@@ -18,6 +18,9 @@ import { randomUUID } from "node:crypto";
 import type { PRDStore, SelectionExplanation } from "../../prd/rex-gateway.js";
 import { explainSelection, collectCompletedIds, findItem, PRD_TREE_DIRNAME } from "../../prd/rex-gateway.js";
 import type { HenchConfig, RunRecord, RunMemoryStats, TaskBrief, TurnTokenUsage, TestGateResult } from "../../schema/index.js";
+import { DEFAULT_CHECKPOINT_THRESHOLD } from "../../schema/index.js";
+import { measureChangeMagnitude } from "../analysis/change-magnitude.js";
+import type { ChangeMagnitude } from "../analysis/change-magnitude.js";
 import { getCurrentHead, execShellCmd, execStdout } from "../../process/exec.js";
 import { SystemMemoryMonitor } from "../../process/memory-monitor.js";
 import { assembleTaskBrief, formatTaskBrief } from "../planning/brief.js";
@@ -99,13 +102,16 @@ export interface SharedLoopOptions {
   /** Run records for computing prior attempts when task is auto-selected. */
   runHistory?: RunRecord[];
   /**
-   * Automatically revert uncommitted file changes on run failure.
-   * Default: true. Pass false (via --no-rollback) to leave changes in place.
+   * Offer to revert uncommitted file changes on run failure. Default: true.
+   * The revert is prompt-only — it never runs without an interactive
+   * confirmation. Pass false (via --no-rollback) to suppress the prompt
+   * entirely so a failed run always leaves changes in place.
    */
   rollbackOnFailure?: boolean;
   /**
-   * Skip the interactive rollback confirmation prompt and proceed automatically.
-   * Set when --yes is passed or when the caller knows it is running non-interactively.
+   * Skip interactive confirmation prompts and proceed non-interactively.
+   * Set when --yes is passed. Because the rollback is prompt-only, --yes
+   * runs never revert on failure (there is no prompt to answer).
    */
   yes?: boolean;
   /**
@@ -457,8 +463,10 @@ export interface ReviewGateOptions {
    * path ignored this flag entirely (issue #303).
    */
   rollbackOnFailure?: boolean;
-  /** Skip the interactive rollback confirmation prompt (--yes / non-interactive). */
+  /** True when --yes was passed — the rollback prompt is unavailable, so no revert. */
   yes?: boolean;
+  /** True in autonomous modes (--auto/--loop). Same effect as `yes`. */
+  autonomous?: boolean;
   /**
    * Untracked paths present before the run, so rollback removes only
    * agent-created files. See {@link captureBaselineUntracked}.
@@ -498,6 +506,7 @@ export async function runReviewGate(
       // files via the baseline.
       await performRollbackIfNeeded(projectDir, {
         yes: options.yes,
+        autonomous: options.autonomous,
         baselineUntracked: options.baselineUntracked,
       });
     }
@@ -746,19 +755,23 @@ export interface FinalizeRunOptions {
   /** Whether in self-heal mode (triggers mandatory test gate). */
   selfHeal?: boolean;
   /**
-   * Automatically revert uncommitted file changes on run failure.
-   * Default: true. Pass false (via --no-rollback) to leave changes in place.
+   * Offer to revert uncommitted file changes on run failure. Default: true.
+   * The revert is prompt-only — it never runs without an interactive
+   * confirmation. Pass false (via --no-rollback) to suppress the prompt
+   * entirely so a failed run always leaves changes in place.
    */
   rollbackOnFailure?: boolean;
   /**
-   * Skip the interactive rollback confirmation prompt and proceed automatically.
-   * Set when --yes is passed or when the caller knows it is running non-interactively.
+   * Skip interactive confirmation prompts and proceed non-interactively.
+   * Set when --yes is passed. Because the rollback is prompt-only, --yes
+   * runs never revert on failure (there is no prompt to answer).
    */
   yes?: boolean;
   /**
    * True when the run is in a non-interactive autonomous mode (--auto or
    * --loop). Bypasses the interactive commit-message approval prompt so
-   * unattended runs do not stall waiting for input.
+   * unattended runs do not stall waiting for input. Autonomous runs are
+   * non-interactive, so they never revert on failure.
    */
   autonomous?: boolean;
   /**
@@ -839,6 +852,12 @@ async function listDirtyPaths(projectDir: string): Promise<string[]> {
  */
 interface AskYesNoOptions {
   interruptMode?: "decline" | "hold-then-exit";
+  /**
+   * Which way an empty answer (bare Enter) resolves. Defaults to `true`
+   * (`[Y/n]` prompts). Set `false` for destructive prompts that should
+   * default to No (`[y/N]`), e.g. the rollback confirmation.
+   */
+  defaultYes?: boolean;
 }
 
 const ROLLBACK_INTERRUPT_HINT = "Press Ctrl+C again to abort the rollback prompt and exit.";
@@ -926,35 +945,46 @@ async function askYesNoWithSuspendedSigint(
   const answer = await readLineWithSuspendedSigint(question, options);
   if (answer === null) return false;
   const trimmed = answer.trim().toLowerCase();
-  return trimmed === "" || trimmed === "y" || trimmed === "yes";
+  if (trimmed === "") return options.defaultYes ?? true;
+  return trimmed === "y" || trimmed === "yes";
 }
 
 /**
- * Ask the user to confirm rollback via stdin (TTY only).
- * Returns true when the user accepts (empty input or 'y'/'yes').
- * The first Ctrl-C prints a hint and keeps the prompt open; a second
- * Ctrl-C aborts the prompt and exits.
+ * Ask the user to confirm the revert via stdin (TTY only).
+ * Reverting is a destructive git action, so the prompt defaults to No —
+ * a bare Enter preserves the working tree; only an explicit 'y'/'yes'
+ * accepts. The first Ctrl-C prints a hint and keeps the prompt open; a
+ * second Ctrl-C aborts the prompt and exits.
  */
 async function promptRollbackConfirm(count: number): Promise<boolean> {
   return askYesNoWithSuspendedSigint(
-    `\nRoll back ${count} uncommitted file(s)? [Y/n] `,
-    { interruptMode: "hold-then-exit" },
+    `\nRevert ${count} uncommitted file(s)? [y/N] `,
+    { interruptMode: "hold-then-exit", defaultYes: false },
   );
 }
 
 /**
- * Revert all uncommitted changes introduced during the run.
+ * Revert uncommitted changes introduced during a failed run — but only
+ * after an express, per-run confirmation. A revert NEVER occurs without the
+ * user explicitly saying yes each time.
+ *
  * Skips silently when the working tree is already clean.
  *
- * In interactive TTY mode (stdin is a terminal and --yes was not passed),
- * prompts the user to confirm before reverting.
- * In non-interactive mode (CI, pipe, or --yes) proceeds without a prompt.
- *
- * Prints the number of reverted paths on completion.
+ * The revert is prompt-only:
+ * - Interactive TTY (stdin is a terminal, --yes not passed, not autonomous):
+ *   prompts `Revert N uncommitted file(s)? [y/N]`, defaulting to No. Only an
+ *   explicit yes reverts — and even then the revert is scoped: tracked
+ *   changes are reverted, but untracked removal is limited to files absent
+ *   from the pre-run baseline (agent-created), never pre-existing work.
+ * - Non-interactive (CI, pipe, --yes, or any autonomous mode): there is no
+ *   channel for a per-run confirmation, so the working tree is left exactly
+ *   as-is and the uncommitted files are reported. Nothing is discarded.
  */
 interface PerformRollbackOptions {
-  /** Skip the interactive confirmation prompt (--yes / non-interactive). */
+  /** True when --yes was passed. There is no prompt channel, so no revert. */
   yes?: boolean;
+  /** True in autonomous modes (--auto/--loop). Same effect as `yes`. */
+  autonomous?: boolean;
   /**
    * Untracked paths present before the run; only untracked files absent from
    * this set are removed. When omitted, no untracked files are deleted.
@@ -971,14 +1001,22 @@ async function performRollbackIfNeeded(
     return;
   }
 
-  // Prompt only in interactive TTY sessions where --yes was not supplied.
-  const isInteractive = Boolean(process.stdin.isTTY) && !options.yes;
-  if (isInteractive) {
-    const confirmed = await promptRollbackConfirm(dirtyPaths.length);
-    if (!confirmed) {
-      info(`Rollback skipped — ${dirtyPaths.length} file(s) left unchanged.`);
-      return;
-    }
+  // A revert requires an express per-run confirmation, which is only
+  // available on an interactive TTY where neither --yes nor an autonomous
+  // mode (--auto/--loop/--epic-by-epic) was supplied. Everything else leaves
+  // the working tree untouched.
+  const isInteractive = Boolean(process.stdin.isTTY) && !options.yes && !options.autonomous;
+  if (!isInteractive) {
+    info(
+      `${dirtyPaths.length} uncommitted file(s) left in place — a rollback only runs after an interactive confirmation.`,
+    );
+    return;
+  }
+
+  const confirmed = await promptRollbackConfirm(dirtyPaths.length);
+  if (!confirmed) {
+    info(`Changes preserved — ${dirtyPaths.length} uncommitted file(s) left unchanged.`);
+    return;
   }
 
   info(`\nRolling back ${dirtyPaths.length} uncommitted file(s) after failed run…`);
@@ -1042,19 +1080,50 @@ export type PreRunCommitChoice = "commit" | "stop" | "proceed";
 export type PreRunCommitGateResult = "proceed" | "stop";
 
 /**
- * Three-way prompt for the pre-run commit gate. Bare Enter proceeds (least
- * friction); Ctrl-C stops (treat an interrupt as "don't start the run").
- * Built on the same SIGINT-suspended readline core as the yes/no prompt.
+ * How the pre-run prompt should present its choices.
+ *
+ * - `escalate` — changes are at/above the checkpoint threshold: bare Enter
+ *   commits instead of proceeding.
+ * - `allowProceed` — false when `hench.git.requireCleanTree` is set (without
+ *   `--allow-dirty`): the "proceed" option is dropped entirely.
  */
-async function promptPreRunCommitChoice(): Promise<PreRunCommitChoice> {
-  const answer = await readLineWithSuspendedSigint(
-    "\nCommit these changes first? [c]ommit / [s]top / [p]roceed (default: proceed) ",
-  );
-  if (answer === null) return "stop";
+export interface PreRunPromptOptions {
+  escalate: boolean;
+  allowProceed: boolean;
+}
+
+/**
+ * Map a raw prompt answer to a {@link PreRunCommitChoice}. Bare Enter takes
+ * the default: "proceed" normally, "commit" when escalated or when proceeding
+ * is disallowed. A "proceed" answer while disallowed re-resolves to the
+ * default rather than sneaking past requireCleanTree. Exported for tests.
+ */
+export function resolvePreRunCommitAnswer(
+  answer: string | null,
+  { escalate, allowProceed }: PreRunPromptOptions,
+): PreRunCommitChoice {
+  if (answer === null) return "stop"; // Ctrl-C — don't start the run.
+  const fallback: PreRunCommitChoice = escalate || !allowProceed ? "commit" : "proceed";
   const trimmed = answer.trim().toLowerCase();
   if (trimmed === "c" || trimmed === "commit") return "commit";
   if (trimmed === "s" || trimmed === "stop") return "stop";
-  return "proceed";
+  if ((trimmed === "p" || trimmed === "proceed") && allowProceed) return "proceed";
+  return fallback;
+}
+
+/**
+ * Three-way prompt for the pre-run commit gate. Bare Enter takes the least
+ * dangerous default (proceed normally, commit when escalated); Ctrl-C stops
+ * (treat an interrupt as "don't start the run"). Built on the same
+ * SIGINT-suspended readline core as the yes/no prompt.
+ */
+async function promptPreRunCommitChoice(opts: PreRunPromptOptions): Promise<PreRunCommitChoice> {
+  const def = opts.escalate || !opts.allowProceed ? "commit" : "proceed";
+  const choices = opts.allowProceed ? "[c]ommit / [s]top / [p]roceed" : "[c]ommit / [s]top";
+  const answer = await readLineWithSuspendedSigint(
+    `\nCommit these changes first? ${choices} (default: ${def}) `,
+  );
+  return resolvePreRunCommitAnswer(answer, opts);
 }
 
 /**
@@ -1168,12 +1237,25 @@ export interface PreRunCommitGateOptions {
    */
   allowDirty?: boolean;
   dryRun?: boolean;
+  /**
+   * Lines-changed threshold at/above which an interactive gate escalates
+   * (from `hench.git.checkpointThreshold`). 0 disables escalation.
+   * Defaults to {@link DEFAULT_CHECKPOINT_THRESHOLD}.
+   */
+  checkpointThreshold?: number;
+  /**
+   * Refuse to start against a dirty tree (from `hench.git.requireCleanTree`):
+   * interactive prompts drop "proceed", non-interactive runs stop.
+   * `--allow-dirty` (allowDirty) takes precedence.
+   */
+  requireCleanTree?: boolean;
   /** Test seams — default to the real implementations. */
   deps?: {
     listDirty?: (dir: string) => Promise<string[]>;
+    measureMagnitude?: (dir: string) => Promise<ChangeMagnitude>;
     collectDiff?: (dir: string) => Promise<ReviewDiff>;
     proposeMessage?: (diff: ReviewDiff, henchDir: string, model?: string) => Promise<string>;
-    promptChoice?: () => Promise<PreRunCommitChoice>;
+    promptChoice?: (promptOpts: PreRunPromptOptions) => Promise<PreRunCommitChoice>;
     commit?: (dir: string, message: string) => Promise<void>;
     isTTY?: boolean;
   };
@@ -1189,7 +1271,15 @@ export interface PreRunCommitGateOptions {
  * Autonomous runs (--auto/--loop/--epic-by-epic) can't prompt without stalling
  * an unattended loop, so a dirty tree makes them *abort* by default rather than
  * silently absorb the pre-existing changes — pass `--allow-dirty` (allowDirty)
- * to proceed anyway. Other non-interactive runs (e.g. --yes, piped) proceed.
+ * to proceed anyway. Other non-interactive runs (e.g. --yes, piped) proceed
+ * unless `hench.git.requireCleanTree` is set (then they stop too, again
+ * unless --allow-dirty).
+ *
+ * The gate is size-aware: when the uncommitted changes reach the checkpoint
+ * threshold (`hench.git.checkpointThreshold` lines changed, default
+ * {@link DEFAULT_CHECKPOINT_THRESHOLD}), the interactive prompt escalates —
+ * it warns about the magnitude and defaults to committing instead of
+ * proceeding. Below the threshold, behavior is unchanged.
  *
  * Returns "stop" when the caller should abort before running, else "proceed".
  */
@@ -1199,17 +1289,27 @@ export async function performPreRunCommitGateIfNeeded(
   const { projectDir, henchDir, model, yes, autonomous, allowDirty, dryRun } = opts;
   const deps = opts.deps ?? {};
   const listDirty = deps.listDirty ?? listDirtyPaths;
+  const measureMagnitude = deps.measureMagnitude ?? measureChangeMagnitude;
   const collectDiff = deps.collectDiff ?? ((dir: string) => collectReviewDiff(dir));
   const proposeMessage = deps.proposeMessage ?? proposePreRunCommitMessage;
   const promptChoice = deps.promptChoice ?? promptPreRunCommitChoice;
   const commit = deps.commit ?? commitPreRunChanges;
   const isTTY = deps.isTTY ?? Boolean(process.stdin.isTTY);
+  const checkpointThreshold = opts.checkpointThreshold ?? DEFAULT_CHECKPOINT_THRESHOLD;
+  // --allow-dirty takes precedence over config: it suppresses both
+  // requireCleanTree and threshold escalation for this run.
+  const requireCleanTree = Boolean(opts.requireCleanTree) && !allowDirty;
 
   // Dry runs never touch the working tree; skip the gate entirely.
   if (dryRun) return "proceed";
 
   const dirty = await listDirty(projectDir);
   if (dirty.length === 0) return "proceed"; // Clean tree → start immediately, no prompt.
+
+  const magnitude = await measureMagnitude(projectDir);
+  const magnitudeLabel = `${dirty.length} uncommitted file(s), ${magnitude.linesChanged} line(s) changed`;
+  const escalate =
+    !allowDirty && checkpointThreshold > 0 && magnitude.linesChanged >= checkpointThreshold;
 
   // Only prompt in an attended TTY session. Autonomous (--auto/--loop/
   // --epic-by-epic) and --yes runs can't prompt without stalling.
@@ -1220,12 +1320,21 @@ export async function performPreRunCommitGateIfNeeded(
     // fast instead — unless the operator explicitly opted in with --allow-dirty.
     if (autonomous && !allowDirty) {
       info(
-        `⚠ Refusing to start an autonomous run with ${dirty.length} uncommitted file(s) in the working tree. ` +
+        `⚠ Refusing to start an autonomous run with ${magnitudeLabel} in the working tree. ` +
           `Commit or stash them, or pass --allow-dirty to proceed anyway.`,
       );
       return "stop";
     }
-    info(`Proceeding with ${dirty.length} uncommitted file(s) in the working tree.`);
+    // requireCleanTree extends the same fail-fast to all non-interactive runs
+    // (--yes, piped): there is no one attending who can commit first.
+    if (requireCleanTree) {
+      info(
+        `⚠ hench.git.requireCleanTree is set: refusing to start with ${magnitudeLabel} in the working tree. ` +
+          `Commit or stash them, or pass --allow-dirty to proceed anyway.`,
+      );
+      return "stop";
+    }
+    info(`Proceeding with ${magnitudeLabel} in the working tree.`);
     return "proceed";
   }
 
@@ -1235,10 +1344,19 @@ export async function performPreRunCommitGateIfNeeded(
   section("Uncommitted changes detected");
   subsection("Changes");
   info(diff.stat || `${dirty.length} file(s)`);
+  if (escalate) {
+    info(
+      `⚠ Large uncommitted change: ${magnitudeLabel} (threshold: ${checkpointThreshold}). ` +
+        `Committing a checkpoint before the run is strongly recommended.`,
+    );
+  }
+  if (requireCleanTree) {
+    info("hench.git.requireCleanTree is set: commit these changes or stop (pass --allow-dirty to override).");
+  }
   subsection("Proposed commit message");
   info(proposed);
 
-  const choice = await promptChoice();
+  const choice = await promptChoice({ escalate, allowProceed: !requireCleanTree });
   if (choice === "stop") return "stop";
   if (choice === "commit") {
     try {
@@ -1910,6 +2028,7 @@ export async function finalizeRun(opts: FinalizeRunOptions): Promise<void> {
   if (opts.rollbackOnFailure !== false && FAILURE_STATUSES.has(run.status)) {
     await performRollbackIfNeeded(projectDir, {
       yes: opts.yes,
+      autonomous: opts.autonomous,
       baselineUntracked: opts.baselineUntracked,
     });
   }

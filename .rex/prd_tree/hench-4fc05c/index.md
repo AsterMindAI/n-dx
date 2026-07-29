@@ -24,6 +24,7 @@ description: "Autonomous agent: picks rex tasks, builds briefs with codebase con
 | [Feature 3: Rex Scanner Go Support](./feature-3-rex-scanner-go-support/index.md) | completed |
 | [Feature 4: Hench Go Project Support](./feature-4-hench-go-project-support/index.md) | completed |
 | [Fix Inaccurate File-Change Reporting in Run Summary and Dashboard](./fix-inaccurate-file-change-a10628/index.md) | completed |
+| [Git-Safety Hardening: express-prompt destructive actions and size-aware commit checkpoints](./git-safety-hardening-express-9ffe3e/index.md) | completed |
 | [Graceful Cancellation with Rollback Prompt on Ctrl+C](./graceful-cancellation-with-626d40/index.md) | completed |
 | [Hench Process Concurrency Management](./hench-process-concurrency-management/index.md) | completed |
 | [Hench Resource Monitoring and User Feedback](./hench-resource-monitoring-and-a5f844/index.md) | completed |
