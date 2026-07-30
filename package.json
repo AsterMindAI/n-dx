@@ -29,7 +29,8 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "preflight": "node scripts/preflight.mjs"
+    "preflight": "node scripts/preflight.mjs",
+    "elm:hello": "node scripts/elm-hello-world.mjs"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
@@ -55,5 +56,8 @@
       "ip-address@<10.1.1": "^10.1.1"
     }
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@10.33.0",
+  "dependencies": {
+    "@astermind/astermind-community": "^3.0.0"
+  }
 }
