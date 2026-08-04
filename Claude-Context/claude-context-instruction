@@ -1,0 +1,118 @@
+# Claude-Context — read this first
+
+You are an agent working on the **AsterMind ELM integration** into the n-dx codebase.
+Three interns work this repo in parallel. This file tells you where things live, what
+you own, and what you must not touch. Read it fully before your first tool call.
+
+---
+
+## 1. The project in one paragraph
+
+n-dx is an AI dev toolkit (sourcevision / rex / hench) that currently pays a hosted LLM
+(Claude, OpenAI, Gemini) for every inference. Our job is to replace those LLM dependencies
+with free, local **ELMs** (Extreme Learning Machines) via `@astermind/astermind-community`.
+Not every call can be replaced — classification-shaped calls can, open-ended generation
+mostly cannot. Deciding which is which is half the work, and those decisions go in ADRs.
+
+Prior art already in `main`: commit `43d6db51` adds the dependency and
+`scripts/elm-hello-world.mjs`, a seeded smoke test that trains an ELM on file-path
+archetype classification under Node. **Read that script before proposing anything** — it
+documents two library gotchas that will otherwise cost you an hour:
+- `charSet` is interpolated unescaped into a RegExp character class, so a literal `-`
+  must come last or it forms an invalid range and throws.
+- Text training requires `useTokenizer: true`.
+- npm's latest is `3.0.0`; the repo pins `^3.0.0`. v4 is tagged on GitHub but unpublished
+  and breaking. Do not chase v4.
+
+## 2. Folder layout
+
+```
+Claude-Context/
+  claude-context-instruction   <- this file. The index. Always read first.
+  ADR/                         <- development plans: decisions, with reasoning
+  IMPL/                        <- implementation plans: step-by-step, per decision
+  Claude-Agents/               <- one file per intern's agent; its own work history
+  OWNERSHIP.md                 <- who owns which paths. Check before editing.
+  IN-FLIGHT.md                 <- what is being edited right now. Claim before starting.
+```
+
+**ADR** — *Why we are doing it this way.* One decision per file, numbered, immutable once
+merged. If a decision changes, write a new ADR that supersedes the old one; don't rewrite
+history. Template: `ADR/ADR-000-template.md`.
+
+**IMPL** — *How we will do it.* A plan derived from one or more ADRs: files to touch,
+order of operations, test strategy, rollback. Mutable — update as reality intrudes.
+Template: `IMPL/IMPL-template.md`.
+
+**Claude-Agents** — *What has actually happened.* One file per intern, named for that
+intern's agent. Append-only log of sessions: what you did, what you learned, what broke,
+what's next. This is the context-reclaim mechanism — a fresh agent reads its own file and
+resumes without re-deriving anything.
+
+## 3. Your operating loop
+
+At the **start** of every session:
+1. Read this file.
+2. Read your own `Claude-Agents/<YOUR-NAME>.md` — that is your memory.
+3. Read `OWNERSHIP.md` and `IN-FLIGHT.md` — know what is yours and what is hot.
+4. `git fetch && git status` — know where you are.
+
+At the **end** of every session (or before context runs out, whichever comes first):
+1. Append a session entry to `Claude-Agents/<YOUR-NAME>.md` using the format in that file.
+2. Remove or update your `IN-FLIGHT.md` claim.
+3. Commit. An uncommitted agent log is a lost agent log.
+
+If you are given a name that has no file in `Claude-Agents/`, copy
+`Claude-Agents/AGENT-TEMPLATE.md` to `Claude-Agents/<name>.md` and start there.
+
+## 4. Rules that prevent collisions
+
+These are not style preferences. Violating them destroys another intern's work.
+
+**Branches.** Never commit to `main`. Branch as `elm/<your-name>/<short-topic>`.
+Prefer a `git worktree` per intern so three agents are not sharing one dirty checkout:
+`git worktree add ../n-dx-<yourname> -b elm/<yourname>/<topic>`.
+
+**PRD state is not concurrency-safe.** The repo's own `CLAUDE.md` documents this: any
+command that writes `.rex/prd_tree/`, `.sourcevision/`, or `.hench/config.json` must not
+run concurrently with another such command. The last writer wins *silently* — no error,
+just data loss. That means: **do not run `ndx plan`, `ndx work`, `ndx ci`, `ndx refresh`,
+`ndx self-heal`, or rex MCP write tools without claiming it in `IN-FLIGHT.md` first.**
+Read-only (`ndx status`, `ndx usage`) is always safe. If you are in your own worktree with
+its own `.rex/`, this constraint is local to you — say so in your claim.
+
+**Ownership before editing.** `OWNERSHIP.md` assigns paths. If you need a file you don't
+own, don't edit it — open an entry in `IN-FLIGHT.md` describing the change you need and
+say so in your handoff. The shared hot spots are, in order of danger:
+`packages/llm-client/src/provider-registry.ts`, `provider-interface.ts`, `llm-types.ts`,
+`llm-config.ts`, `package.json`, `pnpm-lock.yaml`.
+
+**The ELM provider is a registry entry, not a fork.** `ProviderRegistry.register(vendor,
+factory)` (`packages/llm-client/src/provider-registry.ts`) is the extension seam. Add ELM
+as a vendor through it. Do not modify existing provider files to bolt ELM in — that
+guarantees three-way merge conflicts, because all three of us have reason to touch them.
+
+**Architecture rules still apply.** Read the root `CLAUDE.md`. The tier hierarchy
+(orchestration -> hench -> rex/sourcevision -> llm-client) is enforced by tests in
+`tests/e2e/`. Cross-package imports go through gateway modules only. Run
+`pnpm typecheck && pnpm test` before you claim anything is done.
+
+**Numbering.** ADRs and IMPLs use reserved ranges per intern (see `OWNERSHIP.md`) so two
+people never mint `ADR-004` at the same time.
+
+**pnpm-lock.yaml.** Adding a dependency touches the lockfile, which conflicts brutally.
+Announce dependency additions in `IN-FLIGHT.md` before running `pnpm add`. Resolve
+lockfile conflicts by re-running `pnpm install`, never by hand-merging.
+
+**Changesets.** Default every bump to `patch` unless told otherwise (root `CLAUDE.md`).
+Changeset filenames are random, so they don't collide — one changeset per PR is fine.
+
+## 5. Honesty requirements
+
+Your agent log is used by other people to decide what to build next. Therefore:
+- If tests fail, write down that they failed, with output. Do not write "done".
+- If you skipped part of a task, say which part and why.
+- If an ELM turned out to be a bad fit for a call site, that is a **finding**, not a
+  failure — record it in an ADR. A documented "we tried, here's the accuracy, it's not
+  good enough" is worth more than a quiet workaround.
+- Report accuracy numbers with the seed and the baseline. "It works" is not a result.
