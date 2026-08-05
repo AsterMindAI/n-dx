@@ -87,16 +87,43 @@ them is how people end up rebasing onto the wrong thing.
 The parent repo moves independently of us. Let it drift for a week and you will be resolving a
 week of other people's changes inside your feature branch.
 
+**Our fork has already diverged from the parent, and that is correct.** As of 2026-08-05,
+`origin/main` is 3 commits ahead of `upstream/main` (the ELM hello-world work, `43d6db51` and its
+merges) and 1 behind. A fork that carries our work is the whole point; expect this number to grow.
+
+**Look before you merge.** This tells you what you're about to combine:
+
 ```bash
 git fetch upstream
+git rev-list --left-right --count upstream/main...origin/main
+#            ^ behind          ^ ahead
+git log --oneline upstream/main..origin/main    # exactly what we have that they don't
+```
+
+Then merge — a merge commit here is correct, not a failure to keep history clean:
+
+```bash
 git checkout main
-git merge --ff-only upstream/main     # fails loudly if our fork's main has diverged
+git merge upstream/main
 git push origin main
 ```
 
-**`--ff-only` is deliberate.** If it fails, our fork's `main` has commits the parent doesn't —
-that is a real situation needing a decision, not something to paper over with a merge commit. Stop
-and raise it with the other two leads.
+**Read the "ahead" list before merging, every time.** It should contain only work we intended to
+put on `main` — merged PRs, in other words. If you see a commit nobody recognises, or a direct
+commit to `main` that never went through a PR, *that* is the signal worth stopping for. Someone
+committed to `main` instead of a branch, and it is far easier to sort out now than after it is
+buried under a merge.
+
+> **Do not use `git merge --ff-only` here.** A fast-forward only works when our side has added
+> nothing, which stopped being true at `43d6db51`. It will simply refuse. `--ff-only` is the right
+> tool for a fork that is a pure mirror of its parent; ours is not one.
+
+**Never rebase `main` onto `upstream/main`.** It would rewrite commits that are already published
+in our fork and that everyone's branches are based on. Merge is the only correct operation on a
+shared branch.
+
+Do this **once, by one person, per day**, and say so in `IN-FLIGHT.md` § 2. Three people merging
+the same thing is harmless but confusing.
 
 Do this **once, by one person, per day**, and say so in `IN-FLIGHT.md` § 3. Three people
 fast-forwarding the same branch is harmless but confusing.
@@ -227,7 +254,8 @@ commit those too. An uncommitted log is a lost log.
 |---|---|
 | See who's working on what | `git fetch --all --prune && git branch -r --sort=-committerdate` |
 | Start a new agent's branch | `git worktree add ../n-dx-<agent> -b elm/<name>/<topic>` |
-| Update our fork from the parent | `git fetch upstream && git checkout main && git merge --ff-only upstream/main && git push origin main` |
+| See how far our fork has drifted from the parent | `git fetch upstream && git rev-list --left-right --count upstream/main...origin/main` |
+| Update our fork from the parent | `git fetch upstream && git checkout main && git merge upstream/main && git push origin main` |
 | Get `main` into my branch | `git fetch origin && git rebase origin/main` |
 | Signal I've started | `git push -u origin <branch>` + draft PR |
 | Open a PR | `gh pr create --base main` (after `gh repo set-default AsterMindAI/n-dx`) |
