@@ -1,54 +1,77 @@
 # Ownership map
 
-Rename `Intern-A/B/C` to the real agent names in `Claude-Agents/` before starting work.
-If you need to edit a path you don't own, do not edit it — file an entry in
-`IN-FLIGHT.md` describing the change you need, and note it in your handoff.
+## Status: scopes not yet assigned
 
-## Why this split
+**The three leads have not divided the codebase yet.** The structure below is in place and ready
+to fill in.
 
-The three workstreams are separated by **merge surface**, not by difficulty. Each intern
-should be able to work a full day without touching a file another intern has open.
-The `llm-client` foundation is deliberately owned by one person, because everything
-imports it and three-way conflicts there are the most expensive kind.
+Until it is filled in, there is no ownership map protecting anyone, so the substitute is
+visibility:
+
+- **Coordinate every non-trivial edit through [`IN-FLIGHT.md`](IN-FLIGHT.md)** — it is currently
+  the *only* thing standing between three people and the same file.
+- **Push your branch the day you create it**, before it's any good. `git branch -r` is how the
+  other teams see what you're touching. See [`GITHUB-WORKFLOW.md`](GITHUB-WORKFLOW.md) § 5.
+- **When you discover you want a file someone else is in**, whoever pushed first keeps going.
+
+Once scopes are assigned, the rule becomes the normal one: **if you need to edit a path you don't
+own, don't.** Drop a note in the owning team's `Notes/` inbox and add a row to `IN-FLIGHT.md`
+§ Requests.
 
 ## Assignments
 
-| Owner | Paths | Workstream |
-|-------|-------|------------|
-| **Intern-A** | `packages/llm-client/**` | The ELM provider itself: a new vendor registered through `ProviderRegistry.register()`, its config schema, model loading, and the adapter that makes an ELM satisfy `LLMProvider`. Owns the shared type surface, so A unblocks B and C. |
-| **Intern-B** | `packages/sourcevision/src/analyzers/**`, `scripts/elm-*` | Call-site migration in sourcevision — `classify.ts`, `enrich.ts`, `claude-client.ts`. This is the highest-value target: archetype classification is the exact shape the hello-world proved out. Also owns training-data extraction and eval scripts. |
-| **Intern-C** | `packages/hench/src/agent/**`, `packages/hench/src/prd/llm-gateway.ts`, `packages/rex/**` | Call sites in hench and rex. Mostly agentic/generative — expect a lot of "ELM is the wrong tool here" findings, which are legitimate ADR output. Also owns the fallback path: what happens when the ELM declines or scores low-confidence. |
+Fill in when the three leads decide. Split by **merge surface**, not by difficulty — each team
+should be able to work a full day without touching a file another team has open.
+
+| Team | Lead | Paths owned | Workstream |
+|---|---|---|---|
+| **TN** | Nolan | _(unassigned)_ | _(unassigned)_ |
+| **TJ** | Jarrett | _(unassigned)_ | _(unassigned)_ |
+| **TT** | Thomas | _(unassigned)_ | _(unassigned)_ |
 
 ## Shared — nobody edits unilaterally
 
-Claim in `IN-FLIGHT.md`, make the change small, merge it same day.
+These are shared regardless of how scopes get assigned. Claim in `IN-FLIGHT.md`, make the change
+small, merge it same day.
 
 - `package.json`, `pnpm-lock.yaml` (root and per-package)
 - `CLAUDE.md`, `AGENTS.md`, `packages/core/assistant-assets/**`
-- `tests/e2e/**` (architecture policy tests — changing these changes everyone's rules)
+- `tests/e2e/**` — architecture policy tests; changing these changes everyone's rules
 - `.n-dx.json`
+- `packages/llm-client/src/provider-registry.ts`, `provider-interface.ts`, `llm-types.ts`,
+  `llm-config.ts` — whoever ends up owning `llm-client`, changes here affect every call site, so
+  they get announced either way
+- Everything in `Claude-Context/` root (this file, `Command-Structure`, `IN-FLIGHT.md`, templates)
 
 ## Untracked-state hazard
 
-`.rex/`, `.sourcevision/`, `.hench/` are mutable on-disk state, and the repo's own
-concurrency contract says concurrent writers lose data silently. Two options — pick one
-as a team and write it here:
+`.rex/`, `.sourcevision/`, and `.hench/` are mutable on-disk state with **no file locking**. The
+root `CLAUDE.md` documents the consequence: concurrent writers lose data with no error — the last
+writer silently wins. Pick one of these as a team and record the choice here:
 
-- **Worktree isolation (recommended):** each intern runs
-  `git worktree add ../n-dx-<name> -b elm/<name>/<topic>`, giving them their own `.rex/`
-  and `.sourcevision/`. No claiming needed for local runs.
-- **Shared checkout:** every `ndx plan|work|ci|refresh|self-heal` must be claimed in
-  `IN-FLIGHT.md` first, and released after.
+- **Worktree isolation (recommended):** each agent runs
+  `git worktree add ../n-dx-<name> -b elm/<lead>/<topic>`, getting its own `.rex/` and
+  `.sourcevision/`. No claiming needed for local runs. Run `pnpm install` in each new worktree.
+- **Shared checkout:** every `ndx plan|work|ci|refresh|self-heal` and every rex MCP write must be
+  claimed in `IN-FLIGHT.md` first, and released after.
 
-Team choice: _<fill in>_
+**Team choice:** _<fill in>_
 
-## Reserved numbering ranges
+## Naming conventions
 
-So two people never mint the same ADR number.
+No numbered sequences anywhere. Numbers require coordination we don't have, and two people minting
+`ADR-004` on separate branches is a merge conflict that git cannot help with.
 
-| Owner | ADR range | IMPL range |
-|-------|-----------|------------|
-| Intern-A | 100–199 | 100–199 |
-| Intern-B | 200–299 | 200–299 |
-| Intern-C | 300–399 | 300–399 |
-| Joint / Nolan | 001–099 | 001–099 |
+| Artifact | Convention | Example |
+|---|---|---|
+| ADR | `ADR-YYYY-MM-DD-<author>-<slug>.md` | `ADR-2026-08-05-nolan-elm-as-registered-vendor.md` |
+| IMPL | `IMPL-YYYY-MM-DD-<author>-<slug>.md` | `IMPL-2026-08-05-jarrett-classify-elm-swap.md` |
+| Note | `NOTE-<from>-to-<to>-YYYY-MM-DD-<slug>.md` | `NOTE-jarrett-to-nolan-2026-08-05-provider-config-shape.md` |
+| Sync | `SYNC-<NNN>-YYYY-MM-DD-<slug>.md` (per-team, so `<NNN>` is safe) | `SYNC-001-2026-08-05-kickoff.md` |
+| Charter | `<AGENT>.md` in the team folder | `Nolan-Agents/Atlas.md` |
+| Branch | `elm/<lead>/<short-topic>` — lead's name, not the agent's | `elm/nolan/provider-registry` |
+| Backlog ID | `<TN\|TJ\|TT>-<agent initial><n>` | `TN-A1` |
+
+Date first so directories sort chronologically. Author second so two people can never produce the
+same filename. **Reference an ADR or IMPL by its full filename, never by a number** — there are no
+numbers to refer to.
