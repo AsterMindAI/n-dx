@@ -94,11 +94,21 @@ merges) and 1 behind. A fork that carries our work is the whole point; expect th
 **Look before you merge.** This tells you what you're about to combine:
 
 ```bash
-git fetch upstream
+git fetch --all --prune          # BOTH remotes — see the warning
 git rev-list --left-right --count upstream/main...origin/main
 #            ^ behind          ^ ahead
 git log --oneline upstream/main..origin/main    # exactly what we have that they don't
 ```
+
+> ⚠️ **`git fetch upstream` is not enough, and the failure is silent.** It refreshes `upstream/*`
+> only, leaving your `origin/main` ref wherever it was the last time you fetched `origin`. Every
+> comparison you then run — including the "do I recognise these commits?" check below — is made
+> against a stale picture of the fork. It looks clean while another lead's commits sit unseen on
+> the remote, and you find out at `git push`, after you have already merged.
+>
+> This is not hypothetical: it happened on 2026-08-05 and is documented in
+> [`ADR-2026-08-05-nolan-single-fork-and-unified-agent-structure.md`](ADR/ADR-2026-08-05-nolan-single-fork-and-unified-agent-structure.md).
+> **Always `git fetch --all`.**
 
 Then merge — a merge commit here is correct, not a failure to keep history clean:
 
