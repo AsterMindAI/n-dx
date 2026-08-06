@@ -38,6 +38,8 @@ If you're on **native Windows** or want to test against multiple platforms, use 
 
 ### Quick Test
 
+Test By Jarrett
+
 Run tests in an isolated environment matching native Windows or macOS:
 
 **macOS / Linux (bash):**
