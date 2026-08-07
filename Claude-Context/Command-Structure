@@ -1,0 +1,271 @@
+# ELM Migration — Command & Teams
+
+Adapted from the Over Watch command structure. Same conventions, our names, our repo.
+
+## Command
+
+**Command is collective.** The three leads — Nolan, Jarrett, Thomas — hold it jointly. There is
+no single authority above them; where the source structure had a Captain, we have consensus.
+
+> Chain of command: **the three leads, collectively → each lead → their agents.**
+
+That works only if "collective" means something concrete, so:
+
+- **Anything outward-facing or hard to reverse needs a second lead's explicit sign-off** before it
+  happens — merges to `origin/main`, anything pushed to `upstream`, dependency additions, package
+  publishes, destructive operations. Get it in writing (a PR review, or a note in their `Notes/`).
+  Tell the third lead after.
+- **Anything reversible and inside your own scope is yours** — you do not need permission to work.
+- **A disagreement between two leads goes to the third**, who breaks the tie. Whoever loses the
+  call writes down what was decided and why, in the relevant ADR.
+- **Nobody claims collective agreement they did not get.** "We discussed it" is not sign-off.
+
+Each lead is accountable for what their agents do — an agent's mistake is that lead's to catch and
+correct.
+
+The migration is built by **three teams**, one per intern, each self-contained under
+`Claude-Context/<Name>-Agents/` with its own **charters**, **notes inbox**, and **team syncs**.
+This page is the map: who the teams are and how they talk to each other.
+
+## The teams
+
+**Scopes are not yet assigned.** The structure below is in place and ready; the missions and owned
+paths get filled in once the three of you decide who takes what. Until then, coordinate every
+non-trivial edit through `IN-FLIGHT.md` — with no ownership map, that board is the only thing
+preventing collisions.
+
+| Team | Lead | Charter home | Prefix | Mission |
+|---|---|---|---|---|
+| **[Team Nolan](Nolan-Agents/README.md)** | Nolan | `Claude-Context/Nolan-Agents/` | `TN` | _(unassigned)_ |
+| **[Team Jarrett](Jarrett-Agents/README.md)** | Jarrett | `Claude-Context/Jarrett-Agents/` | `TJ` | _(unassigned)_ |
+| **[Team Thomas](Thomas-Agents/README.md)** | Thomas | `Claude-Context/Thomas-Agents/` | `TT` | _(unassigned)_ |
+
+Each team's `README.md` lists its agents, their worktrees, and the seams between them.
+
+**One intern = one lead. That intern's agents are their team members.**
+
+## How a team is structured (the convention)
+
+```
+Claude-Context/<Name>-Agents/
+  README.md                       team model + roster + scopes
+  <AGENT>.md                      one charter per agent (use ../CHARTER-TEMPLATE.md)
+  BACKLOG.md                      team claim board (rollup; lead-maintained) — SOURCE OF TRUTH
+  BACKLOG-<AGENT>.md              (optional) per-agent detail view; IDs match the rollup
+  Notes/                          async inbox (NOTE-<from>-to-<to>-YYYY-MM-DD-slug.md)
+  syncs/                          team syncs (use ../SYNC-TEMPLATE.md)
+```
+
+New agent → follow [`NEW-AGENT.md`](NEW-AGENT.md), which walks the setup interactively and
+produces the charter from [`CHARTER-TEMPLATE.md`](CHARTER-TEMPLATE.md).
+
+Shared across all three teams, at `Claude-Context/` root:
+
+```
+claude-context-instruction        the entry point — every agent reads this first
+Command-Structure                 this file
+NEW-AGENT.md                      the agent onboarding prompt
+GITHUB-WORKFLOW.md                fork, branches, sync cadence, concurrent work
+OWNERSHIP.md                      path ownership + naming conventions
+IN-FLIGHT.md                      cross-team claim board + rolling sync
+ADR/                              decisions (why)
+IMPL/                             implementation plans (how)
+```
+
+## Backlogs (the convention)
+
+Every team keeps its **open work** in a backlog under `Claude-Context/<Name>-Agents/`, so all
+three leads can see and **claim** work in one place — and so we're not all over the place.
+
+- **`BACKLOG.md` — the team's canonical claim board (rollup).** One row per open item,
+  lead-maintained. **This is the single source of truth for status + claims. Always claim here.**
+- **`BACKLOG-<AGENT>.md` (optional) — an agent's detail/working view.** IDs match the rollup;
+  it elaborates but must never contradict the rollup on status or claim.
+
+**Row format (same for every team):**
+`| ID | Item | Related ADR / IMPL | Status | Claimed by |`
+
+- **ID** — `<TEAM>-<AGENT><n>`: team prefix + agent initial + number. Prefixes are **TN** (Nolan),
+  **TJ** (Jarrett), **TT** (Thomas). So `TN-A1` = Team Nolan / agent whose name starts with A,
+  item 1.
+- **Status** — `PENDING` · `IN-PROGRESS` · `BLOCKED (<blocker id>)` · `ONGOING` · `DONE`.
+- **Related docs** — link the ADR(s) and IMPL(s) behind the item.
+
+**Claim protocol — git is the lock:**
+- **To claim:** set `Claimed by` to your name + `Status → IN-PROGRESS`, and commit. One claimant
+  per item; **first commit wins** (if you collide on rebase, pick another).
+- **Another lead claims your team's item** → they work it directly and loop the Owner in via that
+  team's `Notes/`.
+- **On done:** `Status → DONE`, note the PR/commit; it drops off the next revision.
+
+Backlogs hold **open work only** — shipped/merged work is not listed.
+
+## Communication
+
+**Within a team** — notes into your own team's `Notes/` inbox and periodic team syncs. Read your
+inbox at the start of every session.
+
+**Across teams** — drop a note in the **other team's** `Notes/` folder
+(`Claude-Context/<OtherName>-Agents/Notes/`); that lead routes it to their agents. When two or
+more teams need to align, hold a **cross-team sync** and write it up in the coordinating lead's
+`syncs/` directory; all three leads attend.
+
+**Note filename convention:** `NOTE-<from>-to-<to>-YYYY-MM-DD-<slug>.md`
+e.g. `NOTE-jarrett-to-nolan-2026-08-05-need-elm-provider-config-shape.md`
+
+A note is the right tool when: you need something another team owns, you changed something that
+affects them, you found a defect in their territory, or you are about to touch a shared file.
+
+**Working at the same time as someone else** — notes are async and git is the lock, but neither
+tells you what another agent is doing *right now*. See
+[`GITHUB-WORKFLOW.md`](GITHUB-WORKFLOW.md) § *Two people working at once*.
+
+## Doctrine — nothing broken leaves the shop
+
+**A defect you find never goes unrecorded.** What you do about it depends on where you are.
+
+**The default — you are mid-task: file a bug report and keep going.** Do not derail the work you
+are on. Write the report properly (reproduction, `file:line`, what you verified and how), link it
+from wherever you were working, and carry on. **A defect that is only in your head, or only in a
+chat message, does not exist.**
+
+**Fix it now if either is true:**
+
+- **You have no other work in flight** — then it is your next task, not someone's someday.
+- **It is an easy fix** — small, contained, low blast radius, and you can test it. Do not file a
+  ticket for a one-line fix you could land in the time it takes to write the ticket. Still write
+  the bug report; a fix with no record is how the same defect gets re-found in three months.
+
+**Whichever path — the fix has to be real:**
+
+1. **Verify it yourself first.** Reproduce it by execution, or read the code at `origin/main` and
+   cite `file:line`. **A subagent's report is a lead, not a finding.** Confident claims resting on
+   invented identifiers and stale line numbers cost more than the bug did.
+2. **Fix the mechanism, not the symptom.** A fix that works for the wrong stated reason gets that
+   reason quoted into the next three documents while the real defect survives.
+3. **Write a test that FAILS on the old code, and prove that it fails.** Revert the fix, watch the
+   test go red, restore it. **A green test nobody has seen go red is indistinguishable from no
+   test.**
+4. **Say what you did NOT fix, and why.** A partial fix presented as complete is worse than an
+   honest gap, because it closes the ticket.
+
+**Where it stops — these are the line, not loopholes:**
+
+- **Outward-facing or hard to reverse needs a second lead's sign-off** — merges to `origin/main`,
+  anything reaching `upstream`, dependency additions, anything destructive. Find it, write the
+  fix, then get the go-ahead. This doctrine authorises *fixing*; it never authorises *shipping
+  unasked*.
+- **Crossing another team's seam:** if you fix it, drop a note in the owning team's `Notes/` the
+  same session. Surgical, tested, and flagged where it changes their behaviour. **Fix and tell —
+  never fix and hide.** If you would rather not cross the seam, file the report and route it to
+  their lead.
+- **If the fix turns out bigger than the finding**, stop and write it up rather than half-doing it.
+
+**The honesty half — it applies to your own work too.** When you find that something you already
+published was wrong, correct it **everywhere it landed**, not only in the newest document.
+Corrections that live only in the latest artifact are how a wrong number gets quoted for a week.
+Retract in place, in the original, where the reader actually is.
+
+### The ELM-specific corollary
+
+An ELM that scores badly on a call site is a **finding, not a failure** — record it in an ADR with
+the numbers. But the reverse is the trap this project will actually hit:
+
+**Never report an accuracy number without its seed and its baseline.** Three classes at 40%
+accuracy is worse than guessing. "It works" is not a result, and a demo that ran once on your
+machine is not evidence. If it isn't a committed, seeded script another team can run, it didn't
+happen.
+
+## Rules that bind every team
+
+- **Never commit to `main`.** Branch as `elm/<name>/<short-topic>`. Merging to `origin/main`
+  needs a second lead's sign-off. Full workflow: [`GITHUB-WORKFLOW.md`](GITHUB-WORKFLOW.md).
+- **Own your seam.** Once scopes are assigned, work that drifts into another team's scope gets a
+  note and a hand-off — never a quiet reach across the boundary. See `OWNERSHIP.md`.
+- **One agent, one worktree.** Two agents must never share a working directory. See below.
+- **The ELM is a registered vendor, not a fork.** `ProviderRegistry.register(vendor, factory)`
+  (`packages/llm-client/src/provider-registry.ts:96`) is the extension seam. Bolting ELM into the
+  existing provider files guarantees three-way conflicts — all three teams have reason to touch
+  them.
+- **Architecture tests are not advisory.** The tier hierarchy and gateway rules are enforced by
+  `tests/e2e/architecture-policy.test.js` and `tests/e2e/domain-isolation.test.js`. Run
+  `pnpm typecheck && pnpm test` before you claim anything is done.
+- **Announce dependency additions before running `pnpm add`.** `pnpm-lock.yaml` conflicts
+  brutally. Claim it in `IN-FLIGHT.md`. Resolve lockfile conflicts by re-running `pnpm install`,
+  never by hand-merging.
+- **Changeset bumps default to `patch`** unless the leads agree otherwise (root `CLAUDE.md`).
+
+---
+
+## "Approve the PR" means validate it, then MERGE it
+
+**When a teammate asks you to "approve" their PR: validate the contents, then merge it.** Do not
+record a PR as *approved, awaiting merge*. A PR you validated and left unmerged is not approved;
+it is stalled, and nobody is coming. If it is not good, say so on the PR and leave it open — that
+is the only other outcome.
+
+### Where we differ from Over Watch — and it is in our favour
+
+Over Watch runs one GitHub account per team, so GitHub blocks same-team approval at the platform
+level and their merge *is* the approval. **We are three real people with three real accounts.**
+Cross-review is available to us with no workaround: Jarrett can genuinely review and approve
+Nolan's PR, and GitHub has no objection.
+
+**So we use it.** This is also how the collective-command rule gets satisfied in practice — a
+second lead's review on the PR *is* the sign-off. Don't waste it by rubber-stamping.
+
+**Whoever merges still carries the diligence:**
+
+1. **Run it yourself** — never merge on the strength of a PR body saying tests pass.
+2. **If it claims a fix, watch the test go red without it.**
+3. **Verify claims at `file:line` against `origin/main`.** A confident PR body is a lead, not a
+   finding.
+4. **Say what you did NOT check.** Gaps in a review are load-bearing; name them.
+
+---
+
+## One agent, one worktree
+
+**Every agent that may work concurrently with another gets its own git worktree.** Not a
+convention to observe when convenient — the shared checkout is how an agent's uncommitted work
+gets destroyed, and it is not recoverable.
+
+```bash
+git worktree add ../n-dx-<name> -b elm/<name>/<topic>
+```
+
+Declare the path in your team's roster **Worktree** column. `(TBD)` and `(shared checkout)` are
+not valid entries for an agent that works alongside others.
+
+A fresh worktree has **no `node_modules`**; run `pnpm install` before tests. Don't symlink or share
+one between worktrees — branches can carry different lockfiles, and a silently-shared
+`node_modules` produces wrong-dependency bugs much harder to diagnose than a missing one.
+
+### The n-dx-specific reason this is not optional
+
+Beyond the general shared-checkout hazard, this repo has a second one that is worse because it is
+silent. The root `CLAUDE.md` documents it: `.rex/prd_tree/`, `.sourcevision/`, and `.hench/` have
+**no file locking**. Concurrent writers lose data with **no error** — the last writer simply wins.
+
+Any of `ndx plan`, `ndx work`, `ndx ci`, `ndx refresh`, `ndx self-heal`, or a rex MCP write tool
+run from a shared checkout while another agent is doing the same will corrupt PRD state, and you
+will not find out for days. A worktree gives each agent its own `.rex/` and `.sourcevision/`, which
+makes the whole class of problem disappear.
+
+If you are on a shared checkout anyway: **claim it in `IN-FLIGHT.md` before running any of those
+commands, and release it after.** Read-only (`ndx status`, `ndx usage`) is always safe.
+
+### The rules
+
+1. **Never `git stash` in a shared checkout.** A worktree makes stashing unnecessary, so this rule
+   costs nothing. Suppressing stderr on a stash/pop pair (`2>/dev/null`) turns a failure into a
+   silent loss; don't.
+2. **Check `git branch --show-current` before you edit**, not before you commit. By commit time
+   the damage is already staged.
+3. **Commit early and in small steps**, including WIP safety commits. This is the practice that
+   saves work when something else goes wrong, and it is cheap.
+4. **Never `git add -A`** in a checkout another agent may be using — you will commit their work
+   under your name and message. Stage explicit paths.
+5. **Prefer a throwaway worktree even when you are alone.**
+
+*Adapted 2026-08-05 from the Over Watch command structure. Three teams, one migration.*
