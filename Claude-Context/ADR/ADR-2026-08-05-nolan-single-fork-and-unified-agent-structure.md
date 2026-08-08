@@ -1,6 +1,6 @@
 # ADR — One shared fork, branch-and-PR workflow, one agent structure
 
-- **Status:** Proposed — needs Jarrett and Thomas to agree before it means anything
+- **Status:** Partially Accepted — Jarrett agreed 2026-08-08 (see [`NOTE-nolan-to-jarrett-2026-08-05-unify-agent-structure.md`](../Jarrett-Agents/Notes/NOTE-nolan-to-jarrett-2026-08-05-unify-agent-structure.md), resolved section); Thomas has not yet responded. Not fully Accepted until Thomas agrees.
 - **Date:** 2026-08-05
 - **Author:** Nolan (Team Nolan)
 - **Supersedes:** none
@@ -84,9 +84,11 @@ everyone's next branch.
 
 **Migration cost:** low. Three files move and gain a header; see the IMPL.
 
-**Requires agreement.** Status is Proposed. Jarrett owns two of the three affected files and
-Thomas has a `team/Thomas/` directory. Neither has agreed to anything yet, and merging this ADR
-without them would repeat the original mistake in the opposite direction.
+**Requires agreement.** Jarrett has agreed (2026-08-08) and his three charter files
+(`archer.md`/`knight.md`/`realm.md`) have been migrated to `Claude-Context/Jarrett-Agents/` per
+the IMPL. Thomas still has a `team/Thomas/` directory and has not yet agreed — `team/Thomas/.gitkeep`
+and the final removal of `team/` are left untouched pending his confirmation, so this migration
+does not repeat the original mistake in the opposite direction.
 
 ## Evidence
 
