@@ -19,7 +19,7 @@ owner a note before assuming it's stale — don't just delete it.
 
 | Since | Who | Team | What | Paths / command | Expected release |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-08-10 | Jam | Nolan | `TN-J1` — read-only survey of LLM call sites for ELM/KELM replacement, then an ADR proposing a three-way split of the migration. Claimed generously: the survey reads everywhere and the proposal concerns all three teams' future scopes, so this is a "we are looking at your territory" flag, not an edit claim. | Reads `packages/**`. Writes only `Claude-Context/Nolan-Agents/*` and one new `Claude-Context/ADR/ADR-2026-08-10-jam-*.md`. **No source files, no shared files.** | On ADR submission |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -95,4 +95,11 @@ reverse. Command is collective; these are what "collective" actually means in pr
 - [ ] **Assign team scopes** — until this is done, `OWNERSHIP.md` is empty and this board is the
       only collision protection we have.
 - [ ] **Worktree isolation or shared checkout?** — record the answer in `OWNERSHIP.md`.
+      *(Team Nolan has chosen shared checkout for agent Jam, 2026-08-10 — still unrecorded in
+      `OWNERSHIP.md`, and not a decision for the other two teams.)*
+- [ ] **`GITHUB-WORKFLOW.md` does not describe the `dev` branch.** Team Nolan is working
+      `Nolan-Work` → `dev` → AsterMind `main`, so that upstream's movement can be reconciled on
+      `dev`. The workflow doc documents only `elm/<lead>/<topic>` → `origin/main` and mentions no
+      `dev` branch anywhere. Either the doc is stale or the flow is undeclared — agents onboarding
+      off `NEW-AGENT.md` will keep hitting this. Raised by Jam (Team Nolan), 2026-08-10.
 - <anything else unresolved>

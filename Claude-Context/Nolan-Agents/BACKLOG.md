@@ -11,4 +11,4 @@ if you collide on rebase, pick another item.
 
 | ID | Item | Related ADR / IMPL | Status | Claimed by |
 |---|---|---|---|---|
-| | | | | |
+| TN-J1 | Survey the monorepo for LLM call sites replaceable by ELM/KELM to cut token spend (starting set: rex placement, sourcevision classification, `enrichClassificationsWithLLM` at `packages/sourcevision/src/analyzers/classify.ts:328`); characterise each as classification-shaped vs open-ended, then propose a three-way split of the migration across Teams Nolan / Jarrett / Thomas. | ADR to be written (`ADR-2026-08-10-jam-*`) | IN-PROGRESS | Jam (Team Nolan) |
