@@ -35,22 +35,59 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
-Focus has narrowed to `classify.ts`'s `enrichClassificationsWithLLM` as the first ELM build
-target (per the 2026-07-30 survey below). Knight did a follow-up survey of
-`AsterMind-Community-Edition/src/core/` on 2026-08-11 (logged below) confirming base `ELM` in text
-mode is the right fit for that target, and flagging `OnlineELM` as a plausible v2 if the classifier
-should keep learning from live `ndx analyze` runs instead of periodic retraining.
+`classify.ts` has now been read in full and the fused-call caveat is resolved for this specific
+site (see session log below) — the `reason` half of the LLM call has no downstream consumer, so no
+call-splitting is needed before an ELM swap. Combined with Knight's confirmation that base `ELM`
+(text mode) fits, `enrichClassificationsWithLLM` is unblocked as the first ELM build target: the
+remaining work is prototyping, not further investigation.
 
 ## Next up
 
-- [ ] Read `packages/sourcevision/src/analyzers/classify.ts` in full — confirm
+- [x] Read `packages/sourcevision/src/analyzers/classify.ts` in full — confirm
       `enrichClassificationsWithLLM`'s call shape, batching (30/call), and whether it's a fused
-      call (label + free-text reasoning together) like `assessGranularity`, per the fused-call
-      caveat below.
+      call. **Done (2026-08-11)** — see session log.
 - [ ] Prototype base `ELM` (text mode) against that call site using the algorithmic pass's
       evidence-scored output as training data, per the 2026-07-30 next-step note.
 
 ## Session log
+
+### 2026-08-11 — classify.ts verified at file:line; fused-call caveat resolved for this site
+
+Read `packages/sourcevision/src/analyzers/classify.ts` and its call site in full, closing the
+"Next up" item above and the file:line-verification the ADR/IMPL both called for before treating
+the 2026-07-30 fused-call finding as settled for this specific target.
+
+**Call site confirmed:** `enrichClassificationsWithLLM` fires in Phase 3 of `ndx analyze`
+(`packages/sourcevision/src/cli/commands/analyze-phases.ts:218-221`), gated on
+`!ctx.fastMode && classifications.summary.totalUnclassified > 0`. Refines the earlier "runs every
+`ndx analyze`" framing: skipped by `--fast`/`--lite`, and skipped outright when the algorithmic
+pass leaves nothing unclassified.
+
+**Fused-call shape confirmed:** the prompt (`classify.ts:510-519`) asks for
+`[{"path","archetype","reason"}]` per file — one round-trip, label + free text, matching the
+general pattern. Response mapping (`classify.ts:461-469`): `archetype` is required and validated
+against the archetype catalog; `confidence` is hardcoded to `0.7` (never model-derived, so nothing
+of value is lost there either); `evidence` is built **only if `item.reason` is present**
+(`item.reason ? [...] : undefined`).
+
+**The part that changes the conclusion for this site:** traced every consumer of that `reason`
+text. Grepped `signalKind`/`archetypeId`/`.evidence` across the entire `web/src` viewer and server
+— zero matches. Its only reader is `classify.ts:500-505` itself, which recycles it as a "partial
+signals" hint fed into a *later retry attempt's* prompt — an internal implementation detail, never
+shown to a user or read by any other module. Unlike `assessGranularity` (where the free text is
+the actual product handed to a person), `enrichClassificationsWithLLM`'s `reason` has **no external
+consumer at all**. An ELM swap can supply just the label and drop `reason`/`evidence` for
+LLM-classified files entirely, with zero observable regression — no call-splitting required here,
+narrowing the general 2026-07-30 caveat for this specific target.
+
+Also read the current `Claude-Context/` state this session (ADR/IMPL/Notes, both stale top-level
+`team/*.md` and `team/Jarrett/*.md` are gone — migrated to this file's current location per
+`d1692a1d`). ADR is Partially Accepted (Thomas still pending); `Claude-Context/` itself isn't on
+`main` yet. Confirmed Knight's 2026-08-11 handoff below is fully consistent with this read.
+
+**Not yet done:** the actual ELM prototype — training-data construction from the algorithmic pass's
+evidence scores, feature encoding, and a baseline/seed per `ADR-TEMPLATE.md`'s Evidence-section
+requirement if this becomes its own ADR.
 
 ### 2026-08-11 — Knight → Archer: AsterMind-Community-Edition/src/core/ survey (the four ELM types)
 
