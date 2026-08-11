@@ -52,7 +52,7 @@ Claude-Context/<Name>-Agents/
   <AGENT>.md                      one charter per agent (use ../CHARTER-TEMPLATE.md)
   BACKLOG.md                      team claim board (rollup; lead-maintained) — SOURCE OF TRUTH
   BACKLOG-<AGENT>.md              (optional) per-agent detail view; IDs match the rollup
-  Notes/                          async inbox (NOTE-<from>-to-<to>-YYYY-MM-DD-slug.md)
+  Notes/                          async inbox (NOTE-<from-lead>-to-<to-lead>-YYYY-MM-DD-slug.md)
   syncs/                          team syncs (use ../SYNC-TEMPLATE.md)
 ```
 
@@ -110,8 +110,27 @@ inbox at the start of every session.
 more teams need to align, hold a **cross-team sync** and write it up in the coordinating lead's
 `syncs/` directory; all three leads attend.
 
-**Note filename convention:** `NOTE-<from>-to-<to>-YYYY-MM-DD-<slug>.md`
+**Note filename convention:** `NOTE-<from-lead>-to-<to-lead>-YYYY-MM-DD-<slug>.md`
 e.g. `NOTE-jarrett-to-nolan-2026-08-05-need-elm-provider-config-shape.md`
+
+**`<from-lead>` and `<to-lead>` are always intern names — `nolan`, `jarrett`, `thomas` — never an
+agent name.** A note drafted by an agent is still *from that agent's lead*, because that is how it
+routes: you drop it in the other team's inbox, and **that lead routes it to their agents**. Three
+reasons this matters:
+
+- **The receiving team does not know your agents.** `NOTE-fluff-to-jarrett-…` tells Jarrett nothing
+  about who is asking or with what authority; `NOTE-nolan-to-jarrett-…` tells them it came from a
+  lead's team and who to reply to.
+- **Agents are retired; leads are not.** An agent name in a filename goes stale the moment that
+  agent is retired, and the filename is permanent — resolved notes are never deleted.
+- **Replies have somewhere to go.** `NOTE-jarrett-to-nolan-…` is an obvious answer to
+  `NOTE-nolan-to-jarrett-…`. Agent-addressed names do not pair up.
+
+**Name the drafting agent in the note body, not the filename** — a `**Drafted by:**` line under the
+title. Attribution is preserved; routing stays lead-to-lead.
+
+**Within-team notes** (one agent to another on the same team) use
+`NOTE-<lead>-internal-YYYY-MM-DD-<slug>.md`, since `nolan-to-nolan` reads as a mistake.
 
 A note is the right tool when: you need something another team owns, you changed something that
 affects them, you found a defect in their territory, or you are about to touch a shared file.

@@ -101,7 +101,7 @@ is dated and attributed instead:
 |---|---|
 | ADR | `ADR-YYYY-MM-DD-<author>-<slug>.md` |
 | IMPL | `IMPL-YYYY-MM-DD-<author>-<slug>.md` |
-| Note | `NOTE-<from>-to-<to>-YYYY-MM-DD-<slug>.md` |
+| Note | `NOTE-<from-lead>-to-<to-lead>-YYYY-MM-DD-<slug>.md` — **intern names, never agent names** |
 | Sync | `SYNC-<NNN>-YYYY-MM-DD-<slug>.md` (per-team, so `<NNN>` is safe) |
 | Branch | `elm/<lead>/<short-topic>` — the lead's name, not the agent's |
 | Backlog ID | `<TN\|TJ\|TT>-<agent initial><n>` |
