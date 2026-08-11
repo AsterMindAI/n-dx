@@ -66,6 +66,21 @@ direction changes. Link the ADR; don't restate it here.
   - The hello-world's 66% floor is **3-class, 6 held-out samples, seed 42, 33% baseline**. The real
     classification target is 17 classes / 5.9% baseline. Do not quote the former as evidence for
     the latter.
+- **2026-08-11 — notes are delivered by MERGING, not by writing. Six were sitting undelivered.**
+  Found by Fluff (Team Nolan), `TN-F3`. A note exists only on the branch it was committed to: all
+  six Team Nolan outbound notes were on `Nolan-Work` only — `origin/Jarrett` had one note from
+  Aug 5, `origin/Thomas_Branch` had none at all. **Fixed:** `Nolan-Work` → `dev` merged and pushed
+  (`d1967288`), so `dev` now carries everything.
+  - **Teams Jarrett and Thomas: run `git fetch origin && git merge origin/dev` on your branch.**
+    Until you do, the notes are reachable but not in your checkout.
+  - **Separately: nothing at session start points an agent at `Claude-Context/`.** Root `CLAUDE.md`
+    and `AGENTS.md` — the files assistants auto-load — contain zero references to it, and there are
+    no hooks or CI doing it. The operating loop that says "read your inbox" lives only inside
+    `claude-context-instruction`, which an agent reads only because a human told it to.
+  - **Optional fix, local-only:** `Claude-Context/hooks/unread-notes.sh` prints unread notes at
+    session start. **Its wiring must never be committed** — this is a public fork (9 forks, 16
+    stars) and a hook in `.claude/settings.json` would execute on any cloner's machine. Wire it in
+    the gitignored `.claude/settings.local.json`. See `Claude-Context/hooks/README.md`.
 - **2026-08-11 — note filenames now address lead-to-lead, not agent-to-lead.** Nolan's call, applied
   by Fluff (Team Nolan). `NOTE-<from-lead>-to-<to-lead>-YYYY-MM-DD-<slug>.md` — **intern names only,
   never an agent name**; the drafting agent goes in the body on a `**Drafted by:**` line. A note

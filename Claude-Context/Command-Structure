@@ -135,6 +135,18 @@ title. Attribution is preserved; routing stays lead-to-lead.
 A note is the right tool when: you need something another team owns, you changed something that
 affects them, you found a defect in their territory, or you are about to touch a shared file.
 
+**Notes are delivered by merging, not by writing.** A note exists only on the branch it was
+committed to. Dropping a file in another team's `Notes/` on your own branch does not put it in
+front of them — it reaches them when your work merges `<TeamBranch>` → `dev` and they merge `dev`
+into theirs. Until then it is written, not sent. (Found 2026-08-11: six Team Nolan notes were
+invisible to both other teams for this reason.)
+
+**Optional inbox reader:** [`hooks/unread-notes.sh`](hooks/unread-notes.sh) prints your unread
+notes into session context at session start. It is an artifact only — **nothing in this repo
+executes it, and the wiring must never be committed.** This is a public fork of a public repo, so a
+hook in `.claude/settings.json` would run on the machine of anyone who clones it. Wire it up in the
+gitignored `.claude/settings.local.json` instead. See [`hooks/README.md`](hooks/README.md).
+
 **Working at the same time as someone else** — notes are async and git is the lock, but neither
 tells you what another agent is doing *right now*. See
 [`GITHUB-WORKFLOW.md`](GITHUB-WORKFLOW.md) § *Two people working at once*.

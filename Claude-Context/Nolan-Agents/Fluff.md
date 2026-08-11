@@ -169,6 +169,57 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-11 (end of day, latest) — `TN-F3`: notes weren't being delivered; inbox reader added
+
+**Did:**
+- Answered "how do notes reach the other teams" by checking rather than reading the docs. They
+  didn't. All six Team Nolan outbound notes were on `Nolan-Work` only; `origin/Jarrett` had one
+  from Aug 5, `origin/Thomas_Branch` had none.
+- Merged `Nolan-Work` → `dev` (`d1967288`) in a **throwaway worktree** so the shared checkout never
+  changed branch — clean merge, no conflicts, worktree removed after. `dev` now carries everything.
+- Wrote `Claude-Context/hooks/unread-notes.sh` + `hooks/README.md`, and wired it in the
+  **gitignored** `.claude/settings.local.json`.
+
+**Learned:**
+- **A note is delivered by a merge, not by a write.** I had reported "notes sent" twice. Under the
+  lead's definition — merged to `dev` — that is now true, and the ADR line stands. But the lesson
+  is doctrinal: writing a file into another team's `Notes/` on your own branch does nothing. Added
+  this to `Command-Structure` § Communication.
+- **Nothing at startup points an agent at `Claude-Context/`.** Root `CLAUDE.md` and `AGENTS.md`
+  have **zero** references to it; no hooks, no CI. The instruction to read the instructions lives
+  inside the instructions. Every agent so far worked only because a human pasted the prompt.
+- **`packages/core/assistant-assets/` ships to npm** (it is in `package.json` `files[]`, and
+  `assistant-assets.js:333` reads `project-guidance.md` from the installed package). So the
+  "bootstrap from CLAUDE.md" idea I proposed would leak our team structure into every downstream
+  `ndx init`. **I proposed that before checking it — check first next time.**
+- The repo is a **public** fork (9 forks, 16 stars). The information in `Claude-Context/` is
+  already world-readable; what a committed hook would add is **code execution on a stranger's
+  machine**. Different and worse category. Hence local-only wiring.
+
+**Broke / still broken:**
+- **`pnpm typecheck` / `pnpm test` NOT run** — no source touched, Markdown and one shell script.
+- Script tested directly instead: `--list` non-destructive, marking works, second run silent,
+  other teams work, missing team silent, running outside the repo exits 0. Hook JSON validated
+  with `jq -e`. **The hook itself is not proven to fire** — `SessionStart` fires outside a turn,
+  and a newly created `settings.local.json` is not picked up by the settings watcher mid-session.
+- **My testing consumed the read state.** I cleared it afterwards so the first real session still
+  shows the two genuinely unread notes.
+- **Delivery is still only half done.** Jarrett and Thomas must merge `dev` into their branches. I
+  cannot do that for them — those are their branches.
+
+**Left undone and why:**
+- Did **not** touch `packages/core/assistant-assets/` — ships to npm, shared file, and the idea is
+  now a bad one on its merits.
+- Did **not** put anything in `.claude/settings.json`. That was the entire point.
+
+**Notes sent / received:** none this session.
+
+**Handoff:**
+- Tell the lead to open `/hooks` or restart before expecting the inbox reader to fire.
+- `TN-F1` still waits on the three leads. Check `Nolan-Agents/Notes/` for replies.
+
+---
+
 ### 2026-08-11 (end of day, later) — `TN-F2`: note filenames now address lead-to-lead
 
 **Did:** (lead's directive, so applied directly — not routed through an ADR like `TN-F1`. It is
