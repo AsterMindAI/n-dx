@@ -35,13 +35,79 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
-_(Not yet filled in — this charter was migrated from `team/Jarrett/archer.md` on 2026-08-08 per `IMPL-2026-08-05-nolan-migrate-team-profiles-to-charters.md`. Fill in at the start of the next working session.)_
+Focus has narrowed to `classify.ts`'s `enrichClassificationsWithLLM` as the first ELM build
+target (per the 2026-07-30 survey below). Knight did a follow-up survey of
+`AsterMind-Community-Edition/src/core/` on 2026-08-11 (logged below) confirming base `ELM` in text
+mode is the right fit for that target, and flagging `OnlineELM` as a plausible v2 if the classifier
+should keep learning from live `ndx analyze` runs instead of periodic retraining.
 
 ## Next up
 
-- [ ] _(none claimed yet — see `BACKLOG.md`)_
+- [ ] Read `packages/sourcevision/src/analyzers/classify.ts` in full — confirm
+      `enrichClassificationsWithLLM`'s call shape, batching (30/call), and whether it's a fused
+      call (label + free-text reasoning together) like `assessGranularity`, per the fused-call
+      caveat below.
+- [ ] Prototype base `ELM` (text mode) against that call site using the algorithmic pass's
+      evidence-scored output as training data, per the 2026-07-30 next-step note.
 
 ## Session log
+
+### 2026-08-11 — Knight → Archer: AsterMind-Community-Edition/src/core/ survey (the four ELM types)
+
+Handoff from Knight, who explored `../AsterMind-Community-Edition/src/core/` in full (14 files,
+~4.5k lines) to catalog what ELM variants actually exist before committing to one for
+`classify.ts`. Four distinct trainable model types, plus composition/infra built on top:
+
+**The four ELM types:**
+1. **`ELM.ts`** (740 lines) — canonical single-hidden-layer ELM. Random fixed `W`/`b` (seeded
+   PRNG; xavier/uniform/he init), only `beta` (output weights) solved analytically via ridge
+   regression (`(HᵀH+λI)β=HᵀY`, Cholesky). Dual-mode: numeric vectors (`trainFromData`) or **raw
+   text via a built-in tokenizer/encoder** (`train()` — feed strings directly, no hand-rolled
+   encoding needed). Built-in metrics (RMSE/MAE/accuracy/F1/cross-entropy/R²) with optional
+   pass/fail thresholds gating save. **This confirms the 2026-07-30 read below**: text-mode input
+   maps directly onto "file path/snippet → archetype label."
+2. **`DeepELM.ts`** (190 lines) — stacks `ELM` instances as unsupervised autoencoders (each layer
+   trained with Y=X) to build a feature hierarchy, then trains one more `ELM` as supervised
+   classifier on the final layer. No backprop anywhere — still closed-form per layer, just
+   greedily stacked. Overkill for `classify.ts` unless base `ELM`'s random features turn out not
+   linearly-separable enough for the archetype label set.
+3. **`KernelELM.ts`** (429 lines) — kernel-trick variant (rbf/linear/poly/laplacian/custom
+   kernels) instead of random projections. `exact` mode (full N×N Gram, ridge-solved,
+   O(N²)/O(N³)) or `nystrom` mode (landmark-based approximation, uniform or k-means++ selection,
+   optional whitening) for scale. Relevant only if file-archetype similarity turns out non-linear
+   in the base random-feature space — not needed as a first pass.
+4. **`OnlineELM.ts`** (313 lines) — sequential/OS-ELM variant. Same random-feature hidden layer as
+   base ELM, but `beta` updates incrementally via Recursive Least Squares (`init()` bootstraps via
+   one ridge solve, `update()` incorporates new batches without retraining from scratch), with a
+   `forgettingFactor` for non-stationary streams. **Worth flagging for n-dx specifically**: if the
+   classifier should keep learning from every `ndx analyze` run's LLM-labeled examples without a
+   periodic full retrain, this is the shape for that — not `classify.ts`'s first cut, but a
+   natural v2.
+
+**Composition, not new algorithms:**
+- `ELMChain.ts` — generic pipeline chaining any `{getEmbedding(X)->X'}` stage, with
+  validation/normalization/profiling. Wires `DeepELM`'s layers together; usable standalone too.
+- `ELMAdapter.ts` — wraps a trained `ELM` or `OnlineELM` to conform to `ELMChain`'s interface (for
+  `OnlineELM`, a choice of exposing hidden activations or raw logits as the "embedding").
+
+**Shared substrate:** `ELMConfig.ts` (activation/weight-init enums; `NumericConfig`/`TextConfig`
+split via `useTokenizer`), `Activations.ts` (relu/leaky-relu/sigmoid/tanh/linear/gelu +
+derivatives — the derivatives are unused by any ELM type here since none backprop; likely present
+for the `synth` sibling folder), `Matrix.ts` (multiply/transpose/Cholesky solve/regularization/
+symmetric inv-sqrt — the linear-algebra substrate everything above rides on).
+
+**Adjacent, not classifiers — don't confuse these for ELM variants:** `EmbeddingStore.ts`
+(in-memory KNN vector store, JSON I/O), `Evaluation.ts` (standalone metrics/confusion-matrix/
+ROC-PR library, usable by any model), `evaluateEnsembleRetrieval.ts` (retrieval-quality eval for
+ensembled embeddings — likely for the Omega/RAG side mentioned below, not classification),
+`ELMWorker.ts`/`ELMWorkerClient.ts` (Web Worker plumbing to run `ELM`/`OnlineELM` off the main
+thread in-browser — request/response/progress protocol, not a new algorithm).
+
+**Bottom line for `classify.ts`:** base `ELM` in text mode is still the right first target — this
+confirms rather than changes the prior read. `OnlineELM` is the one worth keeping in mind as a
+fast-follow.
+
+**Not yet done:** haven't opened `classify.ts` itself this session — that's next up.
 
 ### 2026-07-30 — ELM/classifier investigation
 
