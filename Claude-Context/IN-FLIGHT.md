@@ -51,6 +51,19 @@ right now" so nobody has to ask.
 Things every team needs to know — ADRs accepted, interfaces changed, measured ELM results,
 direction changes. Link the ADR; don't restate it here.
 
+- **2026-08-11 — ⚠️ `grep` cannot see `packages/sourcevision/src/cli/commands/analyze-phases.ts`.**
+  The file contains two raw NUL bytes (offsets 16345, 16374), used deliberately as delimiters
+  inside a template literal and committed on `origin/main`. `file` reports it as `data`, so grep
+  exits 1 and prints **nothing** — not an error, just silence. Any repo-wide grep any of us runs
+  has a hole in it, and that file wires up the whole analyze pipeline. Use `python3`, `grep -a`,
+  or `rg --text`. **Decision: leave the bytes alone** (Nolan, 2026-08-11) — this is a documented
+  hazard, not a bug to fix. Found by Jam.
+- **2026-08-11 — Path B implementation plan written.**
+  [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md).
+  Headline for whoever takes it: **Step 0 is to measure how many files actually reach the LLM.**
+  That has never been measured, it is cheap, and a small number cancels Path B. Also: the astermind
+  library ships `KernelELM` (with seeded Nyström), `OnlineELM`, `ConfidenceClassifierELM` and a
+  full `Evaluation` report — don't hand-roll the benchmark harness.
 - **2026-08-11 — ELM replacement survey complete; three-way split proposed.** Ask Jam (Team Nolan).
   [`ADR-2026-08-11-jam-elm-replacement-survey-and-split.md`](ADR/ADR-2026-08-11-jam-elm-replacement-survey-and-split.md),
   status **Proposed** — needs the three leads. Three things every team should know before claiming

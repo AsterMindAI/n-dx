@@ -131,6 +131,57 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-11 (b) — Path B IMPL written; two of my own claims corrected
+
+**Did:**
+- Re-verified every `file:line` in the classify.ts analysis at the lead's request, then wrote
+  [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](../IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md).
+- Traced the real pipeline wiring: `runClassificationsPhase` (`analyze-phases.ts:183`), LLM gate at
+  `:219`, enrich call at `:221`. The ELM insertion point is `:219`, ahead of the LLM.
+
+**Learned:**
+- **`analyze-phases.ts` is invisible to `grep`.** Two raw NUL bytes at offsets 16345/16374, used
+  deliberately as delimiters in a template literal, make `file` report it as `data`; grep exits 1
+  and prints nothing. I missed the pipeline wiring twice because of it. Committed on
+  `origin/main`. **The lead instructed me to leave the bytes alone** — so this is a documented
+  hazard, not a fix. Use `python3`, `grep -a`, or `rg --text` on that file.
+- **The library is far richer than the hello-world suggests.** Verified from the installed
+  `.d.ts`: `KernelELM` (kernels rbf/linear/poly/laplacian; `mode: 'exact'|'nystrom'` with seeded
+  landmarks), `OnlineELM.update()` (RLS incremental — maps onto sourcevision's incremental mode),
+  `ConfidenceClassifierELM` (purpose-built abstain mechanism), and `Evaluation` returning a full
+  `ClassificationReport` with confusion matrix and per-class F1. **Do not hand-roll the benchmark
+  harness — it ships.**
+- **`ELM` and `KernelELM` take different inputs.** `ELM` is text-native (`charSet`,
+  `useTokenizer`, `predict(text)`); `KernelELM` is numeric-only and needs TF-IDF or
+  `UniversalEncoder` in front. They are not interchangeable.
+- **The covariate-shift trap is the real risk for Path B** — training on rule-labeled files and
+  inferring on rule-*un*labeled files teaches the model to imitate rules where they already work.
+  A naive held-out split hides it. Written up in the IMPL.
+
+**Corrections to my own earlier claims** (both published in chat; corrected in the IMPL too):
+- I said **"`node_modules` is empty, nothing installed"**. True when checked, **false now** —
+  deps are installed and `@astermind/astermind-community@3.0.0` is present. That is what let me
+  verify the real API instead of citing npm keywords.
+- I said **KELM's N² cost is "fine here and bad later"**. Incomplete — `mode: 'nystrom'` exists
+  precisely to avoid that. The scaling objection is not a reason to skip KELM.
+
+**Broke / still broken:**
+- Nothing touched in source. **The 2 NUL bytes were left exactly as found, per instruction.**
+- `pnpm typecheck` / `pnpm test` still not run — no source changes to validate.
+
+**Left undone and why:**
+- **Step 0 of the IMPL is unmeasured**: nobody knows how many files actually reach the LLM. It is
+  cheap, it gates everything, and it can cancel Path B outright. Did not run it — `ndx analyze` is
+  a state-writing command and this is a shared checkout.
+- No ELM trained, no accuracy measured. Still no viability claim anywhere.
+
+**Notes sent / received:** none this session; the grep hazard posted to `IN-FLIGHT.md` § 3.
+
+**Handoff:**
+- Run IMPL Step 0 before anything else. If `totalUnclassified` is small, close Path B and say so.
+
+---
+
 ### 2026-08-11 — TN-J1: surveyed all 22 LLM call sites; split proposed; measurement gap found
 
 **Did:**
