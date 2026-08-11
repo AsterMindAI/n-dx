@@ -244,6 +244,23 @@ re-runnable via `node scripts/elm-hello-world.mjs`):
 - **Random baseline:** 33.3% — **floor asserted:** 66% (`MIN_ACCURACY`, deliberately 2× baseline
   and explicitly *a floor, not a benchmark*)
 
+> ### ⚠️ Correction 2026-08-11 (post Step 0) — the 5.9% baseline below is the wrong yardstick
+>
+> This ADR repeatedly quotes a **5.9% random baseline** for the 17-class task. That is the
+> *uniform-random* rate and it is misleading, because the measured class distribution is severely
+> imbalanced. Measured on this repo (`sourcevision analyze . --fast`, 683 source files):
+> `utility` accounts for **83 of 424** classified files, so **a model that always answers
+> "utility" scores 19.6%.**
+>
+> **Use 19.6% — the majority-class rate — as the baseline, not 5.9%.** Beating 5.9% would prove
+> nothing. Everywhere below that says 5.9%, read 19.6%.
+>
+> Step 0 also found that **6 of the 17 archetypes have zero examples** in the rule-derived corpus
+> (`gateway`, `middleware`, `model`, `route-module`, `service`, `test-helper`), so the effective
+> label space is 11 classes, not 17. Full detail:
+> [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](../IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md)
+> § Step 0 results.
+
 **Why this does not transfer to the real target, and must not be quoted as if it does:**
 
 | | hello-world | real target (`classify.ts:404`) |

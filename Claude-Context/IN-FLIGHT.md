@@ -22,7 +22,6 @@ owner a note before assuming it's stale — don't just delete it.
 | 2026-08-11 | Fluff | Nolan | `TN-F1` — reconciling the branch-naming / `dev`-branch / base-branch mismatch across the doctrine docs. **This claims shared files:** everything in `Claude-Context/` root is on the "nobody edits unilaterally" list, and these four docs bind all three teams. No doc is edited until the ADR is accepted — this row is claiming the *ADR and the eventual single-pass edit*, so a second agent doesn't start the same reconciliation. | Writes `Claude-Context/Nolan-Agents/Fluff.md`, `Claude-Context/Nolan-Agents/{README,BACKLOG}.md`, one new `Claude-Context/ADR/ADR-2026-08-11-fluff-*.md`, and this row. **Pending leads' acceptance:** `GITHUB-WORKFLOW.md`, `OWNERSHIP.md`, `NEW-AGENT.md`, `claude-context-instruction`, `Command-Structure`. **No source files.** Fluff is on the **shared checkout**, branch `Nolan-Work`, alongside Jam (lead's decision 2026-08-11) — so any state-writing command gets its own claim row here first. This task runs none. | On the leads' decision + single-pass doc edit |
 
 | 2026-08-11 | Nolan (lead) | Nolan | **Team Nolan claims Path B** — sourcevision archetype classification, per [`SYNC-001`](Nolan-Agents/syncs/SYNC-001-2026-08-11-elm-path-assignment.md) and [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md). **Paths A and C remain unclaimed** — this is not a claim on them, and Jarrett/Thomas should take whichever they want. | `packages/sourcevision/src/analyzers/**` | On Path B completion or hand-off |
-| 2026-08-11 | Jam | Nolan | IMPL **Step 0** — measuring `classifications.summary.totalUnclassified` to size the Path B prize. Running with `--fast`, which skips LLM enrichment (`analyze-phases.ts:219`), so **zero tokens are spent**. Claimed because it writes `.sourcevision/` in a shared checkout where Fluff is also working. | `sourcevision analyze . --fast` → writes `.sourcevision/*.json` | Same session (row deleted on completion) |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -54,6 +53,21 @@ right now" so nobody has to ask.
 Things every team needs to know — ADRs accepted, interfaces changed, measured ELM results,
 direction changes. Link the ADR; don't restate it here.
 
+- **2026-08-11 — ⚠️ Path B Step 0 measured. The ELM case is weaker than the ADR implied, and the
+  5.9% baseline we've all been quoting is wrong.** Ask Jam / Nolan (Team Nolan).
+  Measured `sourcevision analyze . --fast` on n-dx itself — **zero tokens**, `--fast` skips LLM
+  enrichment. 683 source files → **424 classified, 259 unclassified = 9 LLM batch calls per full
+  analyze.** That is the whole prize for Path B.
+  - **The baseline correction affects everyone quoting it:** classes are severely imbalanced
+    (`utility` = 83/424), so the honest baseline is **19.6% majority-class, not 5.9% uniform
+    random.** Beating 5.9% would prove nothing. ADR and SYNC-001 corrected in place.
+  - **6 of 17 archetypes have zero training examples** (`gateway`, `middleware`, `model`,
+    `route-module`, `service`, `test-helper`) — an ELM trained on rule output cannot predict them.
+  - **All 259 unclassified files have zero signal evidence**, so path string is the only feature.
+  - **Free win, no ML needed:** all four `*-gateway.ts` files are unclassified despite CLAUDE.md
+    documenting them as the architecture's backbone. ~30 of the 259 (12%) are reachable by simple
+    `archetypes.ts` rules; the other 88% are genuinely semantic.
+  - Full detail + revised plan: [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md) § Step 0.
 - **2026-08-11 — ⚠️ `grep` cannot see `packages/sourcevision/src/cli/commands/analyze-phases.ts`.**
   The file contains two raw NUL bytes (offsets 16345, 16374), used deliberately as delimiters
   inside a template literal and committed on `origin/main`. `file` reports it as `data`, so grep

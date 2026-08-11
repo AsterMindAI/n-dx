@@ -51,6 +51,16 @@ The 17-class task at `classify.ts:404`, behind a confidence threshold with LLM f
 across ~1,319 files in batches of 30 (`LLM_BATCH_SIZE = 30`), with up to 3 retries per batch. If
 ELM works anywhere, this is where it pays.
 
+> **⚠️ Updated 2026-08-11 — Step 0 has now been measured, and it changes this section.**
+> 683 source files: **424 classified deterministically, 259 unclassified**, i.e. **9 LLM batch
+> calls per full analyze** — a modest prize. Of those 259, only ~30 (12%) are reachable by simple
+> name rules; the other 88% are genuinely semantic. **6 of the 17 archetypes have zero training
+> examples**, and **the correct baseline is 19.6% (majority class), not the 5.9% quoted below.**
+> All four `*-gateway.ts` files — the pattern CLAUDE.md calls the architecture's backbone — are
+> unclassified, which is a free deterministic fix needing no ML.
+> Read [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](../../IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md)
+> § Step 0 before taking this path.
+
 **It is also the only path whose feasibility is genuinely unknown.** 17 classes against a 5.9%
 random baseline; our only evidence is a 3-class smoke test at a 33% baseline. Several labels are
 semantically adjacent (`route-handler`/`route-module`, `service`/`utility`, `model`/`schema`/

@@ -131,6 +131,62 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-11 (c) — Step 0 measured. Path B is weaker than I sold it, and my baseline was wrong.
+
+**Did:**
+- Nolan claimed Path B for Team Nolan. Claimed it and the run in `IN-FLIGHT.md` **before**
+  executing, per the shared-checkout rule — Fluff is working this same checkout.
+- Ran `sourcevision analyze . --fast` (commit `b5ecfd5c`). `--fast` skips LLM enrichment
+  (`analyze-phases.ts:219`), so the measurement **cost zero tokens**. Released the claim after.
+
+**Learned (the numbers, all from `.sourcevision/classifications.json`):**
+- **683 source files → 424 classified (62.1%), 259 unclassified (37.9%) = 9 LLM batch calls per
+  full analyze** (`ceil(259/30)`), up to 27 with retries. That is the entire Path B prize, and it
+  shrinks further in incremental mode.
+- **6 of 17 archetypes have ZERO examples**: `gateway`, `middleware`, `model`, `route-module`,
+  `service`, `test-helper`. Only 11 classes present; `config` has exactly 1. An ELM trained on
+  rule output cannot ever predict the missing six.
+- **All 259 unclassified files have zero `evidence`** — no sub-threshold signals, none. Path
+  string is the only feature, for the ELM *and* for the LLM doing it today.
+- **Only ~30 of the 259 (12%) are reachable by simple name rules; 88% is semantic residue** like
+  `agent/analysis/stuck.ts`. My "it's mostly missing rules" hunch was **wrong** — it is a modest
+  win, not the explanation.
+- **All four `*-gateway.ts` files are unclassified** despite CLAUDE.md calling gateways the
+  architecture's backbone and `gateway` existing in the catalog. Free deterministic fix, no ML.
+
+**Corrections to my own published claims** (fixed in place in ADR, SYNC-001 and the IMPL, not just
+here):
+- **"5.9% random baseline" was the wrong yardstick** — quoted in the ADR, SYNC-001, the IMPL and
+  the shared artifact. Classes are severely imbalanced (`utility` 83/424), so the honest baseline
+  is **19.6% majority-class**. Beating 5.9% would have proved nothing. This is the correction most
+  likely to have misled the other two leads, since it made Path B look easier than it is.
+- **"The partial-signal vector is a free 17-dimensional feature set"** (IMPL § Improvements) —
+  **false for the population that matters.** Zero evidence on 100% of unclassified files. Retracted
+  in place.
+
+**Broke / still broken:**
+- Nothing broken. No source files touched; the 2 NUL bytes still untouched (verified again).
+- `.sourcevision/` is now populated where it previously held only `hints.md` — that is a working
+  artifact of the measurement, not a code change, and it is gitignored.
+
+**Left undone and why:**
+- Did **not** write the `archetypes.ts` gateway/route rules. It is the obvious next move and it is
+  free, but it edits source in Path B's territory and Nolan had not asked for code yet.
+- Still no ELM trained, no accuracy number. Step 0's job was to decide whether to bother, and its
+  honest answer is "probably not, as an ML project."
+- Measured **one repo**. n-dx is TypeScript-heavy and idiosyncratic; if the ELM is meant to ship to
+  users' repos, one data point does not close the question.
+
+**Notes sent / received:** Step 0 result posted to `IN-FLIGHT.md` § 3 (all teams), including the
+baseline correction.
+
+**Handoff:**
+- Decision for Nolan: do the free `archetypes.ts` rules, re-measure, and only then decide on the
+  ELM against a prize smaller than 9 calls. Or close Path B as a measured negative — which is a
+  publishable finding, not a failure.
+
+---
+
 ### 2026-08-11 (b) — Path B IMPL written; two of my own claims corrected
 
 **Did:**
