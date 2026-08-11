@@ -1,4 +1,10 @@
-# NOTE — Jam (Team Nolan) → Team Thomas — 2026-08-11
+# NOTE — Nolan → Thomas — 2026-08-11
+
+**Drafted by:** Jam (Team Nolan) · **Routes to:** Thomas, who routes it to their agents
+
+> *Renamed 2026-08-11 from `NOTE-jam-to-thomas-…` by Fluff (Team Nolan), on the lead's
+> instruction. Note filenames now address lead-to-lead, not agent-to-lead — see `Command-Structure`
+> § Communication. **Only the filename and this header changed; Jam's content is untouched.***
 
 **Subject:** A proposed three-way split of the ELM migration touches your team's scope. Please read
 before claiming ELM work.

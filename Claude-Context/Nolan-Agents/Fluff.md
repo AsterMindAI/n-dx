@@ -169,6 +169,72 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-11 (end of day, later) — `TN-F2`: note filenames now address lead-to-lead
+
+**Did:** (lead's directive, so applied directly — not routed through an ADR like `TN-F1`. It is
+reversible, inside my scope, and the lead decided it rather than asking me to propose it.)
+- Renamed all four Team Nolan outbound notes to `NOTE-<from-lead>-to-<to-lead>-…`. Two were mine,
+  two were Jam's. **Content untouched in all four** — only the filename and the title block, each
+  with a renamed-from banner. Verified Jam's byte-for-byte after.
+- Updated the convention in `Command-Structure` § Communication + § folder layout,
+  `claude-context-instruction` § 4, `OWNERSHIP.md` § Naming, and **all three** `Notes/README.md`.
+- Notes to Jarrett and Thomas (both listing exactly what I changed in their folders), and a
+  within-team note to Jam.
+
+**Learned:**
+- **The convention had a hole the instruction didn't cover: within-team notes.** Strict lead-to-lead
+  makes an agent-to-agent note `nolan-to-nolan`, which reads as a typo. I chose
+  `NOTE-<lead>-internal-…` and flagged it in all three notes as my call, overridable. Decided rather
+  than blocked, but it is the one part of this not traceable to the lead.
+- **The real argument for the rule is retirement, not tidiness.** `NEW-AGENT.md` § Retiring says
+  charters stay and resolved notes are never deleted — so an agent name in a filename outlives the
+  agent by design. Worth knowing when someone asks why this mattered.
+
+**Broke / still broken:**
+- Nothing run against source. **`pnpm typecheck` / `pnpm test` still NOT run** — Markdown only.
+- **`TN-F1` is untouched by this and still unfixed.** `NEW-AGENT.md` still produces a broken
+  checkout off `main`; the ADR is still *Proposed*. Renaming notes changed nothing about that.
+
+**Left undone and why:**
+- **Did not edit `Jam.md:190-191`**, which still cites the old note paths. Another agent's charter is
+  its memory and session-log entries are append-only. Told Jam in the internal note instead.
+- **I crossed both other teams' seams** — edited `Jarrett-Agents/Notes/README.md` and
+  `Thomas-Agents/Notes/README.md`, which are their files. Doctrine permits it surgically with a
+  same-session note (`Command-Structure` § Doctrine, *fix and tell*), and both notes list exactly
+  what I touched and invite a revert. Flagged rather than assumed.
+
+**Notes sent / received:**
+- Sent: `Jarrett-Agents/Notes/NOTE-nolan-to-jarrett-2026-08-11-note-naming-convention.md`,
+  `Thomas-Agents/Notes/NOTE-nolan-to-thomas-2026-08-11-note-naming-convention.md`,
+  `Nolan-Agents/Notes/NOTE-nolan-internal-2026-08-11-note-rename.md`.
+
+**Handoff:**
+- Nothing pending on `TN-F2`. `TN-F1` still waits on the three leads — check
+  `Nolan-Agents/Notes/` for replies from Jarrett or Thomas first.
+
+---
+
+### 2026-08-11 (end of day) — Near-miss with Jam in the shared checkout
+
+**Not a task entry — a hazard entry, recorded because it is evidence.**
+
+While I was working, Jam committed `a135360c` and `33365785` to `Nolan-Work` in this same working
+directory. `33365785` modified `NOTE-jam-to-jarrett-2026-08-11-elm-split-proposal.md`; I renamed and
+edited that exact file minutes later. **Nothing was lost** — my rename was based on Jam's committed
+content and I verified it afterwards — but the ordering was luck. Had I staged my rename first, Jam's
+amendment about the vendor seam would have been the loser, silently.
+
+This is the **second** time today HEAD moved under me mid-session (the first was `9c8dc5b1` →
+`ef99e4e3` during onboarding), and the first time it touched a file I was actively editing. Both
+happened inside 24 hours of Team Nolan putting two agents on one branch in one checkout.
+
+This belongs in the record for `ADR-2026-08-11-fluff-branch-and-base-conventions.md` § Consequences,
+which predicted exactly this and called it the accepted cost. It is no longer hypothetical. I have
+not amended the ADR — it is *Proposed* and amending it to cite a near-miss that cost nothing would
+overstate the evidence. If it happens again with actual loss, that is the amendment.
+
+---
+
 ### 2026-08-11 (end of day) — Stale remote branch deleted
 
 **Closes the "Left undone" item in the entry below.** `origin/elm/nolan/agent-system-docs` has been

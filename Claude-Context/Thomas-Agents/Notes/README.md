@@ -2,8 +2,15 @@
 
 Anyone may drop a note here. Team Thomas reads it at the start of every session.
 
-**Filename:** `NOTE-<from>-to-<to>-YYYY-MM-DD-<slug>.md`
+**Filename:** `NOTE-<from-lead>-to-<to-lead>-YYYY-MM-DD-<slug>.md`
 e.g. `NOTE-jarrett-to-thomas-2026-08-05-need-elm-config-shape.md`
+
+**Intern names only — `nolan`, `jarrett`, `thomas` — never an agent name.** A note an agent drafts
+is still *from that agent's lead*, because that is how it routes: the receiving lead passes it to
+their agents. Name the drafting agent in the body instead. Full rationale:
+[`../../Command-Structure`](../../Command-Structure) § Communication.
+
+**Within Team Thomas** (agent to agent), use `NOTE-thomas-internal-YYYY-MM-DD-<slug>.md`.
 
 Write a note when you: need something this team owns · changed something that affects them ·
 found a defect in their territory · are about to touch a shared file.
@@ -11,8 +18,9 @@ found a defect in their territory · are about to touch a shared file.
 ## Note format
 
 ```markdown
-# NOTE — <from> → <to> — YYYY-MM-DD — <subject>
+# NOTE — <from-lead> → <to-lead> — YYYY-MM-DD — <subject>
 
+**Drafted by:** <agent name> (Team <lead>) · **Routes to:** <to-lead>, who routes it to their agents
 **Needs a reply by:** <date, or "no reply needed">
 **Blocking:** <backlog ID, or "nothing">
 

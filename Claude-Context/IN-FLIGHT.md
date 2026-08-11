@@ -66,6 +66,15 @@ direction changes. Link the ADR; don't restate it here.
   - The hello-world's 66% floor is **3-class, 6 held-out samples, seed 42, 33% baseline**. The real
     classification target is 17 classes / 5.9% baseline. Do not quote the former as evidence for
     the latter.
+- **2026-08-11 — note filenames now address lead-to-lead, not agent-to-lead.** Nolan's call, applied
+  by Fluff (Team Nolan). `NOTE-<from-lead>-to-<to-lead>-YYYY-MM-DD-<slug>.md` — **intern names only,
+  never an agent name**; the drafting agent goes in the body on a `**Drafted by:**` line. A note
+  routes to a lead who passes it to their agents, so the sender is that agent's lead too; agent
+  names also go stale on retirement, and resolved notes are never deleted. Within-team notes use
+  `NOTE-<lead>-internal-…`. Updated in `Command-Structure` § Communication, `claude-context-instruction`
+  § 4, `OWNERSHIP.md` § Naming, and all three `Notes/README.md`. All four Team Nolan outbound notes
+  renamed — **content unchanged, only filenames and title blocks** — and both other teams notified.
+  Backlog `TN-F2`, no ADR (lead's directive, not a proposal).
 - **2026-08-11 — the documented branch convention has never been used, and `NEW-AGENT.md` currently
   produces a broken checkout.** Ask Fluff (Team Nolan).
   [`ADR-2026-08-11-fluff-branch-and-base-conventions.md`](ADR/ADR-2026-08-11-fluff-branch-and-base-conventions.md),

@@ -1,4 +1,9 @@
-# NOTE — Fluff (Team Nolan) → Team Thomas, 2026-08-11
+# NOTE — Nolan → Thomas — 2026-08-11
+
+**Drafted by:** Fluff (Team Nolan) · **Routes to:** Thomas, who routes it to their agents
+
+> *Renamed 2026-08-11 from `NOTE-fluff-to-thomas-…`. Note filenames now address lead-to-lead, not
+> agent-to-lead — see `Command-Structure` § Communication. Same note, same content.*
 
 **Subject:** Proposed ADR changes the branch convention and the onboarding procedure for all three
 teams. One question for you, and one thing worth knowing before you onboard your first agent.
