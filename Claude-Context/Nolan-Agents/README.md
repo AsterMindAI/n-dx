@@ -24,6 +24,7 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 | Agent | Charter | Scope | Worktree |
 |---|---|---|---|
 | Jam | [`Jam.md`](Jam.md) | Survey of LLM call sites for ELM/KELM replacement; proposes the three-way split. Analysis + ADR only — implements nothing. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, see below)_ |
+| Fluff | [`Fluff.md`](Fluff.md) | The `Claude-Context/` agent system itself — doctrine, onboarding, and workflow docs. Finds where doctrine and reality disagree and drafts the correction; does **not** decide which convention wins, that goes to the leads as an ADR. | `../n-dx-fluff` (`/Users/nolanmoore/n-dx-fluff`), branch `elm/nolan/agent-system-docs` |
 
 > `(TBD)` and `(shared checkout)` are not valid worktree entries for an agent that works alongside
 > others. See [`../Command-Structure`](../Command-Structure) → *One agent, one worktree*.
@@ -35,6 +36,11 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 > released after**, because `.rex/`, `.sourcevision/`, and `.hench/` lose data silently under
 > concurrent writers. Team Nolan's worktree-vs-shared-checkout choice is still unrecorded in
 > `OWNERSHIP.md` § Untracked-state hazard.
+>
+> **Fluff (2026-08-11) does meet the rule** — own worktree at `../n-dx-fluff`, own `.rex/` and
+> `.sourcevision/`, so its local state-writing commands need no claim. Team Nolan now has one agent
+> on each side of the question, which makes recording the choice in `OWNERSHIP.md` more urgent, not
+> less.
 
 ## Seams
 

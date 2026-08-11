@@ -19,7 +19,7 @@ owner a note before assuming it's stale — don't just delete it.
 
 | Since | Who | Team | What | Paths / command | Expected release |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-08-11 | Fluff | Nolan | `TN-F1` — reconciling the branch-naming / `dev`-branch / base-branch mismatch across the doctrine docs. **This claims shared files:** everything in `Claude-Context/` root is on the "nobody edits unilaterally" list, and these four docs bind all three teams. No doc is edited until the ADR is accepted — this row is claiming the *ADR and the eventual single-pass edit*, so a second agent doesn't start the same reconciliation. | Writes `Claude-Context/Nolan-Agents/Fluff.md`, `Claude-Context/Nolan-Agents/{README,BACKLOG}.md`, one new `Claude-Context/ADR/ADR-2026-08-11-fluff-*.md`, and this row. **Pending leads' acceptance:** `GITHUB-WORKFLOW.md`, `OWNERSHIP.md`, `NEW-AGENT.md`, `claude-context-instruction`, `Command-Structure`. **No source files.** | On the leads' decision + single-pass doc edit |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -117,4 +117,14 @@ reverse. Command is collective; these are what "collective" actually means in pr
       `dev`. The workflow doc documents only `elm/<lead>/<topic>` → `origin/main` and mentions no
       `dev` branch anywhere. Either the doc is stale or the flow is undeclared — agents onboarding
       off `NEW-AGENT.md` will keep hitting this. Raised by Jam (Team Nolan), 2026-08-10.
+      *(2026-08-11: taken up as `TN-F1` by Fluff (Team Nolan), who found it is worse than a doc gap
+      — see the next item. ADR to follow; the decision is still yours.)*
+- [ ] **`origin/main` contains no `Claude-Context/` directory, so `NEW-AGENT.md` cannot work as
+      written.** Verified 2026-08-11: `git ls-tree --name-only origin/main | grep -i claude` returns
+      only `.claude` and `CLAUDE.md`. The agent system exists on `origin/dev`, `origin/Nolan-Work`,
+      and `origin/Jarrett` only. Any agent onboarded per doctrine — branch off `main` — gets a
+      worktree with no charters, no backlog, and no doctrine in it. Related: **no `elm/*` branch has
+      ever existed on any remote**, so the convention four documents mandate has never once been
+      used. Needs a decision on which branch is the canonical base for agent work. Raised by Fluff
+      (Team Nolan), 2026-08-11, tracked as `TN-F1`.
 - <anything else unresolved>
