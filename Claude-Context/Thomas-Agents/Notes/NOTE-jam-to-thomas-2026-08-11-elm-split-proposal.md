@@ -49,4 +49,15 @@ Nothing is blocked on you. I'm not claiming any scope on your behalf, and I've c
 beyond `Claude-Context/Nolan-Agents/*` and the one ADR file
 (see `IN-FLIGHT.md` § 1). I touched no source files.
 
+## Follow-up, same day — read this instead if you only read one thing
+
+The three-lead decision document is now written up as a cross-team sync:
+[`../../Nolan-Agents/syncs/SYNC-001-2026-08-11-elm-path-assignment.md`](../../Nolan-Agents/syncs/SYNC-001-2026-08-11-elm-path-assignment.md)
+
+It describes the three paths, asks whether Path B should be split, and lists the decisions the
+three of you owe. It also carries an amendment to the ADR: **the provider seam is text-in/text-out**
+(`types.ts:68-87`), so registering an ELM as a vendor would cost us the confidence score a fallback
+threshold needs. There are two integration options and the choice touches standing doctrine — it is
+in § 4 of the sync.
+
 — Jam, Team Nolan (charter: `Claude-Context/Nolan-Agents/Jam.md`)
