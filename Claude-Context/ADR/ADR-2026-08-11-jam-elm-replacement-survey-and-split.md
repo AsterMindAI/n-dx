@@ -115,9 +115,56 @@ prompts (`computeLLMClassifyAttempts`, `classify.ts:392-397`).
   vendor, not a fork**.
 - **Tiering seam already exists.** `resolveVendorModel(vendor, config, weight)` takes a
   `TaskWeight` of `"light" | "standard"`, and enrichment already routes naming-dominant pass 1 to a
-  cheaper model (`enrich-batch.ts:215`, `claude-client.ts:50-52`). **ELM is naturally a third tier
-  below `light`**, not a parallel universe. This is the cheapest possible integration path and it
-  is already half-built.
+  cheaper model (`enrich-batch.ts:215`, `claude-client.ts:50-52`).
+
+### ⚠️ Amendment 2026-08-11 — the vendor seam is text-to-text, and that is a problem
+
+*Added the same day, before acceptance, on further reading of the provider contract. It revises the
+integration recommendation below; the survey and the split are unchanged.*
+
+The provider contract is **string in, string out**:
+
+```ts
+interface CompletionRequest  { prompt: string; model: string; /* … */ }   // types.ts:68
+interface CompletionResult   { text: string; tokenUsage?: TokenUsage; }   // types.ts:82
+```
+
+An ELM's native signature is `predict(text) -> [{ label, prob }]`. Registered as a vendor behind
+`complete()`, an ELM would have to (1) receive a fully rendered prompt string — for classification
+that is the 17 archetype descriptions plus the file list plus JSON formatting instructions,
+built by `buildLLMClassifyPrompt` — (2) *reverse-engineer the structured input back out of that
+string*, and (3) re-serialize its labels as JSON text for `parseClassifyResponse` to parse again.
+
+**Two layers of parsing in each direction, to move a label.** That is brittle in exactly the place
+we cannot afford brittleness, and it throws away the ELM's confidence score, which is the thing a
+fallback threshold needs.
+
+There is a second friction: `LLMVendor` is a **closed union** — `"claude" | "codex" | "google"`
+(`provider-interface.ts`) — while `ProviderRegistry.register(vendor: string, …)` takes an open
+string. Adding an ELM vendor properly means editing `provider-interface.ts`, which is on the
+`OWNERSHIP.md` shared-file list.
+
+**So there are two candidate integrations, and the leads should pick one deliberately:**
+
+| | **(a) ELM as a registered vendor** | **(b) ELM as a pre-LLM tier at the call site** |
+|---|---|---|
+| Seam | `provider-registry.ts:96` | inside `classify.ts` / `reason.ts`, before `callClaude`/`spawnClaude` |
+| Flow | prompt string → parse → predict → serialize JSON | features → predict → label + confidence |
+| Confidence score | lost (must be re-encoded as text) | available natively, so a fallback threshold is trivial |
+| Shared files touched | `provider-registry.ts`, `provider-interface.ts` | none |
+| Fits the generation sites (Tier C) | yes | n/a — they stay on a hosted model |
+| Fits the two Tier A sites | poorly | well |
+
+**(b) does not violate the standing rule.** "The ELM is a registered vendor, not a fork" exists to
+stop ELM being bolted *into the existing provider files*, where all three teams collide. Option (b)
+touches no provider file at all — it adds a tier in front of the call, in the package that owns
+that call, and falls through to the untouched hosted path below a confidence threshold. It is
+strictly less invasive than (a), not more.
+
+My reading is that **(b) is right for the two Tier A call sites and (a) is right for nothing we
+currently have** — (a) would only pay off if we later wanted an ELM to serve *generation* sites,
+which the survey says it cannot. But this is a call for the three leads, because it touches the
+standing doctrine, so it is presented as an option rather than decided here.
 
 ## Decision
 
@@ -134,7 +181,7 @@ saved.
 | | **Team A — provider & measurement** | **Team B — classification** | **Team C — granularity** |
 |---|---|---|---|
 | **Owns** | `packages/llm-client/src/` | `packages/sourcevision/src/analyzers/` | `packages/rex/src/analyze/` |
-| **Deliver** | ELM registered as a vendor via `provider-registry.ts:96`; `TaskWeight` extended with an ELM tier; token accounting actually recording non-zero | ELM for the 17-class archetype task at `classify.ts:404`, behind a confidence threshold with LLM fallback | ELM for the 3-class enum at `reason.ts:1481`; resolve the Tier B prose question first |
+| **Deliver** | The shared ELM inference module (load/train/predict + confidence), the integration-shape decision (a) vs (b) above, and **token accounting that records non-zero** | ELM for the 17-class archetype task at `classify.ts:404`, behind a confidence threshold with LLM fallback | ELM for the 3-class enum at `reason.ts:1481`; resolve the Tier B prose question first |
 | **Class count** | n/a | **17** (random baseline 5.9%) | **3** (random baseline 33%) |
 | **First artifact** | Non-zero token numbers from a real `ndx analyze` | Seeded benchmark script + accuracy vs baseline | Product decision on `reasoning`, then seeded benchmark |
 | **Free training data** | n/a | `BUILTIN_ARCHETYPES` deterministic pass labels files at zero cost; `classify.test.ts:394+` is an existing regression harness | Existing proposals + recorded assessments |
