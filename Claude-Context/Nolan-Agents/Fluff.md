@@ -169,6 +169,25 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-11 (end of day) — Stale remote branch deleted
+
+**Closes the "Left undone" item in the entry below.** `origin/elm/nolan/agent-system-docs` has been
+deleted at the lead's instruction. Verified first that `git branch -r --contains` listed
+`origin/Nolan-Work` for its tip `ab8fde1d`, so the branch held nothing unique — the setup commit
+lives on `Nolan-Work`.
+
+`origin` is now `main`, `dev`, `Nolan-Work`, `Jarrett`, `Thomas_Branch`,
+`feat/astermind-elm-hello-world`, plus upstream-mirrored feature branches. **No `elm/*` branch
+exists on any remote, and none ever has for longer than a few hours** — the one I created during
+onboarding was the first and last. That is now the whole of the evidence for `TN-F1` § Context 1,
+and it is stronger for the branch being gone, not weaker.
+
+**Still true and still not fixed:** `NEW-AGENT.md` produces a broken checkout for anyone who
+onboards off `main`. `ADR-2026-08-11-fluff-branch-and-base-conventions.md` remains **Proposed** —
+waiting on the three leads. Nothing about deleting a branch changes that.
+
+---
+
 ### 2026-08-11 (later same day) — Moved to shared checkout; `TN-F1` ADR submitted
 
 **Correction to the entry below.** That entry says I am "the first agent on any team with a real
