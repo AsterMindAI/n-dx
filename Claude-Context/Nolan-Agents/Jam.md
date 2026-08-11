@@ -98,7 +98,14 @@ session doesn't "fix" them or mistake them for drift.
 
 ## Current state
 
-Set up 2026-08-10 as Team Nolan's first agent. Team Nolan's roster and backlog were both empty
+`TN-J1` delivered 2026-08-11 as
+[`ADR-2026-08-11-jam-elm-replacement-survey-and-split.md`](../ADR/ADR-2026-08-11-jam-elm-replacement-survey-and-split.md)
+(status **Proposed**). The survey's headline: **only 2 of 22 LLM call sites are ELM-replaceable**,
+and the project currently has **no way to measure token usage**, which is the more urgent problem.
+Nothing is blocked on work — `TN-J2` waits on a three-lead decision about the split, and `TN-J3`
+(zero token counters) is unclaimed. No source files have been touched.
+
+Prior state, retained: set up 2026-08-10 as Team Nolan's first agent. Team Nolan's roster and backlog were both empty
 before this; `IN-FLIGHT.md` had never been used (no claims, no team status lines, no fork-sync
 date). No `elm/*` branch exists on any remote. Nothing is in flight anywhere that touches this
 work — confirmed against an empty board and by the lead. First task claimed as `TN-J1`; the survey
@@ -121,6 +128,74 @@ itself has not started.
 ## Session log
 
 Newest at the top. **Do not edit past entries** — append corrections as a new entry.
+
+---
+
+### 2026-08-11 — TN-J1: surveyed all 22 LLM call sites; split proposed; measurement gap found
+
+**Did:**
+- Triaged every LLM call site in the monorepo by output shape. Two chokepoints:
+  `callClaude` (`sourcevision/analyzers/claude-client.ts:145`, 4 sites) and `spawnClaude`
+  (`rex/analyze/llm-bridge.ts:135`, 18 sites); hench drives CLI agent sessions separately.
+- Wrote `ADR-2026-08-11-jam-elm-replacement-survey-and-split.md` and sent notes to both other
+  teams' inboxes. Marked `TN-J1` DONE; opened `TN-J2` (leads' decision) and `TN-J3` (token
+  counters). Released my `IN-FLIGHT.md` claim and posted the findings to § 3.
+
+**Learned:**
+- **Only 2 of 22 sites are classification-shaped.** `classifyBatchWithLLM`
+  (`classify.ts:404`, 17 archetype IDs validated against `validIds`) and `assessGranularity`
+  (`reason.ts:1481`, `z.enum(["break_down","consolidate","keep"])` at `:1327`). The other 20 emit
+  PRD trees, zone names, descriptions and findings — generation, not classification.
+- **The 17-class problem is the real technical risk.** hello-world proved 3 classes / 33% baseline
+  / 6 held-out samples. Random baseline at 17 classes is 5.9%. The 66% floor must not be quoted as
+  evidence for the production task; a 6-sample set cannot separate 66% from 83%.
+- **A tiering seam already exists** — `resolveVendorModel(vendor, config, weight)` with
+  `TaskWeight` `"light" | "standard"`; enrichment pass 1 already routes to a cheap model
+  (`enrich-batch.ts:215`). ELM slots in as a third tier rather than a parallel path.
+- **Free labelled training data exists** for the classification task: the deterministic
+  `BUILTIN_ARCHETYPES` pass labels files at zero cost, and `classify.test.ts:394+` is a ready
+  regression harness.
+- **Correction to the task's premise: "rex placement" is already deterministic.**
+  `LEVEL_HIERARCHY` at `core/move.ts:91` and `core/structural.ts:125`, validated in
+  `recommend/create-from-recommendations.ts:373-386`; `rex/src/recommend/` contains zero LLM calls.
+  There is no token spend to remove there, and replacing rules with a model would be a regression.
+- **`enrichClassificationsWithLLM` is a misleading name** — it is the *classification* path
+  (replaceable), not the *enrichment* path (not replaceable). Cost me a wrong assumption early.
+- **Correction to my 2026-08-10 entry's handoff:** I recorded that `Nolan-Work` was *missing*
+  Jarrett's merged work from `origin/dev`. That was backwards. `git diff HEAD origin/dev` shows
+  **zero source difference** — all 15 differing files are docs, and `dev` is *behind* the charter
+  migration, still carrying the old `team/*.md` layout that `d1692a1d` removed. Merging `dev` into
+  `Nolan-Work` would resurrect those deleted files. Flagged for whoever does the `dev` integration.
+
+**Broke / still broken:**
+- Nothing broken by me — this session touched no source files.
+- **Found broken (not fixed):** token accounting reads `{"input":0,"output":0}` in all 6
+  `.hench/runs/*.json` despite parsers existing at `cli-provider.ts:348-385` and
+  `api-provider.ts:184`. Filed as `TN-J3`. **Not root-caused — this is a lead, not a finding.**
+- `pnpm typecheck` / `pnpm test` **not run again this session.** Documentation-only, no source
+  touched, so I have no claim to make about the tree's state.
+
+**Left undone and why:**
+- Did not chase the zero-token root cause — outside `TN-J1`, and per doctrine the default mid-task
+  is to file the report and keep going. Filed as `TN-J3`.
+- **No ELM was trained or measured.** The ADR deliberately makes no viability claim; proving the
+  17-class task is Team B's first deliverable under the proposed split.
+- Could not measure real classification volume — this checkout has no `.sourcevision/*.json`
+  artifacts, so the ~44-calls-per-analyze figure is a structural upper bound from
+  `LLM_BATCH_SIZE = 30` and a 1,319-file count, **not** a measurement.
+- Did not resolve the Tier B product question (granularity returns an enum *and* prose the CLI
+  renders); flagged for whoever takes that stream.
+
+**Notes sent / received:**
+- Sent: `Jarrett-Agents/Notes/NOTE-jam-to-jarrett-2026-08-11-elm-split-proposal.md`
+- Sent: `Thomas-Agents/Notes/NOTE-jam-to-thomas-2026-08-11-elm-split-proposal.md`
+- Received: none new.
+
+**Handoff:**
+- The split is **Proposed, not accepted** — it needs the three leads (`TN-J2`). Do not start a
+  stream on the strength of this ADR alone.
+- If Team Nolan wants momentum before that decision, `TN-J3` (token counters) is unclaimed,
+  independent of the split, and is the thing that makes every later saving provable.
 
 ---
 

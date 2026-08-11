@@ -19,7 +19,7 @@ owner a note before assuming it's stale — don't just delete it.
 
 | Since | Who | Team | What | Paths / command | Expected release |
 |---|---|---|---|---|---|
-| 2026-08-10 | Jam | Nolan | `TN-J1` — read-only survey of LLM call sites for ELM/KELM replacement, then an ADR proposing a three-way split of the migration. Claimed generously: the survey reads everywhere and the proposal concerns all three teams' future scopes, so this is a "we are looking at your territory" flag, not an edit claim. | Reads `packages/**`. Writes only `Claude-Context/Nolan-Agents/*` and one new `Claude-Context/ADR/ADR-2026-08-10-jam-*.md`. **No source files, no shared files.** | On ADR submission |
+| | | | | | |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -51,6 +51,21 @@ right now" so nobody has to ask.
 Things every team needs to know — ADRs accepted, interfaces changed, measured ELM results,
 direction changes. Link the ADR; don't restate it here.
 
+- **2026-08-11 — ELM replacement survey complete; three-way split proposed.** Ask Jam (Team Nolan).
+  [`ADR-2026-08-11-jam-elm-replacement-survey-and-split.md`](ADR/ADR-2026-08-11-jam-elm-replacement-survey-and-split.md),
+  status **Proposed** — needs the three leads. Three things every team should know before claiming
+  ELM work:
+  - **Only 2 of 22 LLM call sites are ELM-replaceable.** The other 20 generate prose and stay on a
+    hosted model. Candidates: sourcevision archetype classification
+    (`packages/sourcevision/src/analyzers/classify.ts:404`, 17 classes) and rex granularity
+    assessment (`packages/rex/src/analyze/reason.ts:1481`, 3 classes).
+  - **"rex placement" is already deterministic** (`core/move.ts:91`, `core/structural.ts:125`;
+    `rex/src/recommend/` has zero LLM calls) — there is no token spend there to remove.
+  - **Token accounting currently reads zero** in all 6 `.hench/runs/*.json`, so the project has no
+    baseline. Tracked as `TN-J3`, unclaimed. A lead, not a root-caused finding.
+  - The hello-world's 66% floor is **3-class, 6 held-out samples, seed 42, 33% baseline**. The real
+    classification target is 17 classes / 5.9% baseline. Do not quote the former as evidence for
+    the latter.
 - <date> — <what changed, who to ask>
 
 ---
