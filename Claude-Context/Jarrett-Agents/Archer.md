@@ -35,21 +35,47 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
-`classify.ts` has now been read in full and the fused-call caveat is resolved for this specific
-site (see session log below) — the `reason` half of the LLM call has no downstream consumer, so no
-call-splitting is needed before an ELM swap. Combined with Knight's confirmation that base `ELM`
-(text mode) fits, `enrichClassificationsWithLLM` is unblocked as the first ELM build target: the
-remaining work is prototyping, not further investigation.
+`ADR-2026-08-11-jarrett-elm-prefilter-classify.md` and
+`IMPL-2026-08-11-jarrett-classify-elm-swap.md` are drafted (backlog `TJ-A1`, `BLOCKED` — see Next
+up). Design: insert the ELM as a new stage *between* `classifyFile` and
+`enrichClassificationsWithLLM`, not inside either — it only ever sees the leftover
+`archetype: null` population, and anything it isn't confident about still falls through to the LLM
+exactly as today. ADR Status is Proposed; the IMPL's Evidence-gathering step (train/eval script,
+random-baseline comparison) has to run and clear its gate before any production wiring happens or
+Status can move to Accepted.
 
 ## Next up
 
 - [x] Read `packages/sourcevision/src/analyzers/classify.ts` in full — confirm
       `enrichClassificationsWithLLM`'s call shape, batching (30/call), and whether it's a fused
       call. **Done (2026-08-11)** — see session log.
-- [ ] Prototype base `ELM` (text mode) against that call site using the algorithmic pass's
-      evidence-scored output as training data, per the 2026-07-30 next-step note.
+- [x] Write up the ELM pre-filter proposal as an ADR + IMPL. **Done (2026-08-11)** — see session
+      log; both docs currently `Proposed`/`Not started`.
+- [ ] Resolve the IMPL's open questions before Step 1 can start: worktree-vs-shared-checkout
+      (blocks branch/worktree creation), AsterMind dependency shape (`@astermind/astermind-elm` vs.
+      vendored `ELM.ts` — determines whether `IN-FLIGHT.md` needs a `package.json` claim), second
+      codebase for the held-out split, acceptance margin over random baseline.
+- [ ] Once unblocked: build the training-data extraction + committed eval script (IMPL steps 3-4)
+      and run the Step 5 gate before touching any production code.
 
 ## Session log
+
+### 2026-08-11 — ADR + IMPL drafted for the ELM pre-filter
+
+Wrote `Claude-Context/ADR/ADR-2026-08-11-jarrett-elm-prefilter-classify.md` and
+`Claude-Context/IMPL/IMPL-2026-08-11-jarrett-classify-elm-swap.md`, and claimed `TJ-A1` in
+`BACKLOG.md`. Captures the design from this session's discussion: ELM sits between the two existing
+passes as a pre-filter over `classifyFile`'s leftovers, single base `ELM` (text mode) first per
+Knight's `DeepELM`-is-overkill read, chain/kernel variants deferred until a held-out accuracy check
+says the simple model isn't enough. ADR's Evidence section is explicitly unmeasured — states
+methodology only (task framing, split plan, seed requirement, random-baseline-vs-measured gate) so
+Status stays Proposed until the IMPL's eval script actually runs.
+
+Status is `BLOCKED`, not `IN-PROGRESS`: the IMPL surfaced four open questions (worktree vs. shared
+checkout, dependency shape, held-out-split codebase, acceptance margin) that block Step 1, none of
+which were resolved by this session's design discussion. Flagged in `IN-FLIGHT.md` § 2 for
+visibility; no cross-team note needed yet since nothing here touches another team's owned path
+(would change if the AsterMind dependency lands in `package.json` — see IMPL Step 1).
 
 ### 2026-08-11 — classify.ts verified at file:line; fused-call caveat resolved for this site
 

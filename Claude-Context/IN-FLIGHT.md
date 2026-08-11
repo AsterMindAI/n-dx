@@ -38,7 +38,9 @@ One line per team, updated by that lead. This is the standing answer to "what is
 right now" so nobody has to ask.
 
 - **Team Nolan:** <in flight · shipped since last update · blockers>
-- **Team Jarrett:** <…>
+- **Team Jarrett:** in flight — `TJ-A1`, ELM pre-filter stage for `classify.ts`'s LLM fallback
+  (`ADR-2026-08-11-jarrett-elm-prefilter-classify.md`). Docs-only so far, no code touched yet;
+  BLOCKED on open questions in the IMPL before implementation starts.
 - **Team Thomas:** <…>
 
 **Fork sync:** last `upstream/main` → `origin/main` fast-forward: _<date, by whom>_

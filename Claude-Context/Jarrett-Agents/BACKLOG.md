@@ -11,4 +11,4 @@ if you collide on rebase, pick another item.
 
 | ID | Item | Related ADR / IMPL | Status | Claimed by |
 |---|---|---|---|---|
-| | | | | |
+| TJ-A1 | ELM pre-filter stage before classify.ts's LLM fallback (`enrichClassificationsWithLLM`) — prototype + eval script first, production wiring gated on results | `ADR-2026-08-11-jarrett-elm-prefilter-classify.md`, `IMPL-2026-08-11-jarrett-classify-elm-swap.md` | BLOCKED (worktree-vs-shared-checkout decision + dependency-shape open question) | Archer |
