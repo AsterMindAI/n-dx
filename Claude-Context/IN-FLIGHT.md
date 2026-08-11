@@ -19,7 +19,7 @@ owner a note before assuming it's stale — don't just delete it.
 
 | Since | Who | Team | What | Paths / command | Expected release |
 |---|---|---|---|---|---|
-| 2026-08-11 | Fluff | Nolan | `TN-F1` — reconciling the branch-naming / `dev`-branch / base-branch mismatch across the doctrine docs. **This claims shared files:** everything in `Claude-Context/` root is on the "nobody edits unilaterally" list, and these four docs bind all three teams. No doc is edited until the ADR is accepted — this row is claiming the *ADR and the eventual single-pass edit*, so a second agent doesn't start the same reconciliation. | Writes `Claude-Context/Nolan-Agents/Fluff.md`, `Claude-Context/Nolan-Agents/{README,BACKLOG}.md`, one new `Claude-Context/ADR/ADR-2026-08-11-fluff-*.md`, and this row. **Pending leads' acceptance:** `GITHUB-WORKFLOW.md`, `OWNERSHIP.md`, `NEW-AGENT.md`, `claude-context-instruction`, `Command-Structure`. **No source files.** | On the leads' decision + single-pass doc edit |
+| 2026-08-11 | Fluff | Nolan | `TN-F1` — reconciling the branch-naming / `dev`-branch / base-branch mismatch across the doctrine docs. **This claims shared files:** everything in `Claude-Context/` root is on the "nobody edits unilaterally" list, and these four docs bind all three teams. No doc is edited until the ADR is accepted — this row is claiming the *ADR and the eventual single-pass edit*, so a second agent doesn't start the same reconciliation. | Writes `Claude-Context/Nolan-Agents/Fluff.md`, `Claude-Context/Nolan-Agents/{README,BACKLOG}.md`, one new `Claude-Context/ADR/ADR-2026-08-11-fluff-*.md`, and this row. **Pending leads' acceptance:** `GITHUB-WORKFLOW.md`, `OWNERSHIP.md`, `NEW-AGENT.md`, `claude-context-instruction`, `Command-Structure`. **No source files.** Fluff is on the **shared checkout**, branch `Nolan-Work`, alongside Jam (lead's decision 2026-08-11) — so any state-writing command gets its own claim row here first. This task runs none. | On the leads' decision + single-pass doc edit |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -66,6 +66,23 @@ direction changes. Link the ADR; don't restate it here.
   - The hello-world's 66% floor is **3-class, 6 held-out samples, seed 42, 33% baseline**. The real
     classification target is 17 classes / 5.9% baseline. Do not quote the former as evidence for
     the latter.
+- **2026-08-11 — the documented branch convention has never been used, and `NEW-AGENT.md` currently
+  produces a broken checkout.** Ask Fluff (Team Nolan).
+  [`ADR-2026-08-11-fluff-branch-and-base-conventions.md`](ADR/ADR-2026-08-11-fluff-branch-and-base-conventions.md),
+  status **Proposed** — needs the three leads. What every team should know now, before the ADR is
+  decided:
+  - **Do not base a new agent's checkout on `main`.** `origin/main` contains no `Claude-Context/`
+    (`git ls-tree --name-only origin/main | grep -i claude` → `.claude`, `CLAUDE.md` only). An agent
+    onboarded per doctrine gets no charters, no backlog, and no doctrine. Use `dev` or your team
+    branch until this is resolved.
+  - **`origin/dev` is 10 commits ahead of `main`** and carries the agent system. This is merge lag,
+    not a deliberate exclusion — merging `dev` → `main` needs a second lead's sign-off and is
+    proposed in the ADR, not done.
+  - **No `elm/*` branch has ever existed on any remote.** Real flow is `<TeamBranch>` → `dev` →
+    `main`. Four documents say otherwise.
+  - **Five of the six agents on this project run on shared checkouts**, which `Command-Structure`
+    § *One agent, one worktree* calls not-optional. The ADR proposes amending the rule to match
+    practice and name the mitigation. Notes sent to Teams Jarrett and Thomas.
 - <date> — <what changed, who to ask>
 
 ---

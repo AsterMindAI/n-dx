@@ -3,10 +3,11 @@
 - **Team:** Team Nolan
 - **Lead:** Nolan
 - **Backlog prefix:** `TN-F`
-- **Branch:** `elm/nolan/agent-system-docs` — see *Open question on my own branch name* below. This
-  follows the convention currently written in `GITHUB-WORKFLOW.md`, which is the same convention
-  my first task exists to change. It may get renamed by my own work.
-- **Worktree:** `/Users/nolanmoore/n-dx-fluff` (`../n-dx-fluff` from the shared checkout)
+- **Branch:** `Nolan-Work` — the lead's decision, 2026-08-11. Same branch as Jam. This is **not**
+  the documented `elm/<lead>/<topic>` convention; see *Deviations from doctrine* below.
+- **Worktree:** _(none — shared checkout at `/Users/nolanmoore/n-dx-1`)_. Lead's decision,
+  2026-08-11, reversing my initial worktree setup the same day. Consequence: every state-writing
+  command must be claimed in `IN-FLIGHT.md` first.
 - **Inbox:** `Claude-Context/Nolan-Agents/Notes/`
 
 ## Scope
@@ -56,8 +57,9 @@ stale — a wrong standing fact is worse than a missing one.**
   The directory exists on `origin/dev`, `origin/Nolan-Work`, and `origin/Jarrett` only.
   **Consequence:** `NEW-AGENT.md` Step 4's `git worktree add ../n-dx-<name> -b elm/<lead>/<topic>`
   branches off the current HEAD, and doctrine elsewhere says branch off `main` — either would give
-  an agent a worktree with no agent system in it. This worktree is based on `origin/Nolan-Work`
-  for that reason.
+  an agent a worktree with no agent system in it. My short-lived worktree was based on
+  `origin/Nolan-Work` for exactly that reason; the finding stands regardless of the worktree being
+  removed, and it is the sharpest single item in `TN-F1`.
 - Real branches on `origin`: `main`, `dev`, `Nolan-Work`, `Jarrett`, `Thomas_Branch`,
   `feat/astermind-elm-hello-world`, plus assorted upstream-mirrored feature branches.
   **No `elm/*` branch existed on any remote before mine** — the documented convention has never
@@ -86,12 +88,16 @@ Four separate mismatches, all pointing the same way — the docs describe a flow
 - `.rex/prd_tree/`, `.sourcevision/`, and `.hench/` have **no file locking**. Concurrent writers
   lose data with **no error** — last writer silently wins (root `CLAUDE.md`; `Command-Structure`
   § One agent, one worktree).
-- Fluff has its own worktree, so local `ndx plan|work|ci|refresh|self-heal` runs are safe without
-  an `IN-FLIGHT.md` claim. **This is the only agent that currently has that property** — Jam and
-  all three of Jarrett's agents are on shared checkouts.
+- **Fluff runs in the shared checkout** (lead's decision, 2026-08-11 — see *Deviations* below), so
+  `ndx plan`, `ndx work`, `ndx ci`, `ndx refresh`, `ndx self-heal`, and any rex MCP write **must be
+  claimed in `IN-FLIGHT.md` before running and released after.** `ndx status` and `ndx usage` are
+  read-only and always safe.
+- **No agent on any team currently has worktree isolation.** Jam, Fluff, and all three of
+  Jarrett's agents share checkouts. The claim board is the only thing preventing silent PRD
+  corruption, and it only works if every agent actually uses it.
 - Observed live on 2026-08-11: the shared checkout's HEAD moved from `9c8dc5b1` to `ef99e4e3`
-  (Jam's ADR) *during* my setup session. Nothing was lost because I had written nothing, but that
-  is exactly the mechanism — this is why the worktree is not a formality.
+  (Jam's ADR) *during* my setup session. Nothing was lost because I had written nothing at that
+  point — but that is the mechanism, observed once already on day one.
 
 ### The ELM library *(inherited — I have run none of this)*
 
@@ -117,40 +123,109 @@ Four separate mismatches, all pointing the same way — the docs describe a flow
   (`classify.ts:404`, 17 labels) and `assessGranularity` (`reason.ts:1481`, 3 labels).
   Not my work; recorded so I don't re-derive it.
 
-## Open question on my own branch name
+## Deviations from doctrine (decided by the lead, 2026-08-11)
 
-My first task is to fix the `elm/<lead>/<topic>` convention. I had to pick a branch name *before*
-that fix exists, so I used the convention as currently written, on the reasoning that a rule in
-force stays in force until the leads change it — I should not pre-empt the outcome of my own task
-by unilaterally adopting the replacement. If the accepted fix names something else, this branch
-gets renamed. Flagged rather than quietly split.
+Written down so a future session doesn't "fix" them or mistake them for drift. Same two deviations
+Jam carries, for the same stated reason.
+
+1. **Shared checkout, not a worktree.** `Command-Structure` § *One agent, one worktree* calls this
+   not-optional because of the unlocked-state hazard. I set up a worktree at `../n-dx-fluff` during
+   onboarding; the lead reversed it the same day for ease of oversight, and it was removed
+   (`git worktree remove`) after its one commit was fast-forwarded onto `Nolan-Work`. Mitigation in
+   force: claim every state-writing command in `IN-FLIGHT.md`. My work is documentation-only, so my
+   own exposure is low — the risk is real for whoever runs `ndx plan|work|ci` next.
+2. **Branch is `Nolan-Work`, shared with Jam** — not `elm/nolan/<topic>`. Deviates from
+   `GITHUB-WORKFLOW.md` § 2 and `OWNERSHIP.md` § Naming conventions. Note the irony and do not
+   resolve it silently: **`TN-F1` is the task of deciding what that convention should be**, and the
+   lead's choice here is now the strongest evidence of what the teams actually do.
+3. **`dev` is the integration branch.** `GITHUB-WORKFLOW.md` documents only `branch → origin/main`
+   and describes no `dev` branch. Raised by Jam in `IN-FLIGHT.md` § 7; folded into `TN-F1`.
 
 ## Current state
 
-Set up 2026-08-11 as Team Nolan's second agent, and the first agent on any team with a real
-worktree. Nothing edited yet beyond my own setup files. `TN-F1` is claimed but not started — the
-`NEW-AGENT.md` process ends at a report-back checkpoint, and the fix itself is a doctrine change
-that needs the leads, so the next step is an ADR, not a doc edit.
+Set up 2026-08-11 as Team Nolan's second agent. Briefly had a worktree; now on the shared checkout
+on `Nolan-Work` per the lead. Setup commit `ab8fde1d` is on `Nolan-Work` and pushed. `TN-F1` is
+claimed and the ADR is in progress — the doctrine edits themselves wait on the leads' decision.
 
 ## Next up
 
-- [ ] `TN-F1` — write `ADR-2026-08-11-fluff-<slug>.md` laying out the four mismatches above with
-      their evidence, and proposing one coherent convention that covers: per-agent branch naming,
-      the `dev` branch's role, and which branch is a valid base for a new agent's worktree.
-- [ ] Get it in front of a second lead. A rule binding all three teams is collective command —
-      Jam already opened this as a question in `IN-FLIGHT.md` § 7, so the leads are on notice.
+- [x] `TN-F1` — ADR written and submitted:
+      `ADR-2026-08-11-fluff-branch-and-base-conventions.md`, status **Proposed**.
+- [x] Notes sent to Teams Jarrett and Thomas asking them to confirm their own branch flows, which I
+      inferred and did not verify.
+- [ ] **Waiting on the three leads.** Nothing to do until they accept, amend, or reject. Do not
+      start editing doctrine files in the meantime — that is the whole reason this went to an ADR.
 - [ ] **Only after acceptance:** edit `GITHUB-WORKFLOW.md`, `OWNERSHIP.md`, `NEW-AGENT.md`,
-      `claude-context-instruction`, and `Command-Structure` in one pass, so the four docs cannot
-      disagree with each other again. Close Jam's `IN-FLIGHT.md` § 7 item in the same commit.
-- [ ] Fix `NEW-AGENT.md`'s worktree step so it names a base branch that actually carries
-      `Claude-Context/`. As written it produces a broken worktree for the next agent.
-- [ ] Consider proposing that `OWNERSHIP.md` § Untracked-state hazard record Team Nolan's actual
-      choice — it is still blank, and Nolan now has one agent on each side of it (Jam shared,
-      Fluff worktree).
+      `claude-context-instruction`, and `Command-Structure` in **one commit**, so the four docs
+      cannot drift apart again. Close Jam's `IN-FLIGHT.md` § 7 item and mine in the same commit.
+- [ ] Chase the `dev` → `origin/main` merge separately — it needs a second lead's sign-off and is
+      the item that actually unbreaks onboarding. The doc edits are cosmetic next to it.
+- [ ] Propose that `OWNERSHIP.md` § Untracked-state hazard record Team Nolan's real choice
+      (shared checkout, both agents). Still blank.
 
 ## Session log
 
 Newest at the top. **Do not edit past entries** — append corrections as a new entry.
+
+---
+
+### 2026-08-11 (later same day) — Moved to shared checkout; `TN-F1` ADR submitted
+
+**Correction to the entry below.** That entry says I am "the first agent on any team with a real
+worktree" and that the worktree is why the unlocked-state hazard doesn't apply to me. **Both are now
+false.** The lead reversed the worktree decision the same day, for ease of oversight. I am on the
+shared checkout at `/Users/nolanmoore/n-dx-1`, on `Nolan-Work`, alongside Jam. The mitigation is the
+one for shared checkouts: claim every state-writing command in `IN-FLIGHT.md`. The roster block in
+`Nolan-Agents/README.md` has been corrected in place too, since the wrong version landed there.
+
+**Did:**
+- Fast-forwarded `Nolan-Work` to my setup commit `ab8fde1d` (clean, 1 ahead / 0 behind — nobody had
+  moved it), pushed, then `git worktree remove ../n-dx-fluff` and deleted the merged local branch
+  `elm/nolan/agent-system-docs`. Nothing was lost; the commit lives on `Nolan-Work`.
+- Wrote `ADR-2026-08-11-fluff-branch-and-base-conventions.md` (Proposed) — four documented
+  mismatches, a proposed convention, five alternatives with reasons, and the git commands that
+  reproduce every claim.
+- Sent notes to Teams Jarrett and Thomas. Both ask the same thing: confirm your own branch flow,
+  which I inferred from the branch list and PR #5 and did **not** verify with you.
+- Updated `IN-FLIGHT.md` § 1 (claim), § 3 (findings), § 7 (open question); `BACKLOG.md` `TN-F1`
+  now links the ADR.
+
+**Learned:**
+- **The `origin/main` gap is merge lag, not design.** `origin/dev` is 10 ahead of `main` and 3
+  behind; `main`'s 3 are a `profile/*.md` add and its revert. My earlier framing implied `main`
+  deliberately excludes the agent system — it does not, `dev` has just never been merged down. This
+  changed the recommendation materially: the real fix is merging `dev` → `main` (needs a second
+  lead), and documenting `dev` as the base is only the stopgap.
+- The `elm/*` branch I created during onboarding was the first and only one to ever exist on any
+  remote, and it lasted about an hour. That is the cleanest possible evidence for the ADR.
+
+**Broke / still broken:**
+- Nothing run against source. **`pnpm typecheck` and `pnpm test` still NOT run** — this session
+  touched only Markdown under `Claude-Context/`.
+- **Still broken and not fixed by this ADR:** `NEW-AGENT.md` continues to produce a broken checkout
+  for anyone who onboards off `main` today. The ADR is *Proposed*; nothing is fixed until the leads
+  decide and the doc edits land. Team Thomas has no agents yet and is the next likely victim — the
+  note to them says so and gives the workaround.
+
+**Left undone and why:**
+- **No doctrine file edited.** Deliberate, and the point of the ADR — a rule binding three teams is
+  collective command.
+- **`origin/elm/nolan/agent-system-docs` still exists on the remote.** Its only commit is on
+  `Nolan-Work`, so it is redundant and now a misleading "Fluff is working here" signal. Deleting a
+  remote branch is outward-facing; asked the lead rather than doing it.
+- `IN-FLIGHT.md` § 2 "Where each team is" still blank for all three teams — the lead's line.
+- `OWNERSHIP.md` § Untracked-state hazard still blank. Shared file, lead's call; carried as a
+  proposal in *Next up*.
+
+**Notes sent / received:**
+- Sent: `Jarrett-Agents/Notes/NOTE-fluff-to-jarrett-2026-08-11-branch-and-base-conventions.md`,
+  `Thomas-Agents/Notes/NOTE-fluff-to-thomas-2026-08-11-branch-and-base-conventions.md`.
+- Received: none new.
+
+**Handoff:**
+- Do not touch the doctrine docs. Check whether Jarrett or Thomas replied in
+  `Nolan-Agents/Notes/`; their answers are a stated dependency of Decision item 1. If the ADR is
+  accepted, do all five doc edits in one commit.
 
 ---
 
