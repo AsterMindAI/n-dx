@@ -38,9 +38,12 @@ One line per team, updated by that lead. This is the standing answer to "what is
 right now" so nobody has to ask.
 
 - **Team Nolan:** <in flight · shipped since last update · blockers>
-- **Team Jarrett:** in flight — `TJ-A1`, ELM pre-filter stage for `classify.ts`'s LLM fallback
-  (`ADR-2026-08-11-jarrett-elm-prefilter-classify.md`). Docs-only so far, no code touched yet;
-  BLOCKED on open questions in the IMPL before implementation starts.
+- **Team Jarrett:** in flight — `TJ-A1` (Archer, worktree `../n-dx-jarrett`) and `TJ-K1` (Knight,
+  worktree `../n-dx-knight`), two independent implementations of the same ADR
+  (`ADR-2026-08-11-jarrett-elm-prefilter-classify.md`) built without cross-reading each other's
+  code, per the user's request for a genuine comparison. Neither has touched production code
+  (`classify.ts`/`analyze-phases.ts`) yet — both gated on their own eval script clearing the ADR's
+  precision-at-threshold bar first.
 - **Team Thomas:** <…>
 
 **Fork sync:** last `upstream/main` → `origin/main` fast-forward: _<date, by whom>_
@@ -53,7 +56,25 @@ right now" so nobody has to ask.
 Things every team needs to know — ADRs accepted, interfaces changed, measured ELM results,
 direction changes. Link the ADR; don't restate it here.
 
-- <date> — <what changed, who to ask>
+- 2026-08-12 — **`@astermind/astermind-community` was already a root `package.json` dependency
+  before `TJ-A1`/`TJ-K1` started** — added in pre-existing commit `43d6db51` ("ELM hello-world").
+  The § 1 claim below (`packages/sourcevision/package.json`) names the wrong path; the actual
+  dependency lives in root `package.json`, already on `main`/`Jarrett`. No new install was needed
+  for either implementation. Ask Archer or Knight if the claim row should be corrected/released.
+- 2026-08-12 — **`ELM.train(trainingExamples)` silently ignores its argument** — confirmed by
+  running the installed `@astermind/astermind-community@3.0.0` package directly (not just reading
+  source): `elm.train(TRAINING_SET)` and `elm.train()` produce byte-identical models (same `W`,
+  `beta`, same predictions) because `train()`'s first parameter is `augmentationOptions`
+  (`{suffixes?, prefixes?, includeNoise?}`), not a data array — passing an array of examples just
+  gets silently treated as an options object with none of its expected keys. `scripts/
+  elm-hello-world.mjs`'s "trained on 30 paths... accuracy on held-out paths: 83%" output is real
+  but misleading: the 30-example `TRAINING_SET` it logs the length of is never actually used by the
+  library call beneath it — the reported accuracy reflects training on augmented variants of the
+  three bare category name strings only. Confirms Archer's `IMPL-2026-08-11-...` finding (verified
+  there by reading source) with a live reproduction; use `trainFromData()` with manually-encoded
+  vectors for real labeled data, as both `TJ-A1` and `TJ-K1` already do. The hello-world script's
+  header comment is now inaccurate and worth a follow-up fix — out of scope for both IMPLs, flagging
+  here so it doesn't get lost.
 
 ---
 
