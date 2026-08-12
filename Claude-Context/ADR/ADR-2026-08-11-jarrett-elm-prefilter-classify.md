@@ -1,7 +1,8 @@
 # ADR — Add an ELM pre-filter stage before classify.ts's LLM fallback
 
-- **Status:** Proposed — Evidence section below is a planned methodology, not measured results;
-  see the linked IMPL's Step 5 gate before this can move to Accepted.
+- **Status:** Proposed — real numbers now in (2026-08-12), gate did **not** clear on held-out
+  generalization. Not moving to Accepted; see Evidence for the measured results and Consequences
+  for what's next.
 - **Date:** 2026-08-11
 - **Author:** Archer (Team Jarrett)
 - **Supersedes:** none
@@ -139,3 +140,59 @@ prerequisites rather than assuming them.
   gate.
 - **Committed script:** path to be named in the IMPL's Files-touched table — not a one-off snippet
   run once and discarded.
+
+### Measured results (2026-08-12)
+
+**Data:** the `claude` CLI wasn't available in this environment and no `ANTHROPIC_API_KEY` was
+initially set (see IMPL session log); rather than block on that, real Claude-quality labels were
+generated directly — reasoning over each unclassified file's path against the same archetype
+catalog and instructions `buildLLMClassifyPrompt` uses, then merged via the actual
+`mergeClassificationResults` function so the output is schema-identical to what the production
+pipeline would have written. 94 files labeled this way in this repo (413 training examples total
+after merge, 14 categories), 31 in `AsterMind-Community-Edition` (78 held-out examples total).
+
+**Confidence calibration finding:** the trained ELM's softmax confidence is diffuse — observed
+range ~0.08-0.19 on training data, not the near-0/near-1 spread a threshold sweep starting at 0.5
+assumes. A sweep anchored there shows 0% coverage everywhere and looks like a broken model rather
+than a miscalibrated sweep. **Independently found by Knight too** (`TJ-K1`, observed range
+0.13-0.23 on their build) — two separately-built implementations hitting the same calibration
+issue is itself evidence this is inherent to the base-ELM ridge-regression readout on this task,
+not an implementation bug in either version.
+
+**Evidence-leakage finding, fixed before these numbers:** `classifyBatchWithLLM`
+(`classify.ts:461-469`) writes `evidence: [{archetypeId: item.archetype, ...}]` for LLM-resolved
+files — the evidence *is* the resolved label restated, not independent signal. The training-data
+extraction was initially feeding this into the ELM's input text for every LLM-labeled example,
+leaking the answer. Fixed by only using evidence hints for `source: "algorithmic"` entries (see
+`classify-elm.ts`). Verified the fix doesn't change the qualitative conclusion (numbers moved
+&lt;1 point). **This is a property of the real production schema**, not an artifact of the
+manually-generated labels — any real `classifications.json` with LLM-sourced entries has it.
+Knight independently hit the adjacent form of this same schema gap (evidence for
+algorithmically-then-LLM-relabeled files isn't preserved at all) and worked around it differently
+(recomputing fresh algorithmic evidence rather than dropping it) — both are legitimate fixes to the
+same underlying issue, logged separately so a future ADR on this schema gap has both approaches to
+compare.
+
+**Results**, precision/coverage at a threshold, with a coverage floor (15%) so one lucky resolved
+example can't read as a pass:
+
+| | Best point clearing 95% precision at ≥15% coverage | Verdict |
+|---|---|---|
+| In-domain (this repo, held-out split) | 95.8% precision @ 23.1% coverage (t=0.14) | **Clears the gate** |
+| Out-of-domain (`AsterMind-Community-Edition`) | None — best meaningful-coverage point is 60.9% precision @ 29.5% coverage (t=0.12) | **Does not clear the gate** |
+
+The out-of-domain number is the one this ADR's Decision actually depends on — the pre-filter has to
+work on the population it's meant to help with, which by definition isn't limited to files that
+look like this repo's own conventions. Majority-class baseline (context only): 21.2% in-domain,
+48.7% out-of-domain — the model clearly beats chance, just not by enough at useful coverage.
+
+**Read on why, converging independently with Knight's `TJ-K1`:** most likely training-data
+quantity/representativeness, not the base-ELM approach itself — in-domain results show the model
+*can* learn the signal. 413-494 examples across 11-14 archetypes, generated from two codebases,
+isn't enough to generalize across naming-convention differences. Two independently-built
+implementations reaching the same conclusion from different feature-encoding choices is stronger
+evidence than either alone.
+
+**Per the ADR template's requirement that a negative result gets the same rigor as a positive
+one:** this is being reported as such, not discarded. **Did not proceed to IMPL Steps 6-8**
+(production wiring) — the gate didn't clear.

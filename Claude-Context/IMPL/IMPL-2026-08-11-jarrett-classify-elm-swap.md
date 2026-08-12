@@ -9,8 +9,10 @@
   exact collision class `OWNERSHIP.md` warns about). The cross-team-wide worktree-vs-shared-checkout
   decision is still formally open — this is a per-agent choice made under that section's "claim
   generously" guidance, not a resolution of the team-wide question.
-- **Status:** In progress — prototype/eval step underway. ADR is Proposed, not Accepted; Step 5's
-  gate must pass before this goes further than the eval script.
+- **Status:** Real numbers in (2026-08-12) — Step 5's gate did **not** clear on held-out
+  generalization (in-domain passed, out-of-domain didn't). Stopped here per the gate; did not
+  proceed to Steps 6-8. See ADR Evidence for full numbers. Not closing TJ-A1 — leaving open pending
+  the user's call on whether to gather more/better training data and retry.
 
 ## Scope
 
@@ -74,10 +76,13 @@
    why `../AsterMind-Community-Edition` isn't portable. Both files typecheck clean
    (`pnpm --filter @n-dx/sourcevision typecheck`, plus a targeted check of `scripts/`, which isn't
    in `tsconfig.json`'s `include`). **Can't actually run yet** — blocked on Step 2b.
-5. **Gate.** Only proceed past this point if precision at the chosen confidence threshold clears
-   the ADR's proposed ≥95% bar on held-out data. If it doesn't, stop and report back with the
-   numbers — per `ADR-TEMPLATE.md`, a negative result needs the same Evidence rigor as a positive
-   one, and this IMPL does not proceed on one.
+5. **Gate — evaluated 2026-08-12, did not clear.** In-domain held-out precision cleared the bar
+   (95.8% @ 23.1% coverage), but out-of-domain (`AsterMind-Community-Edition`, the number that
+   actually matters for this ADR's Decision) did not — best meaningful-coverage point 60.9%
+   precision @ 29.5% coverage, well short of 95%. Full numbers, methodology, and the two findings
+   that had to be fixed/calibrated along the way (confidence-threshold miscalibration,
+   evidence-leakage in the training-data extraction) are in the ADR's Evidence section. **Stopped
+   here — Steps 6-8 not started.**
 6. Wrap the trained model as `classify-elm.ts` — load the model, expose a
    `classifyWithELM(files): FileClassification[]` matching the shape
    `enrichClassificationsWithLLM` already returns.
@@ -134,8 +139,19 @@ was added, revert that `package.json`/lockfile change too and re-run `pnpm insta
       Replaced with a precision-at-threshold gate (proposed ≥95% precision on held-out data at the
       production confidence threshold) — see ADR Evidence for why a flat accuracy-vs-baseline
       number was the wrong metric given threshold-gated production use.
-- [ ] **Confidence threshold:** what makes an ELM resolution safe to skip the LLM entirely — mirror
-      `classifyFile`'s `PRIMARY_THRESHOLD`/`SECONDARY_THRESHOLD` (0.4/0.3), or calibrate separately
-      from the eval script's precision/coverage curve (step 4)? This is now the same calibration
-      exercise as the precision-at-threshold gate above, viewed from the production side rather
-      than the acceptance side — likely resolved together once step 4's curve exists, not before.
+- [x] **Confidence threshold — answered empirically, 2026-08-12, moot for now.** t=0.14 is where
+      in-domain precision clears 95% at usable coverage; but since the out-of-domain gate didn't
+      clear at any threshold, there's no threshold to actually ship yet. Revisit once/if retrained
+      on better data.
+- [ ] **New, 2026-08-12 — does the user want to gather more/better training data and retry, or is
+      this a "not yet, needs more data" conclusion to sit on?** Both `TJ-A1` and Knight's `TJ-K1`
+      converge on the same read: the approach works in-domain, but neither codebase's available
+      data includes enough of the actual target population (files hard enough that the algorithmic
+      pass alone can't resolve them) to generalize. More codebases analyzed with LLM enrichment on
+      would directly address this, but costs real tokens/time — the user's call, not either agent's
+      to spend unilaterally.
+- [ ] **New, 2026-08-12 — worth its own ADR:** the evidence-leakage finding (LLM-sourced
+      `classifications.json` entries have their own label restated as "evidence") is a real gap in
+      the production schema, not specific to this prototype. `TJ-A1` and `TJ-K1` each worked around
+      it differently. Someone should write this up properly, verified at file:line, per the same
+      doctrine that produced the original fused-call ADR requirement.

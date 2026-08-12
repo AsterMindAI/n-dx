@@ -35,6 +35,14 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**TJ-A1 has a real result (2026-08-12): gate did not clear.** In-domain held-out precision passed
+(95.8% @ 23.1% coverage), out-of-domain (`AsterMind-Community-Edition`) did not (best meaningful
+point 60.9% @ 29.5% coverage, vs. the 95% bar). This converges independently with Knight's `TJ-K1`
+result — same qualitative conclusion, different implementation. Did not proceed to production
+wiring (IMPL Steps 6-8). Full numbers and methodology in the ADR's Evidence section. Left open for
+the user's call on whether to gather better training data and retry, rather than declaring this
+either done or dead.
+
 Implementation underway on branch `elm/jarrett/classify-elm-prefilter`, worktree
 `../n-dx-jarrett` (separate commit history from this `Jarrett` branch — code lives there, design
 docs live here). `classify-elm.ts` and `scripts/eval-classify-elm.ts` are written and typecheck
@@ -71,6 +79,68 @@ Status can move to Accepted.
       gated on this).
 
 ## Session log
+
+### 2026-08-12 (later) — TJ-A1 real numbers: gate did not clear, converges with Knight's TJ-K1
+
+Picked up from the `claude`-CLI/API-key blocker logged earlier today. The user asked whether the
+API key could be skipped entirely — realized it could: I'm already an instance of Claude sitting in
+this conversation with full ability to make the same path→archetype judgment call a spawned Claude
+subprocess would, so I classified the unclassified files myself directly rather than routing
+through `callClaude`. Explicitly a stand-in for what `enrichClassificationsWithLLM` would produce,
+not a test of that function's own plumbing — fine for generating training-data ground truth, which
+is all this needed.
+
+**What I did:** read all 260 unclassified files in this repo and 83 in `AsterMind-Community-Edition`
+against the real archetype catalog (`archetypes.ts`, with descriptions — same info the real prompt
+shows), judged each on path/naming alone (no evidence hints existed for any of them — the
+algorithmic pass scored them all at 0), and deliberately let genuinely-ambiguous ones stay
+unclassified rather than force-fitting an archetype to inflate the training set. Caught myself
+almost mislabeling on keyword coincidence twice — `branch-work-store.ts` isn't a "store" (that's
+backend persistence, not frontend state management) and `token-validation-hook.ts` isn't a "hook"
+(no `use`-prefix, not React) — both left unclassified. Merged the results using the actual
+`mergeClassificationResults` function from the compiled package (not hand-rolled JSON) so the
+output is schema-identical to what the real pipeline writes: 94 files labeled here (517
+classified/166 unclassified total), 31 in AsterMind (78/52).
+
+**Ran the eval, hit two real issues, fixed both before trusting the numbers:**
+1. Confidence sweep (0.5-0.99) showed 0% coverage everywhere. Checked the actual distribution
+   before assuming the model was broken: ~0.08-0.20, far below where I'd started sweeping.
+   Recalibrated to 0.08-0.30. **Knight hit the identical issue independently** (their range:
+   0.13-0.23) — worth noting since two separate implementations landing on the same "confidence is
+   diffuse, not nearly binary" symptom is evidence about the base-ELM readout itself, not either
+   implementation.
+2. Realized my own `fileToText()` had a leakage bug: for `source: "llm"` files, the "evidence" I
+   was feeding the ELM as a training hint was `[{archetypeId: item.archetype, ...}]` —
+   **`classifyBatchWithLLM` in the real `classify.ts` (461-469) writes exactly this shape** — so the
+   hint text literally contained the answer for every LLM-labeled example, in the real schema, not
+   just my manually-generated data. Fixed by only using evidence hints for `source: "algorithmic"`
+   entries. Verified the fix barely moved the numbers (&lt;1 point) — the qualitative conclusion
+   was never dependent on the leak, but the schema-level finding is real and worth its own
+   write-up. **Knight independently found the adjacent version of this** (evidence isn't preserved
+   at all for algorithmically-then-LLM-relabeled files) and fixed it differently (recomputing fresh
+   algorithmic evidence rather than dropping it for llm-sourced entries). Both fixes are logged in
+   the ADR since a future ADR on this schema gap should have both approaches to compare, not just
+   mine.
+
+**Final results** (413 training examples/14 categories here, 78 held-out in AsterMind), precision
+at a threshold with a 15%-coverage floor so one lucky resolved example can't read as a pass:
+- **In-domain** (held-out split of this repo's own data): **95.8% precision @ 23.1% coverage**
+  (t=0.14) — clears the gate.
+- **Out-of-domain** (`AsterMind-Community-Edition` — the number the ADR's Decision actually
+  depends on): does **not** clear it. Best meaningful point: 60.9% precision @ 29.5% coverage.
+
+**Did not proceed to production wiring** (IMPL Steps 6-8) — the gate is specifically about
+generalizing beyond this repo's own conventions, and it didn't. Per the ADR template's own
+requirement, reporting this as a negative-leaning result with the same rigor as a positive one,
+not discarding it. This converges independently with Knight's `TJ-K1` (strong in-domain, weak
+out-of-domain, same likely cause: neither dataset has enough of the actual hard-case population to
+generalize from) — two differently-built implementations reaching the same conclusion is stronger
+evidence than either alone. Left `TJ-A1` open in the backlog rather than closing it — next move
+(gather more/better training data across more codebases, or treat this as sufficient evidence to
+pause) is the user's call, not mine to spend real tokens on unilaterally.
+
+Full numbers, both fixes, and the majority-class baselines are in the ADR's Evidence section — this
+entry is the narrative, that's the reproducible record.
 
 ### 2026-08-12 — TJ-A1 implementation started: worktree, dependency, prototype code
 
