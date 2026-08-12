@@ -25,12 +25,22 @@ export interface ArchetypeExample {
  * Build the text representation fed to the ELM for one file: path plus the algorithmic
  * pass's partial evidence hints, mirroring what buildLLMClassifyPrompt already shows the
  * LLM (classify.ts:497-508) so both stages see comparable signal.
+ *
+ * Evidence hints are only used for source: "algorithmic" entries. For source: "llm" entries,
+ * classifyBatchWithLLM (classify.ts:461-469) writes `evidence: [{archetypeId: item.archetype,
+ * ...}]` — i.e. the evidence *is* the resolved label restated, not independent signal. Using
+ * it as a training feature would leak the answer into the input text for every LLM-labeled
+ * example. Confirmed empirically 2026-08-12: including it here inflated held-out precision
+ * before this fix. This is a property of the real production schema, not an artifact of the
+ * manually-generated labels used for this prototype's training data.
  */
 export function fileToText(fc: FileClassification): string {
-  const hints = (fc.evidence ?? [])
-    .slice(0, 5)
-    .map((e) => `${e.archetypeId}(${e.weight})`)
-    .join(" ");
+  const hints = fc.source === "algorithmic"
+    ? (fc.evidence ?? [])
+        .slice(0, 5)
+        .map((e) => `${e.archetypeId}(${e.weight})`)
+        .join(" ")
+    : "";
   return hints ? `${fc.path} ${hints}` : fc.path;
 }
 

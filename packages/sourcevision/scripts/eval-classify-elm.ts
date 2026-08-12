@@ -21,19 +21,29 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
-import type { Classifications } from "../src/schema/index.js";
+import type { Classifications } from "../src/schema/index.ts";
 import {
   extractExamples,
   trainArchetypeELM,
   predictArchetype,
   type ArchetypeExample,
   type TrainedArchetypeELM,
-} from "../src/analyzers/classify-elm.js";
+} from "../src/analyzers/classify-elm.ts";
 
 const SEED = 20260812; // fixed — see ADR Evidence
 const TRAIN_FRACTION = 0.8; // 80% train / 20% internal held-out, drawn from the training-source repo
 const PRECISION_TARGET = 0.95; // proposed gate, ADR Evidence
-const THRESHOLDS = [0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99];
+// A threshold that resolves one lucky example at 100% precision is not a pass. Require the
+// gate to hold over a meaningful slice of the held-out set, not just whatever the threshold
+// happens to catch.
+const MIN_COVERAGE_FOR_GATE = 0.15;
+// Empirically calibrated 2026-08-12: this ELM's ridge-regression softmax readout produces a
+// diffuse confidence distribution (observed range ~0.08-0.20 on training data, argmax still
+// meaningful) rather than the near-0/near-1 spread a sweep starting at 0.5 assumes. A sweep
+// anchored above the model's actual output range shows 0% coverage everywhere and looks like
+// a broken model rather than a miscalibrated sweep — verify against your own model's
+// distribution before reusing these numbers on a different feature encoding or label set.
+const THRESHOLDS = [0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.25, 0.30];
 
 const TRAINING_SOURCE = resolve(import.meta.dirname, "../../../.sourcevision/classifications.json");
 const HELD_OUT_SOURCE = process.env.SV_ELM_HELDOUT_CLASSIFICATIONS;
@@ -121,7 +131,9 @@ function printCurve(label: string, rows: CurveRow[]): void {
   console.log(`\n${label} (target precision >= ${PRECISION_TARGET}):`);
   for (const row of rows) {
     const precisionStr = row.precision === null ? "n/a" : `${(row.precision * 100).toFixed(1)}%`;
-    const flag = row.precision !== null && row.precision >= PRECISION_TARGET ? "  <- clears gate" : "";
+    const clearsGate = row.precision !== null && row.precision >= PRECISION_TARGET && row.coverage >= MIN_COVERAGE_FOR_GATE;
+    const belowCoverageFloor = row.precision !== null && row.precision >= PRECISION_TARGET && row.coverage < MIN_COVERAGE_FOR_GATE;
+    const flag = clearsGate ? "  <- clears gate" : belowCoverageFloor ? `  <- precision clears target but coverage < ${(MIN_COVERAGE_FOR_GATE * 100).toFixed(0)}% floor, not a real pass` : "";
     console.log(
       `  t=${row.threshold.toFixed(2)}  coverage=${(row.coverage * 100).toFixed(1)}%  precision=${precisionStr}${flag}`,
     );
