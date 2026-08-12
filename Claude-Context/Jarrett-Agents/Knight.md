@@ -117,8 +117,100 @@ For handoff to Archer — full technical picture of the current classifier befor
 
 ## Current state
 
-_(Not yet filled in — this charter was migrated from `team/Jarrett/knight.md` on 2026-08-08 per `IMPL-2026-08-05-nolan-migrate-team-profiles-to-charters.md`. Fill in at the start of the next working session.)_
+`TJ-K1` (branch `elm/jarrett/classify-elm-knight`, worktree `../n-dx-knight`): built an independent
+second implementation of `ADR-2026-08-11-jarrett-elm-prefilter-classify.md`, without reading
+Archer's `classify-elm.ts`, per the user's request for a genuine comparison. Prototype + eval only
+— no production code touched. Real numbers are in (see session log): strong in-domain precision,
+but the out-of-domain generalization test (the number the ADR's gate actually cares about) does
+**not** clear the bar with the currently-available training data. Root cause is very likely data
+quantity/coverage, not the approach — both this repo's and the held-out repo's `.sourcevision/`
+data were generated **without LLM enrichment** (confirmed: `bySource` is 100% `"algorithmic"` in
+both), so training never saw the "hard" population the ELM pre-filter is actually meant to help
+with. Re-running `ndx analyze` with LLM enrichment on would be the natural next step, but costs
+real tokens and — for the held-out codebase specifically — touches state Archer's own eval may
+still depend on, so that's flagged for the user rather than done unilaterally.
 
 ## Next up
 
-- [ ] _(none claimed yet — see `BACKLOG.md`)_
+- [ ] Get the user's call on re-running `ndx analyze` (with LLM enrichment) on both this repo and
+      the held-out codebase to get a properly representative training/eval population, vs. treating
+      the current numbers as sufficient evidence for a "not yet, needs more data" conclusion.
+- [ ] Compare results against Archer's `TJ-A1` once both have real numbers — same ADR, same
+      held-out codebase, independently-built extraction/training/eval code.
+- [ ] If a future session touches `classify.ts` in scope, apply the "algorithmic evidence is not
+      recoverable from `classifications.json` for LLM-relabeled files" finding logged below —
+      it likely also affects any other consumer that assumes `evidence` reflects the algorithmic
+      pass for `source: "llm"` entries.
+
+## Session log
+
+### 2026-08-12 — TJ-K1: independent ELM pre-filter implementation, real numbers in
+
+Built and ran an independent implementation of the ELM pre-filter ADR, in its own worktree
+(`../n-dx-knight`, branch `elm/jarrett/classify-elm-knight`), deliberately without reading Archer's
+`classify-elm.ts`/`eval-classify-elm.ts` source — the user asked for a genuine comparison, not a
+copy. Full technical picture:
+
+**Setup:** `@astermind/astermind-community` was already a root `package.json` dependency from a
+pre-existing commit (`43d6db51`, "ELM hello-world") — not something either `TJ-A1` or `TJ-K1`
+needed to add fresh, despite `IMPL-2026-08-11-...`'s files-touched table claiming otherwise (wrong
+path: it names `packages/sourcevision/package.json`, but the dependency lives in root
+`package.json`). Added it to `packages/sourcevision/package.json` explicitly anyway, since the
+package genuinely consumes it directly and shouldn't rely on workspace hoisting by accident.
+
+**Empirically confirmed, not just re-read from Archer's notes:** ran the installed
+`@astermind/astermind-community@3.0.0` package directly — `elm.train(realExamples)` and
+`elm.train()` produce byte-identical models (same `W`, `beta`, same predictions). `train()`'s first
+parameter is `augmentationOptions`, not a data array; passing one is silently ignored. This also
+means the existing `scripts/elm-hello-world.mjs`'s "trained on 30 paths... 83% accuracy" claim is
+misleading — that 30-example `TRAINING_SET` is logged but never actually used; the real accuracy
+reflects training on augmented variants of the three bare category-name strings only. Logged in
+`IN-FLIGHT.md` since the hello-world script is a shared file and its comment is now inaccurate.
+
+**A second finding, not in either ADR/IMPL yet:** `classifications.json` only persists each file's
+*final* resolved archetype. For files the LLM stage relabels, `mergeClassificationResults` replaces
+the algorithmic pass's per-file `evidence` (the `archetypeId(weight)` hints) entirely — nothing
+preserves the pre-merge evidence on disk. So "file path + algorithmic partial-evidence signals" as
+a training feature, for LLM-labeled examples specifically, isn't actually recoverable from
+`classifications.json` alone, contrary to how the ADR's Decision section describes the training-data
+plan. Worked around it in `extractExamples()` by re-running the free, deterministic,
+LLM-call-free `analyzeClassifications()` against the same `inventory.json`/`imports.json` that
+produced `classifications.json`, then pairing its freshly-computed evidence with the FINAL label
+from `classifications.json` regardless of which stage set it.
+
+**Results** (seed `20260812`, training source: Archer's already-generated `n-dx-jarrett/.sourcevision/`
+data — reused rather than re-running `ndx analyze` myself, since it's the same repo content and
+reusing it removes classification noise as a variable from the comparison; held-out source: the
+already-generated `AsterMind-Community-Edition/.sourcevision/` data, likewise reused):
+
+- Neither dataset has any LLM-sourced labels (`bySource` is 100% `"algorithmic"` in both) — whoever
+  generated them ran without LLM enrichment. 423 usable n-dx examples across 11 of 17 archetypes;
+  47 usable held-out examples across 6 archetypes. This is a real gap from the ADR's stated
+  "algorithmic + llm" training plan, not a choice I made.
+- First threshold sweep (0.3-0.99) showed 0% coverage everywhere — not a broken model, a
+  miscalibrated sweep: with candidate archetypes and a ridge-regression softmax readout, confidence
+  stays diffuse (observed cluster 0.13-0.23) even when the argmax is reliably correct. Recalibrated
+  to a wider low-end sweep.
+- **In-domain** (85-example held-out split of n-dx's own data): strong — 98.1% precision at 62.4%
+  coverage (threshold 0.18), 95.7% precision at 82.4% coverage (threshold 0.15).
+- **Out-of-domain** (the number the ADR's gate actually measures — 47 held-out `AsterMind-Community-Edition`
+  examples): does **not** clear the bar in any practically useful sense. At full coverage
+  (threshold <=0.10), precision is 29.8% — *worse* than the 55.3% majority-class baseline. The only
+  point clearing >=95% precision resolves a single example (2.1% coverage) — added a minimum-coverage
+  floor to the eval script's gate check so a result like that can't silently read as a pass.
+  Best *meaningful*-coverage point: 62.5% precision at 17.0% coverage (threshold 0.15).
+- **Read on why:** most likely training-data quantity/representativeness, not the base-ELM approach
+  being wrong — in-domain performance shows the model *can* learn the archetype signal, but 423
+  narrow (algorithmic-only, 11-archetype) examples isn't enough to generalize to a codebase with
+  different naming conventions. The population that never appeared in training — files hard enough
+  that the algorithmic pass alone couldn't resolve them — is exactly the population the pre-filter
+  needs to handle in production.
+
+**Per the ADR's own template requirement** ("a negative result needs the same Evidence rigor as a
+positive one"): this is being reported as a negative-leaning result, not silently discarded. Did
+not proceed to production wiring (IMPL steps 6-8) — the gate didn't clear.
+
+**Left for the user:** whether to spend real LLM tokens re-running `ndx analyze` (with enrichment
+on) for both repos to get a properly representative population before drawing a final conclusion.
+Flagged rather than done unilaterally since it also touches the held-out codebase's shared state,
+which Archer's own `TJ-A1` eval may still depend on.
