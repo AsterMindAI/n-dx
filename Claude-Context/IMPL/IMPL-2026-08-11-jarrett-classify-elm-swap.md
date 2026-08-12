@@ -37,12 +37,12 @@
 
 | Path | Owning team | New/Edit | Note sent? |
 |---|---|---|---|
-| `packages/sourcevision/src/analyzers/classify-elm.ts` (new) | unassigned — Team Jarrett scoped | New | No — not another team's path |
+| `packages/sourcevision/src/analyzers/classify-elm.ts` | unassigned — Team Jarrett scoped | **Created 2026-08-12**, typechecks clean | No — not another team's path |
 | `packages/sourcevision/src/analyzers/classify.ts` | unassigned — Team Jarrett scoped | **Not yet edited.** Prototype/eval phase reads its exported types only; the `"elm"` source value and any export addition happen at Step 7, after the Step 5 gate passes. | No |
 | `packages/sourcevision/src/cli/commands/analyze-phases.ts` | unassigned — Team Jarrett scoped | **Not yet edited.** The in-between call is wired at Step 8, gated — see ADR "Decision": neither existing function is modified, the new stage only reads `analyzeClassifications`'s output and narrows `enrichClassificationsWithLLM`'s input. | No |
 | `packages/sourcevision/src/schema/v1.ts`, `validate.ts` | unassigned — Team Jarrett scoped | **Not yet edited.** Step 7, gated. | No |
-| `packages/sourcevision/scripts/eval-classify-elm.ts` (new — path finalized 2026-08-12) | unassigned | New | No |
-| `packages/sourcevision/package.json` / root `pnpm-lock.yaml` — adds `@astermind/astermind-community` (resolved 2026-08-12, see ADR Evidence) | **shared** per `OWNERSHIP.md` | Edit | **Claimed `IN-FLIGHT.md` § 1 2026-08-12** |
+| `packages/sourcevision/scripts/eval-classify-elm.ts` | unassigned | **Created 2026-08-12**, typechecks clean, not yet runnable (blocked on Step 2b) | No |
+| `packages/sourcevision/package.json` / root `pnpm-lock.yaml` — adds `@astermind/astermind-community` | **shared** per `OWNERSHIP.md` | **Done 2026-08-12** — installed and verified in `../n-dx-jarrett` worktree | **Claimed `IN-FLIGHT.md` § 1 2026-08-12** |
 
 ## Steps
 
@@ -56,14 +56,24 @@
    2026-08-12). Both need `ndx analyze` run before step 3 can pull real data — this is a real,
    LLM-calling, potentially slow operation, not scaffolding; flagged separately rather than folded
    silently into step 3.
-3. Write the training-data extraction: pull `(path, evidence signals) → archetype` pairs from
-   `.sourcevision/classifications.json` — this repo (training source) plus
-   `AsterMind-Community-Edition` (held-out set, chosen over the other `GitHub/n-dx` checkout — see
-   ADR Evidence for why same-codebase-different-branch is a weak generalization test).
-4. Write the committed eval script (`packages/sourcevision/scripts/eval-classify-elm.ts`): fixed
-   seed, train/held-out split, majority-class baseline (reported for context), and a
-   precision/coverage curve across confidence thresholds on the trained ELM — see ADR Evidence for
-   why this replaced a flat accuracy-vs-baseline number.
+3. **Done (2026-08-12).** Training-data extraction written:
+   `packages/sourcevision/src/analyzers/classify-elm.ts` (`extractExamples`/`fileToText`) pulls
+   `(path, evidence signals) → archetype` pairs from a `Classifications` result. Also contains
+   `trainArchetypeELM`/`predictArchetype`. **Important API finding, not obvious from the package
+   surface:** `ELM.train()` does *not* train on a supplied corpus — it bootstraps its own training
+   set from augmented variants of the category names themselves (verified by reading
+   `AsterMind-Community-Edition/src/core/ELM.ts:403-487` directly). Wrong method for training on
+   real labeled examples. Used `trainFromData()` with manually-encoded vectors
+   (`elm.encoder.encode`/`.normalize`) instead — documented prominently in the module so Knight's
+   parallel build doesn't reach for `train()` first.
+4. **Done (2026-08-12), not yet runnable end-to-end.** Eval script written:
+   `packages/sourcevision/scripts/eval-classify-elm.ts` — fixed seed (`20260812`), seeded
+   Fisher-Yates train/held-out split, majority-class baseline (reported for context only), and a
+   precision/coverage curve across confidence thresholds. Held-out source path is intentionally an
+   env var (`SV_ELM_HELDOUT_CLASSIFICATIONS`), not a hardcoded relative path — see ADR Evidence on
+   why `../AsterMind-Community-Edition` isn't portable. Both files typecheck clean
+   (`pnpm --filter @n-dx/sourcevision typecheck`, plus a targeted check of `scripts/`, which isn't
+   in `tsconfig.json`'s `include`). **Can't actually run yet** — blocked on Step 2b.
 5. **Gate.** Only proceed past this point if precision at the chosen confidence threshold clears
    the ADR's proposed ≥95% bar on held-out data. If it doesn't, stop and report back with the
    numbers — per `ADR-TEMPLATE.md`, a negative result needs the same Evidence rigor as a positive

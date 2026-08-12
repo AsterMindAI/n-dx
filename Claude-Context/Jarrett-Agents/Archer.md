@@ -35,6 +35,14 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+Implementation underway on branch `elm/jarrett/classify-elm-prefilter`, worktree
+`../n-dx-jarrett` (separate commit history from this `Jarrett` branch — code lives there, design
+docs live here). `classify-elm.ts` and `scripts/eval-classify-elm.ts` are written and typecheck
+clean, but can't produce real numbers yet: both need `ndx analyze` run against their classification
+source first (this repo + `AsterMind-Community-Edition`) — that's the immediate next step, not yet
+started as of this entry. **Knight is building a parallel implementation off the same ADR** — this
+file is being kept current specifically for that, per standing instruction from the user.
+
 `ADR-2026-08-11-jarrett-elm-prefilter-classify.md` and
 `IMPL-2026-08-11-jarrett-classify-elm-swap.md` are drafted (backlog `TJ-A1`, `BLOCKED` — see Next
 up). Design: insert the ELM as a new stage *between* `classifyFile` and
@@ -51,14 +59,68 @@ Status can move to Accepted.
       call. **Done (2026-08-11)** — see session log.
 - [x] Write up the ELM pre-filter proposal as an ADR + IMPL. **Done (2026-08-11)** — see session
       log; both docs currently `Proposed`/`Not started`.
-- [ ] Resolve the IMPL's open questions before Step 1 can start: worktree-vs-shared-checkout
-      (blocks branch/worktree creation), AsterMind dependency shape (`@astermind/astermind-elm` vs.
-      vendored `ELM.ts` — determines whether `IN-FLIGHT.md` needs a `package.json` claim), second
-      codebase for the held-out split, acceptance margin over random baseline.
-- [ ] Once unblocked: build the training-data extraction + committed eval script (IMPL steps 3-4)
-      and run the Step 5 gate before touching any production code.
+- [x] Resolve the IMPL's open questions. **Done (2026-08-12)** — dependency, held-out codebase,
+      worktree, and acceptance-gate framing all resolved with verified evidence; see IMPL.
+- [x] Build the training-data extraction + committed eval script (IMPL steps 3-4). **Done
+      (2026-08-12)**, code-complete and typechecks clean, but not yet runnable — see below.
+- [ ] Run `ndx analyze` on this repo and on `AsterMind-Community-Edition` (IMPL Step 2b) to produce
+      real `classifications.json` for both. Not started — this is a real, LLM-calling, potentially
+      slow operation, flagged to the user rather than run silently.
+- [ ] Run the eval script against real data, evaluate against the Step 5 precision gate, report
+      back before touching `classify.ts`/`analyze-phases.ts` at all (Steps 6-8 are explicitly
+      gated on this).
 
 ## Session log
+
+### 2026-08-12 — TJ-A1 implementation started: worktree, dependency, prototype code
+
+For Knight, since we're now building in parallel off the same ADR — full detail so the design is
+legible without reading the diff.
+
+**Environment:** created `../n-dx-jarrett` worktree, branch `elm/jarrett/classify-elm-prefilter`
+(resolves the IMPL's worktree-vs-shared-checkout open question for this agent's own work — team-wide
+question still separately open). Claimed `IN-FLIGHT.md` for the `package.json`/`pnpm-lock.yaml`
+edit before touching either.
+
+**Dependency resolved with hard evidence, not the earlier assumption:** checked
+`registry.npmjs.org` directly — `@astermind/astermind-elm` exists (v2.1.1, older/narrower) but
+`@astermind/astermind-community` (v3.0.0) is the exact match to the local
+`AsterMind-Community-Edition/package.json` Knight's 2026-08-11 survey actually read. Installed the
+latter in the worktree. Also confirmed `AsterMind-Community-Edition` is not a sibling of this
+repo's working directory — it only sits next to a second, older n-dx checkout on this machine
+(`GitHub/n-dx`, branch `dev`). Full reasoning in the ADR's Evidence section.
+
+**API surprise worth flagging loudly for Knight's build:** read `ELM.ts` directly rather than
+trusting the prior survey's prose summary. `ELM.train()` (the obvious-looking text-mode training
+method) does **not** train on a supplied corpus of labeled examples — it bootstraps its own
+training set from augmented spelling/casing *variants of the category names themselves*
+(`ELM.ts:403-487`, via `Augment.generateVariants`). It's built for zero-shot-style intent
+classifiers where you only have category names, not for supervised training on real
+(file → archetype) pairs, which is what we actually have. The correct path: encode real examples
+yourself with the same encoder `predict()` uses internally
+(`elm.encoder.encode(text)` → `.normalize(...)`), then call `trainFromData(X, y)` — the
+numeric-vector supervised method. `predict(text, topK)` still works normally afterward since it's
+the same encoder instance. Documented prominently in `classify-elm.ts` itself, not just here,
+since the module doc is what Knight would actually open.
+
+**Code written**, both typecheck clean (`pnpm --filter @n-dx/sourcevision typecheck`, plus a
+targeted check of `scripts/`, which `tsconfig.json`'s `include` doesn't cover by default):
+- `packages/sourcevision/src/analyzers/classify-elm.ts` — `extractExamples`/`fileToText` (training-
+  data extraction from a `Classifications` result, reusing the same evidence-hint text shape
+  `buildLLMClassifyPrompt` already shows the LLM) and `trainArchetypeELM`/`predictArchetype`.
+- `packages/sourcevision/scripts/eval-classify-elm.ts` — fixed seed (`20260812`), seeded
+  Fisher-Yates train/held-out split, majority-class baseline (context only), precision/coverage
+  curve across confidence thresholds. Held-out source path is an env var
+  (`SV_ELM_HELDOUT_CLASSIFICATIONS`), deliberately not a hardcoded relative path, for the same
+  portability reason as the dependency finding above.
+- **Neither `classify.ts` nor `analyze-phases.ts` touched** — matches the ADR's "in-between call,
+  not modifying either function" design exactly.
+
+**Not done yet:** the script can't produce real numbers — neither this repo nor
+`AsterMind-Community-Edition` has `.sourcevision/classifications.json` yet, so `ndx analyze` has to
+run against both first (IMPL Step 2b). That's a real, LLM-calling, non-trivial-duration operation,
+flagged to the user rather than started silently. Everything past that (Step 5's gate, then Steps
+6-8's production wiring) is still ahead.
 
 ### 2026-08-11 — ADR + IMPL drafted for the ELM pre-filter
 
