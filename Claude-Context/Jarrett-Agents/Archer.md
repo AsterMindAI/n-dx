@@ -116,11 +116,26 @@ targeted check of `scripts/`, which `tsconfig.json`'s `include` doesn't cover by
 - **Neither `classify.ts` nor `analyze-phases.ts` touched** — matches the ADR's "in-between call,
   not modifying either function" design exactly.
 
-**Not done yet:** the script can't produce real numbers — neither this repo nor
-`AsterMind-Community-Edition` has `.sourcevision/classifications.json` yet, so `ndx analyze` has to
-run against both first (IMPL Step 2b). That's a real, LLM-calling, non-trivial-duration operation,
-flagged to the user rather than started silently. Everything past that (Step 5's gate, then Steps
-6-8's production wiring) is still ahead.
+**Update same day — Step 2b attempted, hit a real blocker.** Ran `analyze --phase=1`, `--phase=2`,
+`--phase=3` against both `../n-dx-jarrett` (1525 files inventoried, 683 source files) and
+`AsterMind-Community-Edition` (151 files inventoried, 130 source files) — inventory/imports
+completed cleanly on both. **Phase 3's LLM fallback failed on both**: `'claude' not found on PATH`.
+Checked for it directly (`Get-Command claude`, npm global modules, common Windows install paths) —
+genuinely not installed as a standalone binary in this environment, not just a PATH issue in one
+shell. No `ANTHROPIC_API_KEY` set either, so there's no fallback to API-mode auth.
+
+**Result: algorithmic-only data exists for both, no `source: "llm"` examples anywhere yet** —
+`n-dx-jarrett`: 423 classified / 260 unclassified; `AsterMind-Community-Edition`: 47 classified / 83
+unclassified. This is real, usable data for `extractExamples()`, but it misses exactly the
+"files the algorithmic pass couldn't resolve" population the ELM pre-filter is meant to serve, and
+the AsterMind held-out set is thin (47 labels). **Flagging for Knight too** — if you hit the same
+`ndx analyze` step, you'll hit this same wall; worth checking your own environment's `claude` CLI
+availability before assuming it's just this machine.
+
+Reported the blocker to the user rather than guessing at credentials or paths — needs either the
+`claude` CLI installed, an `ANTHROPIC_API_KEY`, or an existing binary path to point
+`llm.claude.cli_path` at. Everything past Step 2b (Step 5's gate, Steps 6-8's production wiring) is
+still ahead and unaffected by this — it's purely a data-generation blocker.
 
 ### 2026-08-11 — ADR + IMPL drafted for the ELM pre-filter
 
