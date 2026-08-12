@@ -19,7 +19,7 @@ owner a note before assuming it's stale — don't just delete it.
 
 | Since | Who | Team | What | Paths / command | Expected release |
 |---|---|---|---|---|---|
-| | | | | | |
+| 2026-08-12 | Archer | Jarrett | Adding `@astermind/astermind-community` dependency for TJ-A1 (ELM pre-filter prototype) | `packages/sourcevision/package.json`, root `pnpm-lock.yaml` | On IMPL Step 4 completion (eval script working) or sooner if the gate fails and the dep is reverted |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·

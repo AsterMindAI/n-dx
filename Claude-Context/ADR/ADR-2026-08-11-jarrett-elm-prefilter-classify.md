@@ -40,7 +40,9 @@ This ADR proposes the next step: don't replace the LLM fallback, narrow how ofte
 
 Insert a new stage **between** the two existing passes, not inside either one: after
 `analyzeClassifications` produces its `archetype: null` files, run a base `ELM` classifier (text
-mode) over just that leftover set, before `enrichClassificationsWithLLM` is called. Files the ELM
+mode, via `@astermind/astermind-community` — see Evidence) over just that leftover set, before
+`enrichClassificationsWithLLM` is called. Neither existing function is modified — the new stage is
+a pure in-between call reading one function's output and narrowing the other's input. Files the ELM
 resolves above a calibrated confidence threshold are done. Everything else — the ELM's own
 low-confidence remainder — still goes to the LLM exactly as it does today. The LLM remains the
 source of truth for anything the ELM isn't sure about; this is a pre-filter, not a replacement.
@@ -93,18 +95,47 @@ the `FileClassification` shape otherwise.
 **Not yet measured — this is what keeps Status at Proposed.** No ELM-viability claim is being made
 yet. Per `ADR-TEMPLATE.md`, this section states the planned methodology so the eventual numbers are
 reproducible by another team; the IMPL's prototype/eval step is where real numbers get filled in.
+Methodology below was tightened 2026-08-12 after checking the actual dependency and data
+prerequisites rather than assuming them.
 
 - **Task framing:** input = file path + partial evidence signals (`archetypeId(weight)` pairs from
   `classifyFile`'s scoring, available even on `null`-archetype files); output = one of
   `BUILTIN_ARCHETYPES.length` (~17) archetype IDs.
-- **Training / held-out split:** drawn from this monorepo's own classification history
-  (algorithmic + LLM-labeled files) plus at least one other already-analyzed codebase, to avoid
-  overfitting to n-dx's own file-naming conventions. Exact split ratio TBD in the IMPL.
+- **Dependency (resolved 2026-08-12):** `@astermind/astermind-community` (npm, v3.0.0) — **not**
+  `@astermind/astermind-elm` (npm, v2.1.1, older/narrower — confirmed via `registry.npmjs.org`
+  for both). `astermind-community`'s name/version/description are an exact match to the local
+  `AsterMind-Community-Edition/package.json` Knight actually read file-by-file for the
+  2026-08-11 survey (`ELM.ts`/`DeepELM.ts`/`KernelELM.ts`/`OnlineELM.ts`/`ELMChain.ts`/
+  `ELMAdapter.ts`); `astermind-elm` predates that consolidation and isn't guaranteed to have the
+  same API shape. The local `AsterMind-Community-Edition` checkout is also **not** a sibling of
+  this repo's working directory (`Final n-dx/n-dx`) — it only sits at `../AsterMind-Community-Edition`
+  relative to a second, older n-dx checkout on this machine (`GitHub/n-dx`, branch `dev`). The
+  npm dependency is the portable path; no script should hardcode a relative sibling path to the
+  source checkout.
+- **Training / held-out split:** neither this repo nor either held-out candidate has
+  `classifications.json` yet — confirmed by checking `.sourcevision/` in both this repo (only
+  `.gitignore`/`hints.md` present, `ndx analyze` never run here) and `AsterMind-Community-Edition`
+  (no `.sourcevision/` at all). Training source: this repo's own classification history, generated
+  by running `ndx analyze` here first. Held-out set: `AsterMind-Community-Edition` (129 `.ts`/`.tsx`
+  files, genuinely different domain — ML library, not a dev-tooling monorepo — so it actually tests
+  generalization rather than memorization of n-dx's own naming conventions), also requires
+  `ndx analyze` run on it first. Considered the other `GitHub/n-dx` checkout as a zero-prerequisite
+  alternative (it already has `.sourcevision/` output) but rejected it for the held-out role — same
+  codebase, different branch, so it would mostly measure overfitting to n-dx's own conventions
+  rather than true generalization. Exact split ratio still TBD in the IMPL.
 - **Seed:** a fixed seed for the ELM's random `W`/`b` initialization, recorded in the committed
   script — not left to a default.
-- **Random baseline vs. measured accuracy:** baseline = majority-class predictor over the label
-  distribution (`computeSummary`'s `byArchetype`); measured = held-out accuracy of the trained
-  ELM. Must clear the random baseline by a stated margin, not merely beat it, to pass the IMPL's
+- **Acceptance gate — reframed as precision-at-threshold, not flat accuracy-over-baseline
+  (2026-08-12):** production use only ever trusts an ELM prediction above a chosen confidence
+  threshold — everything below it still falls through to the LLM exactly as today. A flat
+  "beat the majority-class baseline by N points" accuracy number doesn't measure the thing that
+  matters, because a wrong *resolved* prediction has no safety net the way falling through to the
+  LLM does. The eval script should instead produce a precision/coverage curve across confidence
+  thresholds (precision = fraction correct among predictions at-or-above a threshold; coverage =
+  fraction of the held-out set resolved at that threshold), and the production threshold — see the
+  IMPL's confidence-threshold open question — should be picked where precision clears a high bar
+  (proposed: ≥95%), not from a single accuracy-vs-baseline comparison. Majority-class baseline
+  (from `computeSummary`'s `byArchetype`) is still reported for context, just not used as the sole
   gate.
 - **Committed script:** path to be named in the IMPL's Files-touched table — not a one-off snippet
   run once and discarded.
