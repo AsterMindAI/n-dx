@@ -24,6 +24,8 @@ owner a note before assuming it's stale — don't just delete it.
 | 2026-08-11 | Nolan (lead) | Nolan | **Team Nolan claims Path B** — sourcevision archetype classification, per [`SYNC-001`](Nolan-Agents/syncs/SYNC-001-2026-08-11-elm-path-assignment.md) and [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md). **Paths A and C remain unclaimed** — this is not a claim on them, and Jarrett/Thomas should take whichever they want. | `packages/sourcevision/src/analyzers/**` | On Path B completion or hand-off |
 
 
+| 2026-08-13 | Jam | Nolan | `TN-J7` — IMPL Step 2: corpus acquisition. **LLM-labelled half is BLOCKED** — no `claude`/`codex` binary on PATH and no API keys, verified by an actual `complete()` call returning `ClaudeClientError reason=not-found`. Doing the unblocked half: corpus harness, second-repo measurement, archetype-coverage assessment. **No tokens spendable, so none spent.** | New `scripts/elm-corpus-build.mjs`; clones read-only into the session scratchpad (outside the repo); one `analyze --fast --full` per repo. | Same session |
+
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
 `packages/core/assistant-assets/**` · `tests/e2e/**` · `.n-dx.json` ·
