@@ -6,7 +6,11 @@
 - **Backlog item:** `TN-J2` gates this; the implementing team opens its own `<TEAM>-<agent>N` rows
 - **Branch:** `elm/<lead>/<topic>` — to be created by the implementing team
 - **Worktree:** `../n-dx-<agent>`
-- **Status:** **Step 0 complete — findings below change the plan. Steps 1+ not started.**
+- **Status:** **SUPERSEDED 2026-08-13** by
+  [`IMPL-2026-08-13-jam-elm-classification-build.md`](IMPL-2026-08-13-jam-elm-classification-build.md).
+  Step 0 (below) is complete and its findings are carried forward. Nolan decided to proceed with
+  the ELM — see [`ADR-2026-08-13-jam-proceed-with-elm-classification.md`](../ADR/ADR-2026-08-13-jam-proceed-with-elm-classification.md).
+  **Kept for the Step 0 measurement and the record of why the plan changed; do not work from it.**
 
 > Every `file:line` below was re-verified against the working tree at commit `33365785` on
 > 2026-08-11. Corrections to what I published earlier are recorded in § Corrections.

@@ -131,6 +131,51 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-13 — Nolan decided to proceed with the ELM; ADR + IMPL written
+
+**Did:**
+- Wrote [`ADR-2026-08-13-jam-proceed-with-elm-classification.md`](../ADR/ADR-2026-08-13-jam-proceed-with-elm-classification.md)
+  and [`IMPL-2026-08-13-jam-elm-classification-build.md`](../IMPL/IMPL-2026-08-13-jam-elm-classification-build.md).
+  Marked the 08-11 IMPL superseded (kept for its Step 0 record).
+- Opened `TN-J4` (build) and `TN-J5` (rule fixes); notes sent to both other teams.
+
+**Learned:**
+- **Root-caused the gateway miss.** The `gateway` archetype's *only* signal is
+  `^(?:deps|gateway|barrel)\.[tj]sx?$` in `archetypes.ts` — anchored at `^`, so it matches
+  `gateway.ts` but not `rex-gateway.ts`. Verified by executing the regex against all four
+  `*-gateway.ts` files: all four fail. Weight 0.7 already clears `PRIMARY_THRESHOLD` (0.4), so
+  relaxing the anchor fixes all four instantly. This is `TN-J5`.
+- `.n-dx.json` has only a `sourcevision.zones` section — no `archetypes` section exists, so making
+  the confidence threshold user-configurable means adding one, and that file is shared.
+
+**On the decision itself:** I recommended closing Path B as a measured negative. Nolan's call was
+to proceed and I think the reasoning is sound — **free local inference removes the cost side of
+the trade entirely**, so the question stops being "is 9 calls worth it" and becomes "is any hit
+rate worth a bounded one-off effort", across every user's repo rather than just ours. I put a
+**kill criterion in the ADR** (≥30% of residue at or above LLM accuracy) so the project can still
+end honestly if the model underperforms. Recorded here because a future session reading the Step 0
+numbers might otherwise think the decision ignored them — it didn't.
+
+**Broke / still broken:**
+- Nothing. No source touched. NUL bytes untouched (verified again this session).
+- `pnpm typecheck` / `pnpm test` not run — documentation only.
+
+**Left undone and why:**
+- **No code written.** `TN-J5` (the gateway fix) is the obvious first move and is fully specified,
+  but the user asked for the ADR and IMPL this session, not the implementation.
+- Corpus acquisition (IMPL Step 2) not started — it costs tokens and needs an `IN-FLIGHT` claim.
+
+**Notes sent / received:**
+- Sent: `Jarrett-Agents/Notes/NOTE-jam-to-jarrett-2026-08-13-path-b-proceeding.md`
+- Sent: `Thomas-Agents/Notes/NOTE-jam-to-thomas-2026-08-13-path-b-proceeding.md`
+  Both carry the 19.6% baseline correction and push Path A (token accounting) as still-unclaimed.
+
+**Handoff:**
+- Start at IMPL Step 1 (`TN-J5`): fix the gateway anchor, test-first, then the other name-evident
+  cases, targeting the six zero-example classes. Re-measure before touching any ML.
+
+---
+
 ### 2026-08-11 (c) — Step 0 measured. Path B is weaker than I sold it, and my baseline was wrong.
 
 **Did:**
