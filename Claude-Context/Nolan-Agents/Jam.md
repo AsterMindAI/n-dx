@@ -131,6 +131,60 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-13 (b) — Re-verified the docs; shipped TN-J5, the first code of this project
+
+**Did:**
+- Re-verified the 08-13 ADR and IMPL end to end: all measured numbers reproduce from
+  `classifications.json`, all 18 cited line anchors resolve (including the ones inside the
+  grep-invisible `analyze-phases.ts`, checked via python), and all 9 cited library exports exist.
+- Shipped the gateway fix, test-first, commit `26a191e7`.
+
+**Learned:**
+- **Only 1 of the 6 zero-example archetypes was fixable.** I tested each of the other five signal
+  sets against the real unclassified paths: `middleware`, `model`, `service`, `route-module`,
+  `test-helper` all return **zero** candidates. Their signals are correct — n-dx just isn't a
+  Rails/Angular/Remix codebase. **Those five classes cannot be populated from this repo at any
+  effort**, which turns Step 2's "use more than one repository" from advice into a requirement.
+- **Rule fixes are invisible without `--full`.** My first re-measure returned 424/259 unchanged and
+  I nearly recorded the fix as ineffective. The fix was fine; incremental mode was reusing the
+  cached `archetype: null` (`classify.ts:99-110`; only `--full` bypasses it,
+  `analyze-phases.ts:210`). **This has user impact beyond our measurements** — anyone upgrading
+  n-dx for better rules sees nothing until a full re-analysis. Filed as `TN-J6`.
+- Vitest's git-related tests print `fatal: not a git repository` and `Switched to a new branch
+  feature/*`. Alarming, but they operate in temp repos — verified my branch and branch list were
+  untouched. Known noise; don't panic next time.
+
+**Corrections to my own claims:**
+- The IMPL's "target the six empty classes first" was **wrong** and is corrected in place — only
+  `gateway` was a bug; the other five are conventions this repo doesn't use.
+- The ADR's "~30 of 259 reachable by simple name rules" is now flagged as an *estimate* from an
+  ad-hoc regex list, not a measurement. Step 1 landed 4, not 30 — the remaining candidates are
+  mostly n-dx-specific paths (`routes-rex/`) that would be overfitting in a tool that ships to
+  other people's repos.
+
+**Broke / still broken:**
+- Nothing broken. `pnpm typecheck` clean across all 6 packages; 1192 sourcevision analyzer tests
+  pass; 108 architecture-policy + domain-isolation e2e tests pass.
+- NUL bytes in `analyze-phases.ts` untouched — verified again after the source edits.
+
+**Measured (commit `26a191e7`, `analyze --fast --full`):** classified 424→428, unclassified
+259→255, `gateway` 0→4, classes present 11→12. Still 9 LLM batches (`ceil(255/30)`), so no batch
+reduction yet — the win here is a populated class for training, not a token saving.
+
+**Left undone and why:**
+- Did not chase the remaining ~250 unclassified with more rules. The honest candidates left are
+  n-dx-specific paths, and `archetypes.ts` ships to users — overfitting it to this repo would make
+  the tool worse elsewhere. The residue is genuinely the ELM's job.
+- Step 2 (corpus) not started: it spends tokens and needs its own claim.
+
+**Notes sent / received:** none new; `TN-J6` raised on the team backlog.
+
+**Handoff:**
+- Next is IMPL Step 2, corpus acquisition, and it **must** span more than one repository — five
+  archetypes are unreachable from n-dx alone. Claim `IN-FLIGHT` first; that run costs tokens.
+
+---
+
 ### 2026-08-13 — Nolan decided to proceed with the ELM; ADR + IMPL written
 
 **Did:**

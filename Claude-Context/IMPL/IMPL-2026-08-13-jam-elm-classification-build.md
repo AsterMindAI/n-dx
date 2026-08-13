@@ -97,17 +97,57 @@ does not. Verified by executing the regex against all four files in the repo —
 Weight 0.7 already exceeds `PRIMARY_THRESHOLD` (0.4, `classify.ts:33`), so relaxing the anchor to
 allow a `-` prefix classifies all four immediately.
 
-Then work the rest of the ~30 name-evident files (route handlers under `routes-*/`, `*-adapter.ts`,
-and the other cases listed by the Step 0 residue analysis). **Target the six empty classes first**
-— `gateway`, `middleware`, `model`, `route-module`, `service`, `test-helper` — because those are
-the classes the ELM currently cannot learn at all.
+**✅ DONE 2026-08-13** — commit `26a191e7`. Relaxed the anchor to `(?:^|[-.])`, covering
+`gateway.ts`, `rex-gateway.ts` and `api.gateway.ts` while still rejecting `mygateway.ts`. Test
+written first and watched fail on the old code (`AssertionError: expected null to be 'gateway'`).
 
-**Each fix needs a test that fails before it.** Write the assertion, watch it go red, then fix the
-pattern. A green test nobody saw fail is indistinguishable from no test.
+Measured with `analyze --fast --full`:
 
-**Re-measure after:** `sourcevision analyze . --fast`, then read
-`.sourcevision/classifications.json`. The new `totalUnclassified` is the honest ELM target and
-replaces the 259 figure everywhere.
+| | before | after |
+|---|---|---|
+| classified | 424 | **428** |
+| unclassified | 259 | **255** |
+| `gateway` | 0 | **4** |
+| classes present | 11 | **12** |
+
+Gates green: `pnpm typecheck` across all 6 packages, 1192 sourcevision analyzer tests, 108
+architecture-policy + domain-isolation e2e tests.
+
+### ⚠️ Correction — "target the six empty classes first" was wrong
+
+This IMPL previously said to fix rules for all six zero-example archetypes. **Only `gateway` was
+fixable.** I tested each of the other five signal sets against the real unclassified paths, and all
+five returned **zero** candidate hits:
+
+| Archetype | Signals | Why it never fires here |
+|---|---|---|
+| `middleware` | `/middleware/`, `/middlewares/`, `*.middleware.ts` | n-dx has no such directory or filename |
+| `model` | `/models/`, `*.model.ts`, `*.schema.ts` | Rails/Django-style convention, unused here |
+| `service` | `/services/`, `/service/`, `*.service.ts`, `/clients/` | Angular/NestJS-style convention, unused here |
+| `route-module` | export-based (`loader`/`action`/`meta`/…) | Remix convention, unused here |
+| `test-helper` | `/fixtures/`, `/mocks/`, `__mocks__`, `test-utils.ts` | this repo uses none of these |
+
+**Their signals are correct — the repo just isn't one of those ecosystems.** Adding rules for
+conventions n-dx doesn't use would be overfitting to nothing. **The consequence for the ELM is
+real: those five classes cannot be populated from this repository at any effort.** Their training
+examples have to come from other codebases, which makes Step 2's "repeat across more than one
+repository" a hard requirement rather than a nice-to-have.
+
+### ⚠️ Gotcha with user impact — rule fixes are invisible without `--full`
+
+The first re-measure after the fix returned **424/259, unchanged**. The fix was working; the
+measurement was not. `analyze` reuses `previousClassifications` for unchanged files
+(`classify.ts:99-110`), and the gateway files had not changed, so the cached `archetype: null` was
+reused. Only `--full` bypasses the cache (`analyze-phases.ts:210`,
+`previousClassifications: !ctx.fullMode ? previousClassifications : undefined`).
+
+**Always re-measure with `--fast --full`.** More importantly, this generalises beyond our
+measurements: **a user who upgrades n-dx and receives improved archetype rules will not see any
+benefit until they run a full re-analysis.** Worth deciding whether shipping rule changes should
+force a classification-phase invalidation — filed as an open question below.
+
+**Each further fix needs a test that fails before it.** Write the assertion, watch it go red, then
+fix the pattern. A green test nobody saw fail is indistinguishable from no test.
 
 ### Step 2 — Corpus acquisition (this one costs tokens, deliberately)
 
@@ -235,3 +275,8 @@ Rule fixes (Step 1) roll back independently and safely — they are pure signal 
 - **Token baseline is still missing.** `TN-J3` remains unclaimed and unfixed: all
   `.hench/runs/*.json` record `{"input":0,"output":0}`. Without it this project can demonstrate
   *fewer calls* but cannot report *tokens saved*.
+- **Should shipping rule changes invalidate the classification cache?** Discovered during Step 1:
+  users who upgrade and get better archetype rules see no benefit until they run `--full`
+  (`analyze-phases.ts:210`). Options are a schema/ruleset version stamp in `classifications.json`
+  that forces re-classification when it changes, release notes telling users to run `--full`, or
+  accepting the staleness. Affects every future `archetypes.ts` change, not just this project.
