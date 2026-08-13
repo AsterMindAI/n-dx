@@ -24,7 +24,6 @@ owner a note before assuming it's stale — don't just delete it.
 | 2026-08-11 | Nolan (lead) | Nolan | **Team Nolan claims Path B** — sourcevision archetype classification, per [`SYNC-001`](Nolan-Agents/syncs/SYNC-001-2026-08-11-elm-path-assignment.md) and [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md). **Paths A and C remain unclaimed** — this is not a claim on them, and Jarrett/Thomas should take whichever they want. | `packages/sourcevision/src/analyzers/**` | On Path B completion or hand-off |
 
 
-| 2026-08-13 | Jam | Nolan | `TN-J7` — IMPL Step 2: corpus acquisition. **LLM-labelled half is BLOCKED** — no `claude`/`codex` binary on PATH and no API keys, verified by an actual `complete()` call returning `ClaudeClientError reason=not-found`. Doing the unblocked half: corpus harness, second-repo measurement, archetype-coverage assessment. **No tokens spendable, so none spent.** | New `scripts/elm-corpus-build.mjs`; clones read-only into the session scratchpad (outside the repo); one `analyze --fast --full` per repo. | Same session |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -56,6 +55,22 @@ right now" so nobody has to ask.
 Things every team needs to know — ADRs accepted, interfaces changed, measured ELM results,
 direction changes. Link the ADR; don't restate it here.
 
+- **2026-08-13 — Path B Step 2: the ELM case got *stronger*, but the corpus is blocked on auth.**
+  Ask Jam / Nolan (Team Nolan).
+  - **A second real codebase is 60.5% unclassified vs n-dx's 37.3%** (`AsterMind-Community-Edition`,
+    114 source files). n-dx is the *favourable* case — the prize on users' repos is plausibly
+    larger than on ours. This is the strongest evidence yet for doing the ELM at all, and it
+    partly answers the pessimism in the 2026-08-11 entry below.
+  - **🔴 Blocked (`TN-J8`): no LLM is reachable** — no `claude`/`codex` binary on PATH, no API
+    keys. Verified by executing a completion: `ClaudeClientError reason=not-found`. The corpus must
+    be LLM-labelled, so **all of Path B's ML work is blocked behind this.** Fix: install the Claude
+    CLI, `ndx config llm.claude.cli_path <path>`, or export an API key.
+  - **Corpus needs ecosystem diversity, not more repos (`TN-J9`).** Two repos added 473 rows and
+    **zero** new classes; `middleware`, `model`, `route-module`, `service`, `test-helper` remain at
+    zero. Two TypeScript libraries are worth about one for label coverage.
+  - **Harness shipped** — `scripts/elm-corpus-build.mjs` (commit `8617f9f1`), seeded and
+    reproducible, computes the majority-class baseline per corpus. **That baseline moves with the
+    corpus** (23.0% combined vs 19.6% n-dx alone) — recompute it, never quote it from a document.
 - **2026-08-11 — ⚠️ Path B Step 0 measured. The ELM case is weaker than the ADR implied, and the
   5.9% baseline we've all been quoting is wrong.** Ask Jam / Nolan (Team Nolan).
   Measured `sourcevision analyze . --fast` on n-dx itself — **zero tokens**, `--fast` skips LLM

@@ -131,6 +131,58 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-13 (c) — Step 2: harness shipped, corpus blocked on auth, ELM case got stronger
+
+**Did:**
+- Verified the LLM gate **before** spending effort — executed a real `complete()` call rather than
+  reading config. Result: `ClaudeClientError reason=not-found`, `'claude' not found on PATH`.
+  No API keys either. Claimed `TN-J7` recording the blocker up front.
+- Cloned `AsterMindAI/AsterMind-Community-Edition` (read-only, into the session scratchpad, not the
+  repo) and analyzed it with `--fast --full`.
+- Shipped `scripts/elm-corpus-build.mjs` + the sanity corpus (commit `8617f9f1`).
+
+**Learned:**
+- **The ELM case is stronger than Step 0 suggested.** AsterMind-CE is **60.5% unclassified** vs
+  n-dx's 37.3%. n-dx is the *favourable* case; users' repos plausibly have a bigger prize. This
+  partly answers my own 08-11 pessimism — worth saying out loud since I argued the other way.
+- **Repo count is not the lever; ecosystem diversity is.** AsterMind-CE added 473 rows and **zero**
+  new classes — only `utility`/`entrypoint`/`types`/`config`/`store`/`component`, all of which
+  n-dx already had. Both repos are the same *kind* of thing (a TS library), so two are worth about
+  one for label coverage. `middleware`, `model`, `route-module`, `service`, `test-helper` are still
+  at zero. Filed `TN-J9` with the specific repo types needed.
+- **The majority-class baseline is corpus-dependent** — 19.6% for n-dx alone, **23.0%** combined.
+  So it cannot be quoted from a document; the builder recomputes and prints it every run. Good
+  thing, given I already published one wrong baseline.
+- Local disk had no useful corpus candidates (checked before cloning anything) — only n-dx clones
+  and a 1-file demo repo.
+
+**Broke / still broken:**
+- **🔴 `TN-J8`: no LLM reachable.** This blocks the real corpus and therefore every ML step of
+  Path B. Not something I can fix — it needs the CLI installed, a `cli_path` configured, or an API
+  key.
+- Nothing else broken. No source files touched this session beyond the new script. NUL bytes
+  untouched.
+
+**Left undone and why:**
+- **The actual LLM-labelled corpus** — blocked, see above. The harness refuses to build one and
+  prints the fix, rather than silently emitting a rule-derived set that would look fine and be
+  worthless.
+- **Did not clone more repos speculatively.** Having learned that two similar repos add no class
+  diversity, pulling more TypeScript libraries would have burned time for nothing. Documented the
+  five repo *types* that would actually help instead — that seemed the honest reading of "use your
+  discretion".
+- Step 3 (benchmark) not started: it needs the corpus.
+
+**Notes sent / received:** Step 2 findings posted to `IN-FLIGHT.md` § 3 for all teams, including
+that the ELM case improved.
+
+**Handoff:**
+- **Unblock `TN-J8` first** — nothing else in Path B can move. Then re-run analyze without
+  `--fast` on both repos and `node scripts/elm-corpus-build.mjs <repos...>` (defaults to
+  `--source=llm`) to produce the real corpus.
+
+---
+
 ### 2026-08-13 (b) — Re-verified the docs; shipped TN-J5, the first code of this project
 
 **Did:**

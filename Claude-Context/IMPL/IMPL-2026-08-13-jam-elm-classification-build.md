@@ -165,6 +165,73 @@ is the wrong distribution (ADR § Decision, commitment 1).
 **Budget note:** this is the one deliberate token spend in the plan. It is bounded and one-off, and
 its purpose is to end the recurring spend.
 
+### 🔴 BLOCKED 2026-08-13 — no LLM is reachable, so the real corpus cannot be built
+
+Verified by executing a completion, not by inspecting config:
+
+```
+ClaudeClientError | reason = not-found
+'claude' not found on PATH. Install 'claude' or set
+  `n-dx config llm.claude.cli_path /path/to/claude`.
+```
+
+`.n-dx.json` sets `llm.vendor = "claude"`, model `claude-sonnet-4-6`, but there is no `claude` or
+`codex` binary on `PATH` and no `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_API_KEY` in the
+environment. `classifyBatchWithLLM` treats this as `"auth-error"` and aborts every batch
+(`classify.ts:431-435`), so **zero `source: "llm"` rows can be produced here.**
+
+**To unblock:** install the Claude CLI, or `ndx config llm.claude.cli_path <path>`, or export an
+API key. Then re-run analyze **without** `--fast`.
+
+### ✅ DONE anyway — the harness and the measurements that did not need an LLM
+
+**`scripts/elm-corpus-build.mjs`** (commit `8617f9f1`) — reads
+`.sourcevision/classifications.json` from any number of analyzed repos and emits a corpus with
+provenance (repo, remote, commit, branch, dirty flag), a **seeded stratified** train/held-out
+split, and a class-distribution report. It defaults to `--source=llm` and refuses to run when no
+such rows exist, printing the fix. Verified: two runs produce byte-identical splits; every class
+appears in both splits; train and held-out are disjoint.
+
+It computes and prints the **majority-class baseline per corpus** — 23.0% for the combined set vs
+19.6% for n-dx alone. The baseline moves with the corpus, so it must be recomputed, never quoted
+from a previous document.
+
+**Second repo measured** — `AsterMindAI/AsterMind-Community-Edition` (cloned read-only into the
+session scratchpad, analyzed with `--fast --full`):
+
+| Repo | Source files | Classified | Unclassified | LLM batches |
+|---|---|---|---|---|
+| n-dx | 683 | 428 (62.7%) | **255 (37.3%)** | 9 |
+| AsterMind-CE | 114 | 45 (39.5%) | **69 (60.5%)** | 3 |
+
+**This substantially strengthens the case for the ELM.** The generality caveat was right, and it
+cuts in our favour: n-dx is the *favourable* case at 37.3% unclassified, while a second real
+codebase sits at 60.5%. The prize on users' repos is plausibly larger than on ours.
+
+### ⚠️ Finding that changes the corpus strategy: repo *count* is not the lever, repo *diversity* is
+
+Adding AsterMind-CE added **473 rows but no new classes**. It contributed only `utility`,
+`entrypoint`, `types`, `config`, `store`, `component` — all classes n-dx already had in quantity.
+The same five archetypes remain at zero across **both** repos:
+
+**Still zero after two repos:** `middleware`, `model`, `route-module`, `service`, `test-helper`.
+
+Both repos are the same *kind* of codebase — a TypeScript library/tool. Two similar repos are
+worth about one for label coverage. **Step 2 needs repos from different ecosystems, chosen
+deliberately against the missing labels:**
+
+| Missing class | Repo type that would populate it |
+|---|---|
+| `service` | NestJS or Angular app (`/services/`, `*.service.ts`) |
+| `middleware` | Express/Koa server (`/middleware/`, `*.middleware.ts`) |
+| `model` | An ORM-backed API (`/models/`, `*.model.ts`) |
+| `route-module` | A Remix app (exports `loader`/`action`/`meta`) |
+| `test-helper` | Any repo using `__mocks__/`, `/fixtures/`, `test-utils.ts` |
+
+The combined sanity corpus is also **badly skewed** — top 3 classes are 244 of 473 (52%), while
+`gateway` has 4 rows and `config` has 2. The builder flags both as thin. Those two cannot be
+learned from this corpus at any hyperparameter setting.
+
 ### Step 3 — Benchmark and tune (the kill-criterion gate)
 
 `scripts/elm-archetype-benchmark.mjs`, modelled on `scripts/elm-hello-world.mjs` — seeded,
