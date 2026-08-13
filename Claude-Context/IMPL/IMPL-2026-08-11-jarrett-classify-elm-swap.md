@@ -162,6 +162,13 @@ was added, revert that `package.json`/lockfile change too and re-run `pnpm insta
       pass alone can't resolve them) to generalize. More codebases analyzed with LLM enrichment on
       would directly address this, but costs real tokens/time — the user's call, not either agent's
       to spend unilaterally.
+- [ ] **New, 2026-08-13 — pooled-training experiment result:** tried the direct fix (pooled 3 new,
+      diverse codebases into training — `express`/`indie-stack`/`zustand`, chosen to fill the
+      `route-module`/`store` label gaps). Did not help — in-domain generalization dropped below the
+      gate it previously cleared, out-of-domain stayed similarly poor. Shared with Knight for
+      independent verification (`Notes/NOTE-archer-to-knight-2026-08-13-expanded-training-corpora.md`).
+      Open: does a much larger pool (dozens of codebases) behave differently, or is simple pooling
+      the wrong lever entirely?
 - [ ] **New, 2026-08-12 — worth its own ADR:** the evidence-leakage finding (LLM-sourced
       `classifications.json` entries have their own label restated as "evidence") is a real gap in
       the production schema, not specific to this prototype. `TJ-A1` and `TJ-K1` each worked around

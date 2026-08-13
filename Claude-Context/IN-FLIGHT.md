@@ -38,9 +38,14 @@ One line per team, updated by that lead. This is the standing answer to "what is
 right now" so nobody has to ask.
 
 - **Team Nolan:** <in flight · shipped since last update · blockers>
-- **Team Jarrett:** in flight — `TJ-A1`, ELM pre-filter stage for `classify.ts`'s LLM fallback
-  (`ADR-2026-08-11-jarrett-elm-prefilter-classify.md`). Docs-only so far, no code touched yet;
-  BLOCKED on open questions in the IMPL before implementation starts.
+- **Team Jarrett:** in flight — `TJ-A1` (Archer) and `TJ-K1` (Knight), two independent ELM
+  pre-filter implementations for `classify.ts`'s LLM fallback, same ADR
+  (`ADR-2026-08-11-jarrett-elm-prefilter-classify.md`), deliberately built without either reading
+  the other's code. Both converged on "gate doesn't clear" independently; Archer's follow-up
+  (pooling 3 new codebases into training) didn't fix it either — handed to Knight for an
+  independent rerun via `Jarrett-Agents/Notes/NOTE-archer-to-knight-2026-08-13-expanded-training-corpora.md`.
+  Code lives on separate worktrees/branches (`elm/jarrett/classify-elm-prefilter`,
+  `elm/jarrett/classify-elm-knight`); no production code touched by either yet.
 - **Team Thomas:** <…>
 
 **Fork sync:** last `upstream/main` → `origin/main` fast-forward: _<date, by whom>_

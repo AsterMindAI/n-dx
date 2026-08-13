@@ -201,3 +201,37 @@ evidence than either alone.
 **Per the ADR template's requirement that a negative result gets the same rigor as a positive
 one:** this is being reported as such, not discarded. **Did not proceed to IMPL Steps 6-8**
 (production wiring) — the gate didn't clear.
+
+### Follow-up: pooled-training experiment (2026-08-13) — did not confirm the "needs more data" read
+
+The read above was "training-data quantity/representativeness," so the direct test is: add more,
+more-diverse training data and see if generalization improves. Cloned three small, well-known,
+genuinely different codebases chosen specifically to fill archetype labels neither existing
+dataset had any examples of — `expressjs/express` (route-handler/service), `remix-run/indie-stack`
+(the official Remix starter — sole source of `route-module` examples, zero before), `pmndrs/zustand`
+(literal state-management library — `store` examples, near-zero before). Same `ndx analyze`
+phase 1/2 + manual-classification-for-the-LLM-fallback method as the original run (see
+`packages/sourcevision/scripts/eval-classify-elm.ts`'s new `SV_ELM_EXTRA_TRAINING_CLASSIFICATIONS`
+env var for the pooling mechanism). Full detail in `Archer.md`'s 2026-08-13 session log; shared
+with Knight via `Notes/NOTE-archer-to-knight-2026-08-13-expanded-training-corpora.md` for an
+independent rerun on `TJ-K1`.
+
+**Pooled training (this repo + all three new corpora, 486 examples/16 categories, up from
+413/14) against the same untouched AsterMind held-out set:**
+
+| | Original (2 codebases) | Pooled (5 codebases) |
+|---|---|---|
+| In-domain best point | 95.8% @ 23.1% (t=0.14) — clears gate | 87.3% @ 45.1% (t=0.10) — does **not** clear gate |
+| Out-of-domain best meaningful point | 60.9% @ 29.5% (t=0.12) | ~48% @ 32.1% (t=0.10) |
+
+**Result: pooling more/diverse codebases into training did not improve generalization, and the
+in-domain result — which previously cleared the gate — no longer does either.** Likely mechanism:
+adding categories (14→16) and cross-codebase naming diversity increases the classification task's
+difficulty faster than the added examples increase per-category density; the softmax confidence
+spread compresses further with more categories, same direction as the original calibration finding
+but more pronounced. This does not confirm the "just needs more data" hypothesis in the simple
+pooling form tested here — it may need far more examples per category than three small repos
+provide, or a fundamentally different feature representation, or the base-ELM approach may not be
+the right tool for cross-codebase generalization on this task regardless of data volume. Flagged to
+Knight for independent verification before treating this as settled either way — one pipeline's
+surprising result is a lead, not a conclusion.

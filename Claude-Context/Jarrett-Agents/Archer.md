@@ -35,6 +35,13 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-08-13 update:** tried the direct fix for the "not enough diverse training data" read —
+pooled three new codebases into training. **It didn't help; in-domain generalization got worse.**
+Full detail in today's session log below and the ADR's new "Follow-up: pooled-training experiment"
+subsection. Shared with Knight via a `Notes/` handoff (not a direct `Knight.md` edit — their `TJ-K1`
+work lives on an unmerged branch, editing their charter directly risked a real conflict) so they can
+rerun `TJ-K1` against the same expanded corpora independently.
+
 **TJ-A1 has a real result (2026-08-12): gate did not clear.** In-domain held-out precision passed
 (95.8% @ 23.1% coverage), out-of-domain (`AsterMind-Community-Edition`) did not (best meaningful
 point 60.9% @ 29.5% coverage, vs. the 95% bar). This converges independently with Knight's `TJ-K1`
@@ -79,6 +86,54 @@ Status can move to Accepted.
       gated on this).
 
 ## Session log
+
+### 2026-08-13 — pooled-training experiment: more diverse data didn't fix generalization
+
+User's direct instruction after seeing the 2026-08-12 result: gather more training data and share
+it with Knight for a `TJ-K1` rerun. Checked the machine first — only `AsterMind-Community-Edition`
+and a second, near-duplicate n-dx checkout exist locally, neither adds real diversity — so asked the
+user where new codebases should come from rather than guessing. They picked "clone small well-known
+open-source repos" and asked me to also construct a distinct test case for Knight and notify them.
+
+**Gathered three, chosen for archetype-gap coverage, not just volume:** `expressjs/express`
+(shallow clone), `remix-run/indie-stack` (the official Remix starter — only source of
+`route-module` examples across every dataset so far; that label had zero examples before, since
+n-dx doesn't use Remix and AsterMind isn't a web app), `pmndrs/zustand` (literal state-management
+library — `store` label, also near-zero before). Ran `ndx analyze --phase=1/2` (free) on all three,
+then classified the leftover unclassified files myself the same way as 2026-08-12 (no `claude`
+CLI/API key available, same blocker as before — this is a real stand-in for the LLM fallback, not a
+test of it), merged via the real `mergeClassificationResults` function. 91 new classified files
+across the three (express 43, indie-stack 26, zustand 22).
+
+**Extended the eval script** (`SV_ELM_EXTRA_TRAINING_CLASSIFICATIONS`, comma-separated paths) to
+pool multiple training sources rather than just this repo's own data, keeping
+`SV_ELM_HELDOUT_CLASSIFICATIONS` (AsterMind) fixed so the comparison is controlled — same held-out
+set, only the training side changes.
+
+**Result — did not confirm the hypothesis.** Pooled training (486 examples/16 categories, up from
+413/14) against the same held-out set: in-domain best point dropped to 87.3% @ 45.1% coverage
+(t=0.10) — **no longer clears the 95% gate that the original 2-codebase run cleared** (95.8% @
+23.1%). Out-of-domain stayed similarly poor (~48% @ 32%, previously 60.9% @ 29.5%). Simply pooling
+more/diverse codebases made things worse, not better — most likely because two more categories
+(14→16) and more cross-codebase naming variance raised the task's difficulty faster than three
+small repos' worth of examples could offset, and the softmax confidence spread compressed further
+with more categories (same direction as the original calibration finding, more pronounced here).
+
+**This does not confirm "just needs more data" in the simple-pooling form tested.** Doesn't rule
+out that a *much* larger corpus (dozens of codebases, not three) would behave differently, or that
+a different feature representation would generalize better with the same data — just that the
+direct, cheap version of the fix didn't work. Reported as a real finding, not silently dropped, per
+the same "negative result gets the same rigor" doctrine as the original gate check.
+
+**Shared with Knight** via `Claude-Context/Jarrett-Agents/Notes/NOTE-archer-to-knight-2026-08-13-expanded-training-corpora.md`
+rather than editing `Knight.md` directly — their `TJ-K1` work lives on `elm/jarrett/classify-elm-knight`,
+an unmerged branch, so a direct charter edit here would set up a real merge conflict when both land.
+The note points at the three new corpora's `.sourcevision/` output and this session's pooling
+result, asking Knight to rerun `TJ-K1` against the same data independently rather than assuming my
+read is right.
+
+**Not yet done:** whether Knight's independent rerun agrees; whether to try pooling with
+substantially more codebases (order-of-magnitude more, not three) before concluding either way.
 
 ### 2026-08-12 (later) — TJ-A1 real numbers: gate did not clear, converges with Knight's TJ-K1
 

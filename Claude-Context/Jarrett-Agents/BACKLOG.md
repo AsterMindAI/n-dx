@@ -11,4 +11,4 @@ if you collide on rebase, pick another item.
 
 | ID | Item | Related ADR / IMPL | Status | Claimed by |
 |---|---|---|---|---|
-| TJ-A1 | ELM pre-filter stage before classify.ts's LLM fallback (`enrichClassificationsWithLLM`) — prototype + eval done, gate did not clear on held-out generalization | `ADR-2026-08-11-jarrett-elm-prefilter-classify.md`, `IMPL-2026-08-11-jarrett-classify-elm-swap.md` | ONGOING (real numbers in 2026-08-12; converges with Knight's TJ-K1; awaiting user call on gathering more training data vs. pausing here) | Archer |
+| TJ-A1 | ELM pre-filter stage before classify.ts's LLM fallback (`enrichClassificationsWithLLM`) — prototype + eval done, gate did not clear on held-out generalization; pooled-training retry also did not clear it | `ADR-2026-08-11-jarrett-elm-prefilter-classify.md`, `IMPL-2026-08-11-jarrett-classify-elm-swap.md` | ONGOING (2026-08-13: pooling 3 more codebases into training didn't help, shared with Knight for independent TJ-K1 rerun — see Notes/) | Archer |
