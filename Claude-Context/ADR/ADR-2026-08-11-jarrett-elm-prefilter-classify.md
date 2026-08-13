@@ -69,6 +69,11 @@ held-out accuracy (see Evidence) doesn't clear the acceptance bar.
 
 ## Consequences
 
+**Status note (2026-08-12):** none of the below has happened — the gate in Evidence didn't clear,
+so `classify.ts`/`analyze-phases.ts` are untouched and no ELM runs in production. This section
+describes what the Decision *would* cost/save if a future retry (see Evidence, "Read on why")
+clears the gate, kept here so that evaluation doesn't have to be re-derived from scratch.
+
 **Easier:** fewer files reach `callClaude` per `ndx analyze`, directly cutting the token/latency
 cost the LLM fallback already incurs on every non-fast run with leftover unclassified files. The
 retry-and-degrade machinery (`computeLLMClassifyAttempts`, JSON-parse fallback in
@@ -93,11 +98,10 @@ the `FileClassification` shape otherwise.
 
 ## Evidence
 
-**Not yet measured — this is what keeps Status at Proposed.** No ELM-viability claim is being made
-yet. Per `ADR-TEMPLATE.md`, this section states the planned methodology so the eventual numbers are
-reproducible by another team; the IMPL's prototype/eval step is where real numbers get filled in.
-Methodology below was tightened 2026-08-12 after checking the actual dependency and data
-prerequisites rather than assuming them.
+**Measured 2026-08-12 — see "Measured results" below for the numbers.** This section first
+records the planned methodology (kept intact so the run is reproducible by another team), then the
+actual results. Per `ADR-TEMPLATE.md`, an ELM-viability claim — positive or negative — needs both;
+this ADR is making a negative-leaning one, not an unmeasured proposal anymore.
 
 - **Task framing:** input = file path + partial evidence signals (`archetypeId(weight)` pairs from
   `classifyFile`'s scoring, available even on `null`-archetype files); output = one of
@@ -138,8 +142,9 @@ prerequisites rather than assuming them.
   (proposed: ≥95%), not from a single accuracy-vs-baseline comparison. Majority-class baseline
   (from `computeSummary`'s `byArchetype`) is still reported for context, just not used as the sole
   gate.
-- **Committed script:** path to be named in the IMPL's Files-touched table — not a one-off snippet
-  run once and discarded.
+- **Committed script:** `packages/sourcevision/scripts/eval-classify-elm.ts`, committed on
+  `elm/jarrett/classify-elm-prefilter` — not a one-off snippet run once and discarded. Training
+  logic lives alongside it in `packages/sourcevision/src/analyzers/classify-elm.ts`.
 
 ### Measured results (2026-08-12)
 

@@ -39,11 +39,11 @@
 
 | Path | Owning team | New/Edit | Note sent? |
 |---|---|---|---|
-| `packages/sourcevision/src/analyzers/classify-elm.ts` | unassigned — Team Jarrett scoped | **Created 2026-08-12**, typechecks clean | No — not another team's path |
-| `packages/sourcevision/src/analyzers/classify.ts` | unassigned — Team Jarrett scoped | **Not yet edited.** Prototype/eval phase reads its exported types only; the `"elm"` source value and any export addition happen at Step 7, after the Step 5 gate passes. | No |
-| `packages/sourcevision/src/cli/commands/analyze-phases.ts` | unassigned — Team Jarrett scoped | **Not yet edited.** The in-between call is wired at Step 8, gated — see ADR "Decision": neither existing function is modified, the new stage only reads `analyzeClassifications`'s output and narrows `enrichClassificationsWithLLM`'s input. | No |
-| `packages/sourcevision/src/schema/v1.ts`, `validate.ts` | unassigned — Team Jarrett scoped | **Not yet edited.** Step 7, gated. | No |
-| `packages/sourcevision/scripts/eval-classify-elm.ts` | unassigned | **Created 2026-08-12**, typechecks clean, not yet runnable (blocked on Step 2b) | No |
+| `packages/sourcevision/src/analyzers/classify-elm.ts` | unassigned — Team Jarrett scoped | **Created and fixed 2026-08-12** (evidence-leakage bug), typechecks clean | No — not another team's path |
+| `packages/sourcevision/src/analyzers/classify.ts` | unassigned — Team Jarrett scoped | **Untouched — gate didn't clear, Step 7 not reached.** Prototype/eval phase only ever read its exported types. Stays untouched unless the user asks for a retry with better data and that retry clears the gate. | No |
+| `packages/sourcevision/src/cli/commands/analyze-phases.ts` | unassigned — Team Jarrett scoped | **Untouched — gate didn't clear, Step 8 not reached.** See ADR "Decision": the planned in-between call would read `analyzeClassifications`'s output and narrow `enrichClassificationsWithLLM`'s input without modifying either — still just a plan. | No |
+| `packages/sourcevision/src/schema/v1.ts`, `validate.ts` | unassigned — Team Jarrett scoped | **Untouched — gate didn't clear, Step 7 not reached.** | No |
+| `packages/sourcevision/scripts/eval-classify-elm.ts` | unassigned | **Created, fixed, and run 2026-08-12** — produced the ADR's Measured results | No |
 | `packages/sourcevision/package.json` / root `pnpm-lock.yaml` — adds `@astermind/astermind-community` | **shared** per `OWNERSHIP.md` | **Done 2026-08-12** — installed and verified in `../n-dx-jarrett` worktree | **Claimed `IN-FLIGHT.md` § 1 2026-08-12** |
 
 ## Steps
@@ -53,11 +53,18 @@
 2. **Done (2026-08-12).** `git worktree add ../n-dx-jarrett -b elm/jarrett/classify-elm-prefilter`
    — adopted worktree isolation for this agent's own work given the concrete Knight-parallel-work
    scenario (see Worktree field above); team-wide decision still separately open.
-2b. **Prerequisite, not yet run:** neither this repo nor the chosen held-out codebase
-   (`AsterMind-Community-Edition`) has `.sourcevision/classifications.json` yet (confirmed
-   2026-08-12). Both need `ndx analyze` run before step 3 can pull real data — this is a real,
-   LLM-calling, potentially slow operation, not scaffolding; flagged separately rather than folded
-   silently into step 3.
+2b. **Done 2026-08-12, but not as originally planned.** `ndx analyze --phase=1` and `--phase=2` ran
+   cleanly on both this repo and `AsterMind-Community-Edition`; `--phase=3` (the actual
+   `callClaude`-driven LLM fallback) failed on both — `claude` CLI not on PATH, confirmed genuinely
+   absent (not a shell-PATH quirk) via `Get-Command`, npm global modules, and common install paths,
+   and no `ANTHROPIC_API_KEY` was set. Rather than block on installing the CLI or provisioning a
+   key, Archer classified the unclassified files directly — a legitimate stand-in for what
+   `enrichClassificationsWithLLM` would have produced (same judgment call, same information: path +
+   archetype catalog, no file contents), not a test of `classify.ts`'s own LLM-calling code — and
+   merged the results via the real `mergeClassificationResults` function for schema fidelity. **Gap
+   this leaves:** the actual `callClaude` code path itself was never exercised end-to-end in this
+   IMPL; if that matters later (e.g. for a Step 10 PR reviewer who wants to see the real pipeline
+   run), it still needs a working `claude` CLI or API key.
 3. **Done (2026-08-12).** Training-data extraction written:
    `packages/sourcevision/src/analyzers/classify-elm.ts` (`extractExamples`/`fileToText`) pulls
    `(path, evidence signals) → archetype` pairs from a `Classifications` result. Also contains
@@ -68,14 +75,19 @@
    real labeled examples. Used `trainFromData()` with manually-encoded vectors
    (`elm.encoder.encode`/`.normalize`) instead — documented prominently in the module so Knight's
    parallel build doesn't reach for `train()` first.
-4. **Done (2026-08-12), not yet runnable end-to-end.** Eval script written:
+4. **Done and run 2026-08-12.** Eval script written and executed:
    `packages/sourcevision/scripts/eval-classify-elm.ts` — fixed seed (`20260812`), seeded
    Fisher-Yates train/held-out split, majority-class baseline (reported for context only), and a
-   precision/coverage curve across confidence thresholds. Held-out source path is intentionally an
-   env var (`SV_ELM_HELDOUT_CLASSIFICATIONS`), not a hardcoded relative path — see ADR Evidence on
-   why `../AsterMind-Community-Edition` isn't portable. Both files typecheck clean
-   (`pnpm --filter @n-dx/sourcevision typecheck`, plus a targeted check of `scripts/`, which isn't
-   in `tsconfig.json`'s `include`). **Can't actually run yet** — blocked on Step 2b.
+   precision/coverage curve across confidence thresholds. Held-out source path is an env var
+   (`SV_ELM_HELDOUT_CLASSIFICATIONS`), not a hardcoded relative path — see ADR Evidence on why
+   `../AsterMind-Community-Edition` isn't portable. Two fixes applied after the first run before
+   trusting the output: threshold sweep recalibrated (model's real confidence range is ~0.08-0.19,
+   a sweep starting at 0.5 showed 0% coverage everywhere and looked broken rather than
+   miscalibrated), and an evidence-leakage bug in `classify-elm.ts`'s feature extraction fixed
+   (LLM-sourced entries' `evidence` field is the resolved label restated, not independent signal —
+   see ADR Evidence for detail, this is a real production-schema property, not prototype-specific).
+   Both files typecheck clean (`pnpm --filter @n-dx/sourcevision typecheck`, plus a targeted check
+   of `scripts/`, which isn't in `tsconfig.json`'s `include`).
 5. **Gate — evaluated 2026-08-12, did not clear.** In-domain held-out precision cleared the bar
    (95.8% @ 23.1% coverage), but out-of-domain (`AsterMind-Community-Edition`, the number that
    actually matters for this ADR's Decision) did not — best meaningful-coverage point 60.9%
@@ -90,10 +102,10 @@
 8. Wire into `runClassificationsPhase` (`analyze-phases.ts`), between `analyzeClassifications` and
    `enrichClassificationsWithLLM`: run the ELM stage first, shrink `unclassified` to the ELM's own
    low-confidence remainder before the LLM stage runs on what's left.
-9. Update the ADR's Evidence section with the real numbers from step 4; flip Status to Accepted if
-   step 5's gate passed.
-10. Open a PR per the org ADR's branch+PR rule — this is substantive work, not the docs-only
-    exception the September migration commit used.
+9. **Done 2026-08-12.** Updated the ADR's Evidence section with the real numbers from step 4.
+   Status stays Proposed, not Accepted — step 5's gate didn't pass.
+10. **Not started — no reason to yet.** A PR is for landing production wiring (steps 6-8), which
+    didn't happen. Revisit if a future retry clears the gate.
 
 Order matters at steps 3-5 specifically: the eval has to run and pass its gate *before* any
 production wiring (steps 6-8), so a negative result costs a script, not a half-integrated feature.
