@@ -30,7 +30,11 @@ Three constraints came out of it, and they shape the design rather than block it
    `route-module`, `service`, `test-helper`. A model trained on rule output cannot predict them.
 2. **All 259 unclassified files have zero signal evidence.** The path string is the only feature —
    for the ELM *and* for the LLM doing the job today.
-3. **~30 of the 259 (12%) are reachable by simple name rules; 88% is genuine semantic residue.**
+3. **Roughly 30 of the 259 (~12%) look reachable by simple name rules; the rest is genuine
+   semantic residue.** ⚠️ **Method caveat:** that split is an *estimate*, produced by running an
+   ad-hoc list of a dozen filename regexes over the unclassified paths — not a measurement, and
+   not a bound. The real number is whatever Step 1 actually lands. Treat "most of the residue is
+   semantic" as the finding; treat "30" as an order of magnitude.
 
 **Baseline correction, carried forward:** the honest baseline is **19.6%** (majority class
 `utility`, 83/424), not the 5.9% uniform-random figure quoted in the earlier ADR and SYNC-001.
