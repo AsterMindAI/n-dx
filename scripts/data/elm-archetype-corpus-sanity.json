@@ -1,0 +1,3383 @@
+{
+  "schema": "elm-archetype-corpus/v1",
+  "generatedAt": "2026-08-13T17:03:50.309Z",
+  "generatedBy": "scripts/elm-corpus-build.mjs",
+  "provenance": {
+    "sources": [
+      "algorithmic"
+    ],
+    "seed": 42,
+    "holdout": 0.25,
+    "repos": [
+      {
+        "repo": "n-dx-1",
+        "path": "/Users/nolanmoore/n-dx-1",
+        "git": {
+          "commit": "903627034344f706c8515665bf6b895ae499004a",
+          "branch": "nolan-work",
+          "remote": "https://github.com/AsterMindAI/n-dx.git",
+          "dirty": true
+        },
+        "totalFiles": 683,
+        "classified": 428,
+        "unclassified": 255,
+        "harvested": 428
+      },
+      {
+        "repo": "AsterMind-Community-Edition",
+        "path": "/private/tmp/claude-501/-Users-nolanmoore-n-dx-1/981772f7-4a9e-44de-8eda-a71faf83c289/scratchpad/corpus-repos/AsterMind-Community-Edition",
+        "git": {
+          "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+          "branch": "main",
+          "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git",
+          "dirty": true
+        },
+        "totalFiles": 114,
+        "classified": 45,
+        "unclassified": 69,
+        "harvested": 45
+      }
+    ]
+  },
+  "stats": {
+    "total": 473,
+    "classes": 12,
+    "distribution": {
+      "utility": 109,
+      "component": 72,
+      "cli-command": 63,
+      "entrypoint": 53,
+      "store": 52,
+      "page": 37,
+      "hook": 28,
+      "route-handler": 25,
+      "types": 15,
+      "schema": 13,
+      "gateway": 4,
+      "config": 2
+    },
+    "majorityBaseline": {
+      "label": "utility",
+      "rate": 0.23044397463002114
+    },
+    "thinClasses": [
+      "gateway",
+      "config"
+    ]
+  },
+  "train": [
+    {
+      "text": "packages/hench/src/cli/commands/template.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/init.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/format-loe.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/status-shared.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/run.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/health.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/token-format.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/backfill-commit-attribution.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/reset.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/parse-md.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/smart-add-duplicates.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/add.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/update.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/prd-epic-resolver.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/usage.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/migrate-to-folder-tree.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/show.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/sync.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/decomposition-review.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/validate.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/status.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/status-sections.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/pr-markdown.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/consecutive-failures.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/analyze.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/init.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/report.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/folder-tree-sync.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/config.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/modification-intent.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/prune.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/init.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/validate-tokens.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/git-credential-helper.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/reshape.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/token-errors.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/analyze.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/migrate-folder-tree-filenames.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/tree.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/remove.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/chunked-review-state.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/next.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/adapter.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/smart-add.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/verify.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/migrate-to-md.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/reshape-detect-duplicates.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/detail-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/format-usage.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/task-utilization.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/degradation-banner.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/ui/components/BindUI.ts",
+      "label": "component",
+      "confidence": 1,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/components/data-display/health-gauge.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/zone-slideout.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/proposal-editor.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/triple-click-detector.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/data-display/collapsible-section.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/logos.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/memory-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/throttle-controls.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/tree-search.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/prd-tree.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/inline-status-picker.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/smart-add-input.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/config-footer.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/durations.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/bulk-actions.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/levels.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/analyze-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/copy-link-button.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/decorations.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/neolithic-overlay.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/guide.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/prune-confirmation.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/search-overlay.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/tree-utils.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/lazy-children.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/memory-warning.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/density-selector.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/index-md-sections.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/elapsed-time.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/tree-differ.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/sidebar.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/compute.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/notion-schema-wizard.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/task-detail.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/status-indicators.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/use-live-tick.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/data-display/findings-list.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/search-types.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/delete-confirmation.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/data-display/zone-map.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/progressive-loader.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/favicon.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/rex-task-link.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/prune-diff-tree.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/crash-recovery-banner.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/search-filter.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/listener-lifecycle.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/execution-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/polling-suspension-indicator.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/config.ts",
+      "label": "config",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/shared/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/autocomplete-chain/main.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/adapters/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/public.ts",
+      "label": "entrypoint",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/cli.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/public.ts",
+      "label": "entrypoint",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/practical-examples/01-smart-search-filtering/main.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/cli/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/guard/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/loader/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/schema/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/types/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/practical-examples/04-user-intent-classification/main.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/main.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/language-awareness-demo/main.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/public.ts",
+      "label": "entrypoint",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/chain-with-save/main.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/pro/math/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/messaging/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/practical-examples/02-content-moderation/main.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/schema/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/practical-examples/05-personalized-recommendations/main.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/quota/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/infoflow/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/analyze/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/integration-schemas/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/domain-gateway.ts",
+      "label": "gateway",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/rex-gateway.ts",
+      "label": "gateway",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/prd/rex-gateway.ts",
+      "label": "gateway",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-crash-recovery.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-feature-toggle.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-gateway.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-prd-data.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-dom-performance-monitor.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-file-edges.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-item-selection.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-memory-monitor.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-project-status.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-project-metadata.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-prd-deep-link.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-persistent-filter.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-zone-drag.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-index-md.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-delete-actions.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-toast.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-app-data.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-prd-websocket.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-refresh-throttle.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-subzone-edges.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-pan-zoom.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/project-settings.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/integration-config.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/llm-provider.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/domain-rex.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/domain-settings.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/merge-graph.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/view-registry.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/enrichment-thresholds.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/graph.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/rex-dashboard.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/suggestions.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/import-graph/model.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/import-graph/layout.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/hench-runs.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/files.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/sourcevision-tabs.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/architecture.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/zone-types.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/domain-sourcevision.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/domain-hench.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/overview.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/hench-templates.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/status-filter.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/token-usage.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/problems.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/pr-markdown.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/commands.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/analysis.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-sourcevision.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-features.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex-analysis.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-notion.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-validation.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-static.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-hench.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-token-usage.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/routes.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-data.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/route-detection.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-project.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/route-state.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-mcp.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-llm.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-status.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-adaptive.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-workflow.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-commands.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/schema/v1.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/schema/v1.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/schema/validate.ts",
+      "label": "schema",
+      "confidence": 1,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/validation.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/loader/schema/compat.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/schema/validate.ts",
+      "label": "schema",
+      "confidence": 1,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/schema/data-files.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/schema/v1.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/schema/levels.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/schema/templates.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/run-retention-scheduler.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/asana-client.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/run-change-detector.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/project-config.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/markdown-parser.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/atomic-write.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/adapter-registry.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/branch-naming.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/templates.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/run-retention.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/integration-schemas/asana.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/legacy-markdown-parser.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/run-token-index.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/folder-tree-mutations.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/store/SyntheticFieldStore.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/store/integration-schemas/github.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/jira-client.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/jira-adapter.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/runs.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/prd-discovery.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/notion-client.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/integration-schemas/jira.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/ensure-legacy-prd-migrated.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/prd-md-migration.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/folder-tree-store.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/file-lock.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/paths.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/file-adapter.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/title-to-filename.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/integration-schemas/notion.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/folder-tree-serializer.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/integration-schema.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/notion-map.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/markdown-serializer.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/folder-tree-parser.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/asana-adapter.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/prd-migration.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/project-config.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/suggestions.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/quota/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/constants.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/fix/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/constants.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/constants.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/usage/constants.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/recommend/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/constants.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/dag.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/types/output.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/ELMWorker.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/errors.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/reorganize.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/gitattributes-pins.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/evaluateEnsembleRetrieval.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/pending-cache.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/remove-task.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/ELMWorkerClient.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/keywords.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/assistant-integration.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/remove-feature.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/tree.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/sync.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/timestamps.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/transitions.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/OnlineELM.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/delete.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/requirements.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/structural.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/ELM.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/llm-client/src/output.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/ci.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/config.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/compact-single-children.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/codex-integration.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/backup-snapshots.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/output.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/cli-brand.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/cli-timeout.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/sync-engine.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/errors.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/core/elm_utils.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/scope-creep.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/output.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/item-duration-rollup.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/child-lifecycle.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/Activations.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/cli/errors.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/move.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/git-preflight.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/KernelELM.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/parent-completion.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/utils/markdown.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/utils/format.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/health.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/stale-check.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/utils/tokenization.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/epic-correlation.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/verify.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/llm-model-catalog.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/pair-programming.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/web.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/bin/hench.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/bin/sourcevision.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/ELMChain.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/work-item-link.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/prune.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/stats.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/utils/autotune.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/merge.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/durations.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/git-utils.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/reshape.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/self-heal-confirm.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/update-check.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/facets.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/refresh-validate.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/remove-epic.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/utils/Augment.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/cli/output.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/core/PatternCorrector.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/core/EmbeddingStore.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/reorganize-executor.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/ELMConfig.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/synth/core/validation.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/core/token-store.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/win-spawn.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/bin/rex.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/cli-ink.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/token-usage.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    }
+  ],
+  "heldOut": [
+    {
+      "text": "packages/sourcevision/src/cli/commands/analyze-phases.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/health-warning.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/chunked-review.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/validate-interactive.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/move.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/workspace.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/reorganize.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/validate.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/chunked-review-types.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/fix.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/add-reshape.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/task-lookup.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/recommend.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/commands/export-pdf.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/status.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/commands/record.ts",
+      "label": "cli-command",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/reorganize-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/add-item-form.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/merge-preview.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/tree-event-delegate.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/batch-import-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/ws-health-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/facet-filter.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/theme-toggle.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/breadcrumb.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/data-display/tree-view.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/inline-add-form.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/faq.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/data-display/mini-charts.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/active-tasks-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/completion-timeline.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/refresh-queue-status.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/concurrency-panel.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/virtual-scroll.ts",
+      "label": "component",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/config/Presets.ts",
+      "label": "config",
+      "confidence": 0.6,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/fix/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/crash/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/engine/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/schema/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/cli/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/visualization/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/public.ts",
+      "label": "entrypoint",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/retrieval/index.ts",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/practical-examples/03-smart-form-autocomplete/main.js",
+      "label": "entrypoint",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/public.ts",
+      "label": "entrypoint",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/prd/llm-gateway.ts",
+      "label": "gateway",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-prd-actions.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-tab-visibility.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "Claude-Context/hooks/unread-notes.sh",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-facet-state.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-route-state.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-tick.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/hooks/use-graceful-degradation.ts",
+      "label": "hook",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/notion-config.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/task-audit.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/zones.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/feature-toggles.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/hench-config.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/workflow-optimization.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/prd.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/cli-timeout.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/views/use-polling.ts",
+      "label": "page",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-merge-graph.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-integrations.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-project-settings.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-search.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-cli-timeout.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-config.ts",
+      "label": "route-handler",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/schema/v1.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/loader/schema/validate.ts",
+      "label": "schema",
+      "confidence": 1,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/schema/validate.ts",
+      "label": "schema",
+      "confidence": 1,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/github-projects-map.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/asana-map.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/config.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/jira-map.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/contracts.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/github-projects-adapter.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/run-log.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/file-classifier.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/notion-adapter.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/self-heal-tag.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/github-projects-client.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/store/folder-tree-index-generator.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/store/run-archiver.ts",
+      "label": "store",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/commands/constants.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/components/prd-tree/types.ts",
+      "label": "types",
+      "confidence": 0.9,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/utils/elm-scorer.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/core/claude-integration.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/DeepELM.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/core/refresh-artifacts.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/canonical.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/core/ELMAdapter.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/core/assistant-assets.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/utils/IO.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/pro/utils/model-serialization.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/core/refresh-plan.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/utils/index-md-parser.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/override-escalation.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/item-token-rollup.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/init-llm.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/analytics.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/readme-generator.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/help.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/archive.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/next-task.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/folder-per-task-migration.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/core/export.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/code-coverage.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/core/parent-reset.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/core/SequenceContext.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/core/Evaluation.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/synth/utils/saveModel.ts",
+      "label": "utility",
+      "confidence": 0.8,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/core/Matrix.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "algorithmic",
+      "repo": "AsterMind-Community-Edition"
+    }
+  ]
+}
