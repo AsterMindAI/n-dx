@@ -10,9 +10,10 @@
   agents building independent implementations of the same ADR need isolated `.sourcevision/` state,
   per `OWNERSHIP.md`'s untracked-state hazard. The cross-team worktree-vs-shared-checkout decision
   is still formally open; this is a per-agent choice, not a resolution of that question.
-- **Status:** Blocked — Step 9's gate did not pass with currently-available data. Not proceeding to
-  production wiring (equivalent to Archer's IMPL steps 6-8) until the user decides whether to
-  regenerate richer training data (see Open questions).
+- **Status:** Blocked — Step 9's gate did not pass, including on a 2026-08-13 re-run against richer,
+  LLM-enriched data (result got worse, not better — see ADR Evidence). Not proceeding to production
+  wiring (equivalent to Archer's IMPL steps 6-8); the open question is no longer "is there enough
+  data" but "is the feature representation or model capacity the real lever" (see Open questions).
 
 ## Scope
 
@@ -116,17 +117,20 @@ reverting on its own, revert that commit and re-run `pnpm install`.
 
 ## Open questions
 
-- [ ] **The one that actually blocks a conclusion:** should `ndx analyze` be re-run with LLM
-      enrichment on, for both n-dx and `AsterMind-Community-Edition`, to get a training/held-out
-      population that includes the "hard" files the pre-filter is meant to help with? Real token
-      cost; also touches `AsterMind-Community-Edition`'s shared `.sourcevision/` state, which
-      Archer's own `TJ-A1` eval may still depend on — needs the user's call, not a unilateral
-      decision by either implementation.
+- [x] **Re-run `ndx analyze` with LLM enrichment on — resolved 2026-08-13.** Someone (Archer's
+      session or the user) ran it for both repos; re-ran the eval against the richer data. Result
+      was the opposite of the hypothesis this question was gating on: out-of-domain generalization
+      got *worse*, not better (see `ADR-2026-08-12-knight-elm-prefilter-classify.md`'s Evidence
+      section, "Second measurement"). Training-data quantity is no longer the leading explanation.
+- [ ] **The one that actually blocks a conclusion now:** feature representation vs. model
+      capacity/architecture — which is the real lever? Neither measured yet. See the ADR's Second
+      measurement for the two candidates (richer encoder input, or escalating to `KernelELM`/more
+      `hiddenUnits`). Needs the user's steer before spending more time on either.
 - [ ] **Reconciliation with `TJ-A1`:** once Archer's own numbers are in, how should the two
       independent results be reconciled? Not resolved here — see Scope.
-- [ ] Why do both existing `.sourcevision/` datasets have zero LLM-sourced classifications —
-      `--fast`/`--lite` mode, or an LLM call that failed/broke early? Matters for whether a re-run
-      needs a config change or just a plain `ndx analyze`.
+- [x] Why do both original `.sourcevision/` datasets had zero LLM-sourced classifications —
+      **still not root-caused**, but moot for next steps now that both have been re-run with
+      enrichment on.
 - [ ] Same confidence-threshold question Archer's IMPL leaves open, now sharpened by measurement:
       given the observed 0.13-0.23 diffuse-confidence cluster, is a single global threshold viable
       across all 17 archetypes, or does calibration need to be per-archetype? Not measured in this

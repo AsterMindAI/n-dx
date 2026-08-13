@@ -117,24 +117,25 @@ For handoff to Archer — full technical picture of the current classifier befor
 
 ## Current state
 
-`TJ-K1` (branch `elm/jarrett/classify-elm-knight`, worktree `../n-dx-knight`): built an independent
-second implementation of `ADR-2026-08-11-jarrett-elm-prefilter-classify.md`, without reading
-Archer's `classify-elm.ts`, per the user's request for a genuine comparison. Prototype + eval only
-— no production code touched. Real numbers are in (see session log): strong in-domain precision,
-but the out-of-domain generalization test (the number the ADR's gate actually cares about) does
-**not** clear the bar with the currently-available training data. Root cause is very likely data
-quantity/coverage, not the approach — both this repo's and the held-out repo's `.sourcevision/`
-data were generated **without LLM enrichment** (confirmed: `bySource` is 100% `"algorithmic"` in
-both), so training never saw the "hard" population the ELM pre-filter is actually meant to help
-with. Re-running `ndx analyze` with LLM enrichment on would be the natural next step, but costs
-real tokens and — for the held-out codebase specifically — touches state Archer's own eval may
-still depend on, so that's flagged for the user rather than done unilaterally.
+`TJ-K1` (branch `elm/jarrett/classify-elm-knight`, worktree `../n-dx-knight`): independent second
+implementation of `ADR-2026-08-11-jarrett-elm-prefilter-classify.md` / own docs
+`ADR-2026-08-12-knight-elm-prefilter-classify.md` / `IMPL-2026-08-12-knight-classify-elm-swap.md`.
+Prototype + eval only — no production code touched. **Re-ran against LLM-enriched data 2026-08-13**
+(someone — Archer's session or the user — ran `ndx analyze` with enrichment on for both repos since
+the 2026-08-12 measurement): the naive "more data will fix generalization" hypothesis from the
+first measurement was **wrong** — out-of-domain precision got *worse*, not better, with richer
+data. This rules out plain data-quantity as the explanation and points at something more
+structural: label-space growth (11→14 archetypes) diluting an already-diffuse softmax, and/or the
+bare path+evidence-hint feature representation not carrying enough cross-codebase signal. See
+session log for the full picture and updated ADR Evidence section for the numbers.
 
 ## Next up
 
-- [ ] Get the user's call on re-running `ndx analyze` (with LLM enrichment) on both this repo and
-      the held-out codebase to get a properly representative training/eval population, vs. treating
-      the current numbers as sufficient evidence for a "not yet, needs more data" conclusion.
+- [ ] The data-quantity hypothesis is falsified — next real lever is either the feature
+      representation (richer encoder input than 3 evidence hints?) or model capacity/architecture
+      (more `hiddenUnits`, or actually reaching for `KernelELM`/`DeepELM` now that base ELM has
+      real evidence of underperforming, not just a "we haven't measured yet" gap). Needs the user's
+      steer on which to try before spending more time.
 - [ ] Compare results against Archer's `TJ-A1` once both have real numbers — same ADR, same
       held-out codebase, independently-built extraction/training/eval code.
 - [ ] If a future session touches `classify.ts` in scope, apply the "algorithmic evidence is not
@@ -143,6 +144,49 @@ still depend on, so that's flagged for the user rather than done unilaterally.
       pass for `source: "llm"` entries.
 
 ## Session log
+
+### 2026-08-13 — TJ-K1 re-run on LLM-enriched data: more data made generalization WORSE
+
+User asked to re-run training now that richer data existed. Checked first rather than assuming:
+both `../n-dx-jarrett/.sourcevision/` and `AsterMind-Community-Edition/.sourcevision/` now show real
+`"llm"`-sourced entries (`bySource: {algorithmic: 589, llm: 94}` and `{llm: 31, algorithmic: 99}`
+respectively) — someone ran `ndx analyze` with enrichment on for both since the 2026-08-12
+measurement. Re-ran `eval-classify-elm.ts` unchanged, pointed at the same two directories (still
+reusing rather than generating my own copy, same reasoning as before — controls classification-run
+noise out of the comparison).
+
+**Expected richer data to close the out-of-domain gap. It didn't — it opened wider:**
+
+| | 2026-08-12 (algorithmic-only) | 2026-08-13 (LLM-enriched) |
+|---|---|---|
+| Training examples / archetypes | 423 / 11 | 517 / 14 |
+| Held-out examples / archetypes | 47 / 6 | 78 / 6 |
+| In-domain best (precision @ coverage) | 98.1% @ 62.4% | 92.7% @ 39.4% |
+| Out-of-domain best *meaningful* point | 62.5% @ 17.0% | 7.7% @ 16.7% |
+| Out-of-domain @ full coverage | 29.8% (below 55.3% baseline) | 25.6-29.9% (below 48.7% baseline) |
+
+Verified this wasn't a bug before reporting it as a real finding: wrote a direct probe
+(`predictArchetype` over all 78 held-out examples, ignoring the confidence threshold entirely) —
+raw argmax accuracy is 25.6% (20/78). Looking at the actual misses, the model defaults to
+`"utility"` (the largest training class) for almost every `entrypoint`-style file in the held-out
+set (`examples/*/main.js`, `node_examples/*.ts`) it doesn't recognize — classic majority-class
+collapse, sharper now than at 11 archetypes.
+
+**This falsifies the 2026-08-12 hypothesis** ("most likely training-data quantity/representativeness,
+not the architectural choice"). Growing both the example count *and* the label space (11→14
+archetypes) made the softmax more diffuse and the held-out task harder in a way that outweighed
+whatever signal the new LLM-labeled examples added. Two live candidates for what to try next,
+neither measured yet: (1) the feature representation — file path + up to 3 evidence hints may
+simply not carry enough discriminative signal across codebases with different conventions,
+regardless of training-set size; (2) model capacity/architecture — `hiddenUnits` is still the
+hello-world's original 512, untuned for a 14-way problem, and this is now real evidence (not just
+"we haven't measured yet") that could justify actually reaching for `KernelELM` per the ADR's own
+"only if base-ELM's held-out accuracy doesn't clear the bar" escalation clause.
+
+Updated: `ADR-2026-08-12-knight-elm-prefilter-classify.md`'s Evidence section (added as a second,
+dated measurement — did not overwrite the 2026-08-12 numbers, since the contrast between the two is
+itself the finding) and this charter. Did not touch `IMPL-2026-08-12-knight-classify-elm-swap.md`'s
+Steps — still blocked before Step 9's gate for the same reason, now on firmer evidence.
 
 ### 2026-08-12 — TJ-K1: independent ELM pre-filter implementation, real numbers in
 
