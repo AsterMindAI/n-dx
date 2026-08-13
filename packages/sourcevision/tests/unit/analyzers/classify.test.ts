@@ -77,6 +77,33 @@ describe("analyzeClassifications", () => {
     expect(main.archetype).toBe("entrypoint");
   });
 
+  it("classifies hyphen-prefixed gateway files", () => {
+    // Regression: the gateway signal was anchored as `^(?:deps|gateway|barrel)\.[tj]sx?$`,
+    // which matched `gateway.ts` but not the far more common `<name>-gateway.ts`. Every
+    // gateway in this monorepo uses the hyphenated form, so the archetype never fired and
+    // `gateway` had zero classified files.
+    const inv = makeInventory([
+      "packages/hench/src/prd/rex-gateway.ts",
+      "packages/hench/src/prd/llm-gateway.ts",
+      "packages/web/src/server/domain-gateway.ts",
+      "src/gateway.ts",
+    ]);
+    const result = analyzeClassifications(inv, emptyImports);
+
+    for (const path of [
+      "packages/hench/src/prd/rex-gateway.ts",
+      "packages/hench/src/prd/llm-gateway.ts",
+      "packages/web/src/server/domain-gateway.ts",
+    ]) {
+      const fc = result.files.find((f) => f.path === path)!;
+      expect(fc.archetype).toBe("gateway");
+      expect(fc.confidence).toBeGreaterThanOrEqual(0.4);
+    }
+
+    // The unhyphenated form must keep working.
+    expect(result.files.find((f) => f.path === "src/gateway.ts")!.archetype).toBe("gateway");
+  });
+
   it("classifies utility files", () => {
     const inv = makeInventory(["src/utils/format.ts", "src/helpers/log.ts"]);
     const result = analyzeClassifications(inv, emptyImports);

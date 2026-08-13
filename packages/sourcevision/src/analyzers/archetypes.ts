@@ -165,7 +165,11 @@ export const BUILTIN_ARCHETYPES: ArchetypeDefinition[] = [
     name: "Gateway",
     description: "Re-export-heavy gateway modules that concentrate cross-package imports.",
     signals: [
-      { kind: "filename", pattern: "^(?:deps|gateway|barrel)\\.[tj]sx?$", weight: 0.7 },
+      // The `(?:^|[-.])` prefix matches both the bare form (`gateway.ts`) and the
+      // qualified forms that are far more common in practice (`rex-gateway.ts`,
+      // `api.gateway.ts`). Anchoring on `^` alone missed every hyphenated gateway,
+      // leaving the archetype with zero classified files in real codebases.
+      { kind: "filename", pattern: "(?:^|[-.])(?:deps|gateway|barrel)\\.[tj]sx?$", weight: 0.7 },
     ],
     analysisHints: {
       deadExports: "skip",
