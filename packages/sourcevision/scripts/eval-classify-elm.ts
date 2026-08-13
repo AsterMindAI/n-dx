@@ -17,6 +17,15 @@
  *
  *   SV_ELM_HELDOUT_CLASSIFICATIONS=/path/to/AsterMind-Community-Edition/.sourcevision/classifications.json \
  *     node --experimental-strip-types packages/sourcevision/scripts/eval-classify-elm.ts
+ *
+ * Additional training-source codebases (2026-08-13, addressing the "training data isn't diverse
+ * enough to generalize" read from the first result) can be pooled in via a comma-separated env
+ * var, each pointing at a classifications.json from a codebase distinct from this repo and from
+ * the held-out set:
+ *
+ *   SV_ELM_EXTRA_TRAINING_CLASSIFICATIONS=/path/to/express/.sourcevision/classifications.json,/path/to/indie-stack/.sourcevision/classifications.json,/path/to/zustand/.sourcevision/classifications.json \
+ *     SV_ELM_HELDOUT_CLASSIFICATIONS=/path/to/AsterMind-Community-Edition/.sourcevision/classifications.json \
+ *     node --experimental-strip-types packages/sourcevision/scripts/eval-classify-elm.ts
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -46,6 +55,10 @@ const MIN_COVERAGE_FOR_GATE = 0.15;
 const THRESHOLDS = [0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.25, 0.30];
 
 const TRAINING_SOURCE = resolve(import.meta.dirname, "../../../.sourcevision/classifications.json");
+const EXTRA_TRAINING_SOURCES = (process.env.SV_ELM_EXTRA_TRAINING_CLASSIFICATIONS ?? "")
+  .split(",")
+  .map((p) => p.trim())
+  .filter((p) => p.length > 0);
 const HELD_OUT_SOURCE = process.env.SV_ELM_HELDOUT_CLASSIFICATIONS;
 
 function loadClassifications(path: string, label: string): Classifications {
@@ -152,7 +165,16 @@ async function main(): Promise<void> {
   const trainingSource = loadClassifications(TRAINING_SOURCE, "training-source (this repo)");
   const heldOutSource = loadClassifications(HELD_OUT_SOURCE, "held-out (AsterMind-Community-Edition)");
 
-  const allExamples = extractExamples(trainingSource);
+  let allExamples = extractExamples(trainingSource);
+  if (EXTRA_TRAINING_SOURCES.length > 0) {
+    console.log(`Pooling ${EXTRA_TRAINING_SOURCES.length} additional training source(s):`);
+    for (const path of EXTRA_TRAINING_SOURCES) {
+      const extra = loadClassifications(path, `extra training source (${path})`);
+      const extraExamples = extractExamples(extra);
+      console.log(`  ${path} — ${extraExamples.length} examples`);
+      allExamples = allExamples.concat(extraExamples);
+    }
+  }
   const categories = [...new Set(allExamples.map((e) => e.archetype))].sort();
 
   const { train, heldOut: internalHeldOut } = splitTrainHeldOut(allExamples, SEED, TRAIN_FRACTION);
