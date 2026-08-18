@@ -28,6 +28,12 @@ import { sortClassifications } from "../util/sort.js";
 import { callClaude, ClaudeClientError } from "./claude-client.js";
 import { emptyAnalyzeTokenUsage, accumulateTokenUsage } from "./token-usage.js";
 import { startSpinner } from "../cli/output.js";
+import {
+  ELM_GATE_ENABLED,
+  trainClassifyELM,
+  predictWithClassifyELM,
+  type ClassifyELMPrediction,
+} from "./classify-elm.js";
 
 /** Minimum accumulated score for a primary classification. */
 const PRIMARY_THRESHOLD = 0.4;
@@ -342,6 +348,45 @@ export async function enrichClassificationsWithLLM(
     return { updatedFiles, tokenUsage };
   }
 
+  // ELM confidence gate — trains on this run's confidently-classified files
+  // (evidence vector -> archetype) and tries to resolve some unclassified
+  // files locally, at zero token cost, before they reach the LLM batch
+  // queue. Shadow mode by default: predictions are computed and compared
+  // against the LLM's actual answers below, but ELM_GATE_ENABLED must be
+  // flipped on before it's allowed to actually skip a file. See
+  // classify-elm.ts.
+  const archetypeIds = classifications.archetypes.map((a) => a.id);
+  const elmModel = trainClassifyELM(classifications.files, archetypeIds);
+  const elmPredictions = new Map<string, ClassifyELMPrediction>();
+  if (elmModel) {
+    for (const f of unclassified) {
+      const prediction = predictWithClassifyELM(elmModel, f.evidence);
+      if (prediction) elmPredictions.set(f.path, prediction);
+    }
+  }
+
+  if (ELM_GATE_ENABLED) {
+    for (const f of unclassified) {
+      const prediction = elmPredictions.get(f.path);
+      if (!prediction) continue;
+      updatedFiles.push({
+        path: f.path,
+        archetype: prediction.archetype,
+        confidence: Math.round(prediction.confidence * 100) / 100,
+        source: "elm",
+      });
+    }
+  }
+
+  // Files the ELM resolved (when the gate is live) never reach the LLM.
+  const toClassify = ELM_GATE_ENABLED
+    ? unclassified.filter((f) => !elmPredictions.has(f.path))
+    : unclassified;
+
+  if (toClassify.length === 0) {
+    return { updatedFiles, tokenUsage };
+  }
+
   // Build archetype catalog for the prompt
   const archetypeCatalog = classifications.archetypes.map((a) => ({
     id: a.id,
@@ -349,10 +394,10 @@ export async function enrichClassificationsWithLLM(
     description: a.description,
   }));
 
-  // Batch unclassified files
+  // Batch remaining files for the LLM
   const batches: FileClassification[][] = [];
-  for (let i = 0; i < unclassified.length; i += LLM_BATCH_SIZE) {
-    batches.push(unclassified.slice(i, i + LLM_BATCH_SIZE));
+  for (let i = 0; i < toClassify.length; i += LLM_BATCH_SIZE) {
+    batches.push(toClassify.slice(i, i + LLM_BATCH_SIZE));
   }
 
   // Valid archetype IDs for validation
@@ -380,7 +425,42 @@ export async function enrichClassificationsWithLLM(
     }
   }
 
+  // Shadow mode: the gate didn't skip anything (everything above still went
+  // to the LLM), so compare what the ELM would have said against what the
+  // LLM actually said, and log agreement. This is how ELM_GATE_ENABLED gets
+  // validated before it's turned on.
+  if (!ELM_GATE_ENABLED && elmPredictions.size > 0) {
+    logElmShadowAgreement(elmPredictions, updatedFiles);
+  }
+
   return { updatedFiles, tokenUsage };
+}
+
+/**
+ * Compare shadow-mode ELM predictions against the LLM's actual answers for
+ * the same files and log the agreement rate. Only meaningful when the gate
+ * is off (everything went to the LLM regardless of the ELM's prediction).
+ */
+function logElmShadowAgreement(
+  elmPredictions: Map<string, ClassifyELMPrediction>,
+  llmResults: FileClassification[],
+): void {
+  const llmByPath = new Map(llmResults.map((f) => [f.path, f]));
+  let compared = 0;
+  let agreed = 0;
+
+  for (const [path, prediction] of elmPredictions) {
+    const llmResult = llmByPath.get(path);
+    if (!llmResult || llmResult.source !== "llm" || !llmResult.archetype) continue;
+    compared++;
+    if (llmResult.archetype === prediction.archetype) agreed++;
+  }
+
+  if (compared === 0) return;
+  const pct = Math.round((agreed / compared) * 100);
+  console.log(
+    `  [classify] ELM shadow mode: agreed with the LLM on ${agreed}/${compared} files it was confident about (${pct}%) — not gating yet (ELM_GATE_ENABLED=false)`,
+  );
 }
 
 /** Attempt configs for retry degradation. */

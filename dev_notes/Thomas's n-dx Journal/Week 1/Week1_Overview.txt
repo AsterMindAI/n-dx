@@ -1,0 +1,83 @@
+File Name: Week 1 Overview
+Date Of Creation: 08/12/26
+Created By: Thomas Addison
+Purpose: To document the work I've done on the n-dx repository in a readable
+    human friendly format.
+    
+
+___TUESDAY___
+
+
+INTERNSHIP STAND-UP MEETING:
+
+    t
+
+
+WORK DONE THROUGH-OUT THE DAY:
+
+    t
+
+        
+___WENESDAY___
+
+
+WORK DONE THROUGH-OUT THE DAY:
+
+    t
+
+
+___THURSDAY___
+
+
+INTERSHIP STAND-UP MEETING:
+
+    WHAT WAS TALKED ABOUT:
+        
+        We started the meeting by giving updates on what we have acomplished and
+        
+        how our progress had been going.  After that base line had been establised,
+        
+        we ruffly mappeed out what we would do the next week and debated on whether
+
+        or not we would test the n-dx repository in the meeting.  It had come to
+
+        our attention that none of us had actully used the n-dx code, so we had
+
+        no idea what it did.  We finally came to the conclusion to test the n-dx
+
+        in the meeting and to continue testing the code over the weekend.  
+        
+    WHAT WAS DONE:
+        
+        We each on our own systems attempted to test the n-dx repo and each ran into
+
+        our own problems.  My problems was I was unable to run n-dx.  When asking the
+
+        the other two they were able to run it using claude which I was not using,
+
+        instead I was trying to run the program manually.  Before we ended the meeting
+
+        I was aided by Jarett in setting up claude to set up n-dx to run.
+        
+        
+WORK DONE THROUGH-OUT THE DAY:
+
+    I continued my attempts to test the n-dx repo having claude doing most of the
+    
+    heavy lifting rather then myself.  Claude was able to get n-dx running fairly
+
+    easily but the program only returned results.  After claude's work paved the
+
+    way, I was able to get n-dx working myself however, my attempt only returned
+
+    outputs rather then a UI.
+
+
+___FRIDAY___
+
+
+WORK DONE THROUGH-OUT THE DAY:
+
+    t
+
+    
