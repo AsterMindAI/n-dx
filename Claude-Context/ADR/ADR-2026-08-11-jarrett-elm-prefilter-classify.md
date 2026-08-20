@@ -235,3 +235,39 @@ provide, or a fundamentally different feature representation, or the base-ELM ap
 the right tool for cross-codebase generalization on this task regardless of data volume. Flagged to
 Knight for independent verification before treating this as settled either way — one pipeline's
 surprising result is a lead, not a conclusion.
+
+### Review (Realm, 2026-08-19) — the pooling experiment confounded two variables
+
+Realm reviewed both `TJ-A1` and Knight's `TJ-K1` at the user's request (full text:
+`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`), independently
+re-checked `classify.ts:461-469` (still confirms the evidence-leakage finding, unchanged), and
+identified a real methodological gap in the 2026-08-13 pooling experiment: **it changed two
+variables in the same run** — added ~73 examples *and* introduced 2 brand-new categories
+(`route-module`, `store`, previously zero/near-zero examples) simultaneously. That means the
+in-domain regression (95.8%→87.3%) can't be attributed to either cause specifically from that data
+alone. My own "categories diluted the softmax" explanation at the time was a stated guess, not a
+measured conclusion — Realm called this out directly.
+
+Realm's recommended sequence, in order of what actually isolates the cause rather than repeating a
+confounded retry:
+
+1. **Controlled data-volume experiment** — add examples only to categories the original two
+   datasets already had (no new categories), rerun against the same untouched held-out set. Not yet
+   run.
+2. **Fix the feature representation before reaching for a bigger/different model.** `classifyFile`
+   already computes a per-archetype weighted numeric score for every file
+   (`classify.ts:135-208`/`159-165`) — right now that reaches the ELM only as a tokenized text hint
+   (`archetypeId(weight)` embedded in a string via `fileToText`), not as a direct numeric feature
+   vector. A ridge-regression readout should work better on structured numeric input than on the
+   same information indirectly encoded as text. Worth trying before `KernelELM`/`DeepELM` — no
+   evidence yet the problem is non-linear separability rather than a weak input encoding.
+3. Only after 1 and 2: revisit `ELMChain`/`KernelELM`/`DeepELM`, per this ADR's own escalation
+   clause.
+4. The evidence-leakage schema gap (see 2026-08-12 Evidence above) still needs its own dedicated
+   ADR, independent of whether this work continues — flagged, still unwritten.
+5. Worktree isolation validated itself independently for both `TJ-A1` and `TJ-K1` — keep doing it.
+
+**Picking up item 2 next** (2026-08-20, this session) — see below for the numeric-feature-vector
+implementation and result, run as a controlled A/B against the *original* two-codebase data (not
+the pooled 5-codebase set) so the feature-representation variable is isolated exactly the way
+Realm's review asks for.
