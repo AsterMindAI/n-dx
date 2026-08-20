@@ -35,6 +35,15 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-08-20 update — Realm's item 2 (numeric feature representation) clears the gate.** Fed
+`classifyFile`'s full per-archetype score as a raw numeric vector instead of tokenized text.
+Controlled A/B against the original 2-codebase data: out-of-domain went from 60.9% @ 29.5%
+(doesn't clear) to **100% @ 59.0% coverage (clears by a wide margin)**. Sanity-checked, not a
+degenerate artifact. First result across every attempt (mine, Knight's, both follow-ups) to clear
+the gate. Not yet re-tested against the pooled corpora or independently verified by Knight — not
+treating this as final yet, same discipline as every prior measurement. Full detail below and in
+the ADR's new "Numeric feature representation" subsection.
+
 **2026-08-13 update:** tried the direct fix for the "not enough diverse training data" read —
 pooled three new codebases into training. **It didn't help; in-domain generalization got worse.**
 Full detail in today's session log below and the ADR's new "Follow-up: pooled-training experiment"
@@ -86,6 +95,61 @@ Status can move to Accepted.
       gated on this).
 
 ## Session log
+
+### 2026-08-20 — numeric feature representation clears the gate (Realm's item 2)
+
+Read Realm's 2026-08-19 review first (`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`)
+— per the user's instruction, updated the ADR with Realm's findings before starting any
+implementation, so the record shows the review landed before the retry it motivated, not after.
+
+Realm's sharpest point: the 2026-08-13 pooling experiment changed two variables in one run (more
+examples + more categories), so its in-domain regression couldn't be attributed to either cause.
+Realm's item 2 was a different, specific, testable idea: `classifyFile` already computes a clean
+per-archetype numeric score for every file — feeding that as a tokenized text hint (what
+`fileToText` does) makes the ridge-regression readout re-derive numeric signal from string tokens
+instead of receiving it directly. Picked this up as instructed.
+
+**Implementation:** added `scoreArchetypeVector`/`matchesSignal`/`buildExportMap` to
+`classify-elm.ts`, reimplementing `classify.ts`'s signal-matching logic independently rather than
+exporting anything new from that file — `classify.ts` stays untouched, per the standing design
+constraint, at the cost of duplicated logic that could drift if the real regexes change (flagged
+in the code, not hidden). Added `extractNumericExamples` (recomputes the score vector fresh from
+`inventory.json`/`imports.json` for every example, sidestepping the evidence-leakage question
+entirely rather than working around it — nothing stored to leak), `trainArchetypeELMNumeric`
+(`NumericConfig`, `useTokenizer: false`, `inputSize: 17`), `predictArchetypeNumeric`. New eval
+script `eval-classify-elm-numeric.ts`, deliberately run against only the *original* 2-codebase
+data (not the 2026-08-13 pooled corpora) so the feature-representation variable stays isolated —
+exactly the controlled comparison Realm's review asked for.
+
+**Had to recalibrate thresholds again** — checked the numeric model's actual confidence range
+before guessing (~0.09-0.18, even tighter than text mode's ~0.08-0.19) rather than reusing the
+text-mode script's threshold list, which would have shown 0% coverage everywhere for the third
+time this project.
+
+**Result:**
+
+| | Text mode | Numeric vector |
+|---|---|---|
+| In-domain | 95.8% @ 23.1% | 97.6% @ 79.8%, 100% @ 75.0% |
+| Out-of-domain | 60.9% @ 29.5% — no clear | **100% @ 59.0% — clears by a wide margin** |
+
+Sanity-checked before trusting it: resolved predictions at the passing threshold span 5 distinct
+archetype labels (not a majority-class artifact), zero wrong among them.
+
+**This is the first result, across both agents' implementations and every retry either of us ran,
+that actually clears the out-of-domain gate.** Supports Realm's diagnosis directly — the
+bottleneck was signal loss in the text encoding, not data volume or category count, and there's
+now no evidence pointing at needing `KernelELM`/`DeepELM` either.
+
+**Not declaring this done.** Only tested against the original 2-codebase data by design (to isolate
+the variable); haven't re-tried it against the pooled corpora, and Knight hasn't independently
+verified it the way the original negative result was cross-checked before being trusted. Same
+rigor either direction — a striking positive result gets checked before it gets believed, same as
+the negative ones did.
+
+**Not yet done:** share this with Knight for independent verification; test numeric features
+against the pooled 5-codebase data now that the confound is understood; if it holds up, only then
+consider whether Steps 6-8 (production wiring) are warranted.
 
 ### 2026-08-13 — pooled-training experiment: more diverse data didn't fix generalization
 

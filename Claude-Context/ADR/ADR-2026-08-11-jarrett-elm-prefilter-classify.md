@@ -271,3 +271,48 @@ confounded retry:
 implementation and result, run as a controlled A/B against the *original* two-codebase data (not
 the pooled 5-codebase set) so the feature-representation variable is isolated exactly the way
 Realm's review asks for.
+
+### Numeric feature representation (2026-08-20) — clears the gate
+
+Implemented Realm's item 2: instead of encoding a file as tokenized text ("path +
+`archetypeId(weight)` hints"), feed `classifyFile`'s full per-archetype weighted score
+(`classify.ts:147-171`) as a raw numeric vector — one dimension per archetype in the catalog
+(17), computed fresh from `inventory.json`/`imports.json` rather than read from
+`classifications.json`'s `evidence` field. This sidesteps the evidence-leakage question entirely
+(see 2026-08-12 above) rather than working around it — recomputed from first principles, nothing
+stored to leak.
+
+Reimplemented signal matching independently in `classify-elm.ts`
+(`scoreArchetypeVector`/`matchesSignal`) rather than exporting anything new from `classify.ts` —
+that file stays genuinely untouched (known tradeoff: duplicated matching logic that can drift out
+of sync if `classify.ts`'s regexes change; acceptable for a prototype, would need reconciling for
+production). Trained via `NumericConfig` (`useTokenizer: false`, `inputSize: 17`) instead of
+`TextConfig`.
+
+**Controlled A/B — same two codebases, same seed, same 80/20 split, same coverage floor as the
+2026-08-12 text-mode run. Only the feature representation changed:**
+
+| | Text mode (2026-08-12) | Numeric vector (2026-08-20) |
+|---|---|---|
+| In-domain best point | 95.8% @ 23.1% (t=0.14) | **97.6% @ 79.8%** (t=0.11-0.15), 100% @ 75.0% (t=0.17) |
+| Out-of-domain best point | 60.9% @ 29.5% (t=0.12) — does not clear gate | **100% @ 59.0%** (t=0.11-0.17) — **clears gate by a wide margin** |
+
+Sanity-checked before trusting this — confirmed the resolved out-of-domain predictions aren't a
+degenerate single-class artifact: 46 of 78 held-out examples resolved at t=0.11, spread across 5
+distinct predicted labels (`entrypoint`: 16, `utility`: 26, `types`: 2, `store`: 1, `component`: 1),
+zero incorrect among them.
+
+**This is the first result across both independent implementations (`TJ-A1`, `TJ-K1`) and every
+prior experiment (original run, pooled-training retry, Knight's two runs) that clears the
+out-of-domain gate at meaningful coverage.** Supports Realm's read directly: the bottleneck was
+the indirect text encoding losing signal that the algorithmic pass already computes cleanly, not
+data volume, not category count, and — per this result — not obviously the base-ELM
+architecture's linear-separability either (Alternatives considered's escalation to
+`KernelELM`/`DeepELM` isn't needed yet).
+
+**Not yet done, before this changes the Status field:** this ran only against the original
+2-codebase data, deliberately, to isolate the one variable per Realm's review. Not yet tested
+against the pooled 5-codebase corpora from 2026-08-13, and not yet independently verified by
+Knight the way the original result was cross-checked. One striking result is a strong lead, not
+by itself grounds to move to Steps 6-8 — same discipline as every other measurement in this
+document.
