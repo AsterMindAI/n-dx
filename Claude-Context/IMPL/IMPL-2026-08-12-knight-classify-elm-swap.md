@@ -10,10 +10,11 @@
   agents building independent implementations of the same ADR need isolated `.sourcevision/` state,
   per `OWNERSHIP.md`'s untracked-state hazard. The cross-team worktree-vs-shared-checkout decision
   is still formally open; this is a per-agent choice, not a resolution of that question.
-- **Status:** Blocked — Step 9's gate did not pass, including on a 2026-08-13 re-run against richer,
-  LLM-enriched data (result got worse, not better — see ADR Evidence). Not proceeding to production
-  wiring (equivalent to Archer's IMPL steps 6-8); the open question is no longer "is there enough
-  data" but "is the feature representation or model capacity the real lever" (see Open questions).
+- **Status:** Gate clears (2026-08-20) — numeric feature representation clears the ADR's ≥95%
+  precision bar at 42.3% held-out coverage (see ADR Evidence, "Third measurement"). Not proceeding
+  to production wiring (Archer's IMPL steps 6-8 equivalent) yet regardless — one held-out codebase,
+  not independently corroborated. The open question is no longer "does it work" but "is this
+  corroborated enough to wire in" (see Open questions).
 
 ## Scope
 
@@ -40,8 +41,8 @@
 
 | Path | Owning team | New/Edit | Note sent? |
 |---|---|---|---|
-| `packages/sourcevision/src/analyzers/classify-elm.ts` | unassigned — Team Jarrett scoped | **Created 2026-08-12** on `elm/jarrett/classify-elm-knight`, typechecks clean | No |
-| `packages/sourcevision/scripts/eval-classify-elm.ts` | unassigned | **Created 2026-08-12**, typechecks clean (targeted check — `scripts/` isn't in `tsconfig.json`'s `include`), **run successfully** | No |
+| `packages/sourcevision/src/analyzers/classify-elm.ts` | unassigned — Team Jarrett scoped | **Created 2026-08-12**; **extended 2026-08-20** with `buildEvidenceVector`/`trainArchetypeELMNumeric`/`predictArchetypeNumeric` (Realm's feature-representation fix). Typechecks clean. | No |
+| `packages/sourcevision/scripts/eval-classify-elm.ts` | unassigned | **Created 2026-08-12**; **extended 2026-08-20** to run both representations ("text"/"numeric") controlled, same data/split/seed, in one script run. Typechecks clean, run successfully. | No |
 | `packages/sourcevision/package.json` / root `pnpm-lock.yaml` | **shared** per `OWNERSHIP.md` | **Edited 2026-08-12** — added explicit `@astermind/astermind-community` dependency. Was already present at the *root* `package.json` level from pre-existing commit `43d6db51` ("ELM hello-world"); added explicitly to sourcevision's own `package.json` since it's a direct consumer and shouldn't rely on workspace hoisting by accident. | Logged as an `IN-FLIGHT.md` § 3 finding, not a new § 1 claim — see note below |
 | `Claude-Context/Jarrett-Agents/BACKLOG.md` | Team Jarrett | Claimed `TJ-K1`, 2026-08-12 | N/A |
 | `Claude-Context/IN-FLIGHT.md` | shared | Added a § 2 status line + two § 3 findings (dependency-claim path correction, `train()` empirical proof), 2026-08-12 | N/A |
@@ -94,6 +95,29 @@ order below reflects what actually occurred, 2026-08-12, not a plan written in a
    user.
 10. This document, plus `ADR-2026-08-12-knight-elm-prefilter-classify.md`, written at the user's
     explicit follow-up request to formalize what had already happened.
+11. **2026-08-13.** Re-ran against newly-appeared LLM-enriched data (someone ran `ndx analyze`
+    with enrichment on for both repos). Result: out-of-domain generalization got *worse*, not
+    better — falsified the "just needs more data" hypothesis. Logged in the ADR's Evidence section,
+    "Second measurement."
+12. **2026-08-19.** User had Realm (Team Jarrett) review both `TJ-A1` and `TJ-K1`
+    (`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`). Findings: the
+    confidence-calibration false alarm was hit independently by both implementations (not a bug);
+    the evidence-for-LLM-files problem needs its own schema-gap ADR; Archer's pooling retry
+    conflated two variables and couldn't isolate its result; proposed next steps in priority order
+    (controlled data-volume experiment, then feature-representation fix, then bigger models).
+13. **2026-08-20.** User's instruction: skip the controlled data-volume experiment, go straight at
+    fixing the feature representation. Read `TextEncoder.ts` directly rather than assuming Realm's
+    framing was complete — found `useTokenizer: true` doesn't produce token embeddings at all (join
+    with no separator destroys word boundaries; still char-level one-hot on the result). Built
+    `buildEvidenceVector()`/`trainArchetypeELMNumeric()`/`predictArchetypeNumeric()`: `classifyFile`'s
+    per-archetype scores as a direct fixed-length numeric vector, concatenated with a path-only
+    encoded vector.
+14. **2026-08-20.** Ran the numeric representation controlled against the original text
+    representation — identical data, split, seed, `hiddenUnits`. **Gate clears**: out-of-domain
+    97.0% precision @ 42.3% coverage (t=0.15), vs. the text baseline's 7.7% @ 16.7% at the same
+    threshold. Updated the ADR's Evidence section ("Third measurement") and this document. Did not
+    proceed to Steps 6-8 — clearing the gate on one held-out codebase isn't the same decision as
+    being ready to wire into production; left that call for the user.
 
 ## Test strategy
 
@@ -117,22 +141,32 @@ reverting on its own, revert that commit and re-run `pnpm install`.
 
 ## Open questions
 
-- [x] **Re-run `ndx analyze` with LLM enrichment on — resolved 2026-08-13.** Someone (Archer's
-      session or the user) ran it for both repos; re-ran the eval against the richer data. Result
-      was the opposite of the hypothesis this question was gating on: out-of-domain generalization
-      got *worse*, not better (see `ADR-2026-08-12-knight-elm-prefilter-classify.md`'s Evidence
-      section, "Second measurement"). Training-data quantity is no longer the leading explanation.
-- [ ] **The one that actually blocks a conclusion now:** feature representation vs. model
-      capacity/architecture — which is the real lever? Neither measured yet. See the ADR's Second
-      measurement for the two candidates (richer encoder input, or escalating to `KernelELM`/more
-      `hiddenUnits`). Needs the user's steer before spending more time on either.
-- [ ] **Reconciliation with `TJ-A1`:** once Archer's own numbers are in, how should the two
-      independent results be reconciled? Not resolved here — see Scope.
+- [x] **Re-run `ndx analyze` with LLM enrichment on — resolved 2026-08-13.** Result was the opposite
+      of the hypothesis this question was gating on: out-of-domain generalization got *worse*, not
+      better. Training-data quantity was not the leading explanation.
+- [x] **Feature representation vs. model capacity — resolved 2026-08-20, feature representation was
+      it.** Realm's review pointed at the representation; built the fix
+      (`trainArchetypeELMNumeric`); ran it controlled against the text baseline. Out-of-domain
+      precision at the same threshold: 7.7% → 97.0%. See ADR "Third measurement." Model
+      capacity/architecture (`hiddenUnits`, `KernelELM`) is no longer the leading open question.
+- [ ] **The one that actually blocks a conclusion now: is one held-out codebase enough
+      corroboration to move toward production wiring?** 78 examples, 6 archetypes, single dataset.
+      Options: (a) treat it as sufficient and proceed to Steps 6-8, (b) find/generate a second,
+      genuinely different held-out codebase and require the gate to clear there too before
+      proceeding, (c) something else. Needs the user's call — this is a bigger decision than another
+      eval run.
+- [ ] **Reconciliation with `TJ-A1`:** Archer's extractor uses the same text-hint approach this
+      fix replaces for `TJ-K1` — the numeric-feature fix very likely applies there too, not measured
+      yet. Should this finding be shared back to Archer/Realm before either side proceeds further?
+      Not resolved here — see Scope.
 - [x] Why do both original `.sourcevision/` datasets had zero LLM-sourced classifications —
       **still not root-caused**, but moot for next steps now that both have been re-run with
       enrichment on.
 - [ ] Same confidence-threshold question Archer's IMPL leaves open, now sharpened by measurement:
-      given the observed 0.13-0.23 diffuse-confidence cluster, is a single global threshold viable
-      across all 17 archetypes, or does calibration need to be per-archetype? Not measured in this
-      pass — the held-out set (47 examples across 6 archetypes) is too small to break down
-      per-archetype meaningfully.
+      given the observed diffuse-confidence cluster, is a single global threshold viable across all
+      17 archetypes, or does calibration need to be per-archetype? Still not measured — the held-out
+      set (78 examples across 6 archetypes) is too small to break down per-archetype meaningfully.
+- [ ] **New, from Realm's review — independent of how the above resolves:** the
+      `classifications.json` evidence-for-`source:"llm"`-files schema gap needs its own ADR. Two
+      prototypes (`TJ-A1`, `TJ-K1`) have worked around it two different ways; neither is a real fix
+      for future consumers of that field.

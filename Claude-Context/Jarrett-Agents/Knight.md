@@ -120,30 +120,99 @@ For handoff to Archer — full technical picture of the current classifier befor
 `TJ-K1` (branch `elm/jarrett/classify-elm-knight`, worktree `../n-dx-knight`): independent second
 implementation of `ADR-2026-08-11-jarrett-elm-prefilter-classify.md` / own docs
 `ADR-2026-08-12-knight-elm-prefilter-classify.md` / `IMPL-2026-08-12-knight-classify-elm-swap.md`.
-Prototype + eval only — no production code touched. **Re-ran against LLM-enriched data 2026-08-13**
-(someone — Archer's session or the user — ran `ndx analyze` with enrichment on for both repos since
-the 2026-08-12 measurement): the naive "more data will fix generalization" hypothesis from the
-first measurement was **wrong** — out-of-domain precision got *worse*, not better, with richer
-data. This rules out plain data-quantity as the explanation and points at something more
-structural: label-space growth (11→14 archetypes) diluting an already-diffuse softmax, and/or the
-bare path+evidence-hint feature representation not carrying enough cross-codebase signal. See
-session log for the full picture and updated ADR Evidence section for the numbers.
+**Big update, 2026-08-20: the ADR's gate clears now.** Realm reviewed both `TJ-A1` and `TJ-K1`
+(`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`) and diagnosed the
+feature representation, not data volume, as the real lever — `classifyFile`'s per-archetype
+evidence scores were being buried inside tokenized text instead of surfaced as direct numeric
+input. Built that fix (`buildEvidenceVector`/`trainArchetypeELMNumeric`/`predictArchetypeNumeric`
+in `classify-elm.ts`) and ran it head-to-head against the original text-hint approach, same data,
+same split, same seed/hiddenUnits — controlled, so the representation is the only changed variable.
+**Result: out-of-domain precision jumped from 7.7%@16.7%cov to 97.0%@42.3%cov at the same
+threshold (0.15) — clears the ADR's ≥95% gate with real coverage, for the first time in either
+implementation.** Still prototype-only — no production code touched, and this is one held-out
+codebase, not independently corroborated yet. Full numbers in session log and the ADR's Evidence
+section.
 
 ## Next up
 
-- [ ] The data-quantity hypothesis is falsified — next real lever is either the feature
-      representation (richer encoder input than 3 evidence hints?) or model capacity/architecture
-      (more `hiddenUnits`, or actually reaching for `KernelELM`/`DeepELM` now that base ELM has
-      real evidence of underperforming, not just a "we haven't measured yet" gap). Needs the user's
-      steer on which to try before spending more time.
-- [ ] Compare results against Archer's `TJ-A1` once both have real numbers — same ADR, same
-      held-out codebase, independently-built extraction/training/eval code.
+- [ ] **The gate clearing raises a real decision, not just a technical one**: is this enough
+      corroboration to move toward IMPL Steps 6-8 (production wiring), or does it need validation
+      against a second, different held-out codebase first before trusting a single-dataset pass?
+      Needs the user's call — this is a bigger step than another eval run.
+- [ ] Realm's item 4 (still open, independent of how the above resolves): the evidence-leakage/
+      evidence-loss schema gap in `classifications.json` (`source: "llm"` entries' `evidence` field
+      isn't independent signal) needs its own ADR — two prototypes have now worked around it two
+      different ways without a real fix ever landing.
+- [ ] Share this result back with Archer/Realm — the numeric-feature fix isn't specific to my
+      implementation's text-hint approach; it very likely applies to `TJ-A1`'s extractor too.
 - [ ] If a future session touches `classify.ts` in scope, apply the "algorithmic evidence is not
       recoverable from `classifications.json` for LLM-relabeled files" finding logged below —
       it likely also affects any other consumer that assumes `evidence` reflects the algorithmic
       pass for `source: "llm"` entries.
 
 ## Session log
+
+### 2026-08-20 — Read Realm's review, built the feature-representation fix, gate clears
+
+User's instruction: don't just run Realm's suggested controlled data-volume experiment (item 1) —
+fix what Realm found and work around it. That pointed at item 2 of Realm's note
+(`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`): the ELM's input is
+file path + evidence hints as tokenized text, when `classifyFile` already computes a clean,
+structured, fixed-length per-archetype score vector — currently only surfaced to the model
+indirectly, through a string.
+
+**Checked how bad "indirectly" really is before building around it, rather than assuming.** Read
+`AsterMind-Community-Edition/src/preprocessing/TextEncoder.ts:45-59` directly: `useTokenizer: true`
+does **not** produce a token/word embedding. `Tokenizer.tokenize(text).join('')` splits on the
+delimiter and immediately rejoins with **no separator** — every token/word boundary is destroyed —
+then the result is one-hot encoded per character over a fixed `maxLen` window. So `fileToText`'s
+`"packages/hench/src/agent/analysis/index.ts entrypoint(0.8)"` isn't seen as
+`[path-tokens, archetypeId, weight]` at all — it's a flat character window over
+`"packageshenchsrcagentanalysisindextsentrypoint08"`. Measured the truncation angle directly rather
+than theorizing: sampled 500 real n-dx examples, only 3.8% actually exceed the 64-char window
+(so truncation is real but a minor contributor, not the dominant issue) — the bigger problem is
+that even *untruncated* input carries the evidence as an undifferentiated character blob, not as an
+archetype-indexed value the ridge-regression readout can use directly.
+
+**The fix:** added `buildEvidenceVector()` (sums `classifyFile`'s per-archetype signal weights into
+a fixed-length vector, ordered over the full `BUILTIN_ARCHETYPES` catalog — stable dimensionality
+regardless of which archetypes happen to appear in a given training run) and
+`trainArchetypeELMNumeric()`/`predictArchetypeNumeric()`, which concatenate that vector with a
+path-only encoded vector (no evidence text appended, so it doesn't compete with hints for
+truncation budget or mix the two signal types into one stream) and train via `trainFromData()` —
+same as before, just numeric input instead of joined text.
+
+**Ran it controlled, not as a replacement** — same data, same 80/20 split, same seed (`20260812`),
+same `hiddenUnits` (512), same held-out codebase, both representations in the same script run so
+the only changed variable is the representation itself. This is the discipline Realm's review said
+the pooled-training retry was missing (it changed example count *and* category count in one shot);
+didn't want to repeat that mistake here.
+
+**Result — clean, large, and in the direction Realm predicted:**
+
+| | text (original) | numeric (fix) |
+|---|---|---|
+| In-domain best point | 92.7% @ 39.4% (t=0.15) | **95.7% @ 67.3%** (t=0.15) |
+| Out-of-domain @ t=0.15 (same threshold, both reps) | 7.7% @ 16.7% | **97.0% @ 42.3%** |
+| Out-of-domain best point | 7.7% @ 16.7% (t=0.15) — nothing better available | **100% @ 30.8%** (t=0.18) |
+| Out-of-domain @ full coverage (t=0.05) | 25.6% (below 48.7% baseline) | **71.8%** (well above baseline) |
+
+**The numeric representation clears the ADR's ≥95% precision gate with real coverage (42.3%) for
+the first time in either implementation.** Not a marginal improvement — a qualitative change from
+"doesn't work" to "works, on this held-out set." Sanity-checked this isn't leakage before reporting
+it as a real result: the evidence vector comes from the same source I've used since 2026-08-12 (a
+fresh, LLM-call-free `analyzeClassifications()` re-run) — no dependency on the true label, same
+non-circular signal as always, just encoded as numbers instead of a string.
+
+**What this doesn't yet establish:** one held-out codebase, 78 examples, 6 archetypes represented.
+Realm's own caution about the pooling experiment (one dataset's surprising result is a lead, not a
+conclusion) applies here too, on the positive side this time. Left the "is this enough to move
+toward production wiring" question open for the user rather than deciding it — see Next up.
+
+Updated `ADR-2026-08-12-knight-elm-prefilter-classify.md` with a third dated measurement (Realm's
+review referenced, the encoder-mechanics finding, and this comparison) and `IMPL-2026-08-12-knight-...md`'s
+Status/Open questions. Did not touch `classify.ts`/`analyze-phases.ts` — still gated on a decision
+about corroboration, not on the precision number itself anymore.
 
 ### 2026-08-13 — TJ-K1 re-run on LLM-enriched data: more data made generalization WORSE
 

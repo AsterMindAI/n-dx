@@ -1,8 +1,10 @@
 # ADR — Add an ELM pre-filter stage before classify.ts's LLM fallback (Knight's independent verification)
 
-- **Status:** Proposed — Evidence below is **measured**, not planned, and does not clear the
-  acceptance gate as currently trained. Neither Accepted nor Rejected — see Evidence for why this
-  reads as inconclusive-pending-more-data rather than a final verdict.
+- **Status:** Proposed — **the ≥95%-precision-at-threshold gate now clears** on held-out data as of
+  the 2026-08-20 measurement (numeric feature representation), with real coverage (42.3%), for the
+  first time in either implementation. Not moved to Accepted: this is one held-out codebase and one
+  measurement, not yet corroborated independently, and no production code has been touched — see
+  Evidence, "Third measurement," for the full caveat.
 - **Date:** 2026-08-12
 - **Author:** Knight (Team Jarrett)
 - **Supersedes:** none. Same architectural decision as
@@ -146,9 +148,85 @@ added. Two live candidates for what to try next, neither measured yet:
    accuracy doesn't clear the bar" escalation clause — that clause was written to gate on
    evidence like this.
 
-**Status stays Proposed, not Accepted, and not Rejected.** Per `ADR-TEMPLATE.md`: "An ADR that says
-'ELM does not work for this' needs [Evidence] just as much" as a positive result. Two dated
-measurements now point the same direction (does not clear the gate) via two different, uncorrelated
-mechanisms of failure (insufficient data, then confirmed-not-insufficient-data) — this reads as a
-more structural gap than the first measurement alone suggested, not a final verdict on the
-architectural approach, but stronger evidence than a single run.
+**Status as of 2026-08-13:** Proposed, not Accepted, not Rejected. Two dated measurements pointed
+the same direction (does not clear the gate) via two different, uncorrelated mechanisms of failure
+(insufficient data, then confirmed-not-insufficient-data) — read as a structural gap, not a final
+verdict. **Superseded by the third measurement below**, which changed the outcome.
+
+### Third measurement (2026-08-20) — Realm's review, and the fix it pointed at
+
+**Context: Realm's independent review.** The user asked Realm (Team Jarrett) to review both
+`TJ-A1` and `TJ-K1` before either continued —
+[`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`](../Jarrett-Agents/Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md).
+Findings relevant here, condensed:
+
+1. Both implementations independently hit the same confidence-calibration false alarm (threshold
+   sweeps anchored at 0.5 showing 0% coverage) before recalibrating — inherent to base-ELM's
+   ridge-regression readout on this task, not a bug in either build.
+2. The evidence-for-`source:"llm"`-files problem (this ADR's "Decision" section, point 1) is a real
+   `classifications.json` schema gap needing its own ADR, independent of whether this work
+   continues — flagged, not yet written.
+3. **Archer's 2026-08-13 pooled-training retry conflated two variables** (added ~73 examples *and*
+   2 new archetype categories in the same experiment), so its negative result couldn't isolate
+   *why* performance dropped — category-count dilution, per-category signal dilution, or both.
+4. **Realm's proposed next step, in priority order:** (1) a controlled data-volume experiment
+   holding category count fixed, (2) fix the feature representation — `classifyFile` already
+   computes a clean, fixed-length per-archetype score for every file, currently surfaced to the ELM
+   only as a string hint inside tokenized text rather than as direct numeric input — before
+   reaching for a bigger/different model, (3) only then revisit `KernelELM`/`DeepELM`.
+
+**The user's instruction: skip item 1, go straight at item 2 — fix the representation, don't just
+re-run a bigger version of the same experiment.**
+
+**Checked how bad "indirectly" really was before building around it, rather than assuming Realm's
+framing was the whole story.** Read `AsterMind-Community-Edition/src/preprocessing/TextEncoder.ts:45-59`
+directly: `useTokenizer: true` does **not** produce a token/word embedding — `Tokenizer.tokenize(text)
+.join('')` splits on the delimiter and immediately rejoins with no separator, destroying every
+token/word boundary, then the result is one-hot encoded per character over a fixed `maxLen` window.
+So the encoder never saw `[path-tokens, archetypeId, weight]` structure at all — it saw a flat
+character window over a boundary-free blob. Measured the truncation angle directly: only 3.8% of
+500 sampled real examples actually exceed the 64-char window, so truncation is real but minor; the
+dominant issue is that even *untruncated* input carries the evidence as an undifferentiated
+character stream, not as an archetype-indexed numeric value.
+
+**The fix:** `buildEvidenceVector()` sums `classifyFile`'s per-archetype signal weights into a
+fixed-length vector (ordered over the full `BUILTIN_ARCHETYPES` catalog, stable dimensionality
+regardless of which archetypes a given training run happens to contain), concatenated with a
+path-only encoded vector (no evidence text appended — doesn't compete with hints for truncation
+budget, doesn't mix the two signal types into one stream). Trained via `trainFromData()` exactly as
+before, numeric input instead of joined text. Implementation: `trainArchetypeELMNumeric()`/
+`predictArchetypeNumeric()` in `classify-elm.ts`.
+
+**Ran it controlled, not as a replacement for the baseline** — identical data, identical 80/20
+split, identical seed (`20260812`) and `hiddenUnits` (512), identical held-out codebase; both
+representations evaluated in the same script run so representation is the only changed variable.
+This is the exact discipline Realm's review said the pooled-training retry was missing — applied
+here instead of skipped:
+
+| | text (original) | numeric (fix) |
+|---|---|---|
+| In-domain best point | 92.7% @ 39.4% (t=0.15) | **95.7% @ 67.3%** (t=0.15) |
+| Out-of-domain @ t=0.15 (same threshold, both reps) | 7.7% @ 16.7% | **97.0% @ 42.3%** |
+| Out-of-domain best point | 7.7% @ 16.7% — nothing better available | **100% @ 30.8%** (t=0.18) |
+| Out-of-domain @ full coverage (t=0.05) | 25.6% (below 48.7% baseline) | **71.8%** (well above baseline) |
+
+**The numeric representation clears the ADR's ≥95% precision gate with real coverage (42.3%) — the
+first time either implementation has cleared it.** Not a marginal change: out-of-domain precision
+at the same threshold went from 7.7% to 97.0%. Checked this wasn't leakage before reporting it:
+the evidence vector is built from the same source used since the first measurement (a fresh,
+LLM-call-free `analyzeClassifications()` re-run) — no dependency on the true label, same
+non-circular signal as always, only the encoding changed.
+
+**What this does and doesn't establish.** Confirms Realm's diagnosis: the feature representation,
+not data volume, was the dominant lever — the two falsified data-volume hypotheses (second
+measurement, and Archer's pooling retry) were chasing the wrong variable. Does **not** yet establish
+production-readiness: one held-out codebase, 78 examples, 6 archetypes represented, no independent
+corroboration on a second held-out set. Per `ADR-TEMPLATE.md`'s symmetry requirement (positive
+claims need the same rigor as negative ones), this is reported as a real but singular result, not a
+final verdict — see the linked IMPL's open questions for what corroboration would look like before
+treating the gate-clear as sufficient to move to production wiring.
+
+**Status as of 2026-08-20:** Proposed. The gate clears on measured evidence for the first time —
+this is a materially different position than "does not clear," but promotion to Accepted is a
+production-wiring decision (IMPL Steps 6-8), not an evidence-section update, and is left open for
+the user rather than decided here.

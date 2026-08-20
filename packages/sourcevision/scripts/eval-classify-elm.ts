@@ -4,7 +4,21 @@
  * of ADR-2026-08-11-jarrett-elm-prefilter-classify.md / IMPL-2026-08-11-jarrett-
  * classify-elm-swap.md).
  *
- * Two separate evaluations, because they answer different questions:
+ * Runs TWO feature representations side by side, controlled (same data, same
+ * split, same hiddenUnits/seed) so the only thing that differs between them is
+ * the representation itself — per Realm's 2026-08-19 review
+ * (Claude-Context/Jarrett-Agents/Notes/NOTE-realm-to-archer-and-knight-2026-08-19-
+ * elm-prefilter-review.md), the earlier pooled-training retry changed two
+ * variables at once and couldn't isolate its own result; this comparison is
+ * built not to repeat that mistake:
+ *
+ *   - "text"    — the original approach: path + evidence hints joined into one
+ *                 string, run through the ELM's own char-level tokenizer.
+ *   - "numeric" — Realm's suggested fix: `classifyFile`'s per-archetype
+ *                 evidence scores as a direct fixed-length numeric vector,
+ *                 concatenated with a path-only encoded vector.
+ *
+ * And two eval axes per representation, because they answer different questions:
  *
  *  1. In-domain (seeded Fisher-Yates 80/20 split of this repo's own classification
  *     data): trains on 80%, measures precision/coverage on the other 20%. Fast
@@ -35,7 +49,10 @@ import {
   extractExamples,
   trainArchetypeELM,
   predictArchetype,
+  trainArchetypeELMNumeric,
+  predictArchetypeNumeric,
   type ArchetypeExample,
+  type TrainedArchetypeELM,
 } from "../dist/analyzers/classify-elm.js";
 import type { Inventory, Imports, Classifications } from "../dist/schema/index.js";
 
@@ -99,14 +116,31 @@ function majorityBaseline(examples: ArchetypeExample[]): { archetype: string; ra
 
 interface CurveRow { threshold: number; n: number; correct: number; precision: number; coverage: number; }
 
+type Representation = "text" | "numeric";
+
+function trainByRepresentation(rep: Representation, examples: ArchetypeExample[], seed: number): TrainedArchetypeELM {
+  return rep === "text"
+    ? trainArchetypeELM(examples, { seed })
+    : trainArchetypeELMNumeric(examples, { seed });
+}
+
+function predictByRepresentation(
+  rep: Representation,
+  model: TrainedArchetypeELM,
+  e: ArchetypeExample,
+): { archetype: string; confidence: number } {
+  return rep === "text" ? predictArchetype(model, e.text) : predictArchetypeNumeric(model, e.path, e.evidence);
+}
+
 function precisionCoverageCurve(
-  model: ReturnType<typeof trainArchetypeELM>,
+  rep: Representation,
+  model: TrainedArchetypeELM,
   testExamples: ArchetypeExample[],
 ): CurveRow[] {
   // Predict once, sweep thresholds over cached results — avoids re-running
   // inference per threshold.
   const preds = testExamples.map((e) => {
-    const p = predictArchetype(model, e.text);
+    const p = predictByRepresentation(rep, model, e);
     return { truth: e.archetype, predicted: p.archetype, confidence: p.confidence };
   });
 
@@ -135,8 +169,51 @@ function printCurve(label: string, baseline: { archetype: string; rate: number }
   }
 }
 
+// A threshold clearing 95% precision on a handful of resolved predictions
+// (e.g. 1/47) isn't a meaningful pass — it's noise from a tiny n. Require
+// real coverage too, or the gate silently overstates a trivial result.
+const MIN_MEANINGFUL_COVERAGE = 0.1;
+
+function reportGate(curve: CurveRow[]): void {
+  const gateRow = curve.find((r) => r.precision >= 0.95 && r.coverage >= MIN_MEANINGFUL_COVERAGE);
+  const trivialRow = curve.find((r) => r.precision >= 0.95 && r.n > 0 && r.coverage < MIN_MEANINGFUL_COVERAGE);
+  if (gateRow) {
+    console.log(`GATE: threshold ${gateRow.threshold} clears >=95% precision at ${(gateRow.coverage * 100).toFixed(1)}% coverage (n=${gateRow.n}) on held-out data. Passes.`);
+  } else if (trivialRow) {
+    console.log(
+      `GATE: threshold ${trivialRow.threshold} technically clears >=95% precision but only resolves ${trivialRow.n} example(s) ` +
+      `(${(trivialRow.coverage * 100).toFixed(1)}% coverage) — below the ${(MIN_MEANINGFUL_COVERAGE * 100).toFixed(0)}% coverage floor for a meaningful result. ` +
+      `Does NOT pass the ADR's bar in any practically useful sense.`,
+    );
+  } else {
+    console.log(`GATE: no threshold in [${THRESHOLDS.join(", ")}] clears >=95% precision at >=${(MIN_MEANINGFUL_COVERAGE * 100).toFixed(0)}% coverage on held-out data. Does not pass the ADR's bar as currently trained.`);
+  }
+}
+
+function runRepresentation(
+  rep: Representation,
+  inDomainTrain: ArchetypeExample[],
+  inDomainTest: ArchetypeExample[],
+  allExamples: ArchetypeExample[],
+  heldOutExamples: ArchetypeExample[] | null,
+): void {
+  console.log(`\n\n########## Representation: ${rep} ##########`);
+
+  const inDomainModel = trainByRepresentation(rep, inDomainTrain, SEED);
+  const inDomainCurve = precisionCoverageCurve(rep, inDomainModel, inDomainTest);
+  printCurve(`[${rep}] In-domain (n-dx held-out split)`, majorityBaseline(inDomainTest), inDomainCurve);
+
+  if (heldOutExamples) {
+    const fullModel = trainByRepresentation(rep, allExamples, SEED); // train on ALL n-dx data this time
+    const heldOutCurve = precisionCoverageCurve(rep, fullModel, heldOutExamples);
+    printCurve(`[${rep}] Out-of-domain (genuinely different codebase)`, majorityBaseline(heldOutExamples), heldOutCurve);
+    reportGate(heldOutCurve);
+  }
+}
+
 function main() {
   console.log("=== ELM archetype classifier eval — Knight's independent implementation ===");
+  console.log("Comparing 'text' (original) vs 'numeric' (Realm's 2026-08-19 fix) representations, controlled.");
   console.log(`seed=${SEED}  train dir=${TRAIN_DIR}  held-out dir=${HELDOUT_DIR ?? "(not set — skipping generalization eval)"}\n`);
 
   const train = loadSV(TRAIN_DIR);
@@ -148,49 +225,25 @@ function main() {
     process.exit(1);
   }
 
-  // --- Eval 1: in-domain held-out split ---
   const rng = makePRNG(SEED);
   const shuffled = shuffle(allExamples, rng);
   const splitAt = Math.floor(shuffled.length * TRAIN_SPLIT);
   const inDomainTrain = shuffled.slice(0, splitAt);
   const inDomainTest = shuffled.slice(splitAt);
+  console.log(`In-domain split: ${inDomainTrain.length} train / ${inDomainTest.length} held-out (identical split for both representations).`);
 
-  console.log(`\nIn-domain split: ${inDomainTrain.length} train / ${inDomainTest.length} held-out.`);
-  const inDomainModel = trainArchetypeELM(inDomainTrain, { seed: SEED });
-  const inDomainCurve = precisionCoverageCurve(inDomainModel, inDomainTest);
-  printCurve("In-domain (n-dx held-out split)", majorityBaseline(inDomainTest), inDomainCurve);
-
-  // --- Eval 2: out-of-domain generalization ---
+  let heldOutExamples: ArchetypeExample[] | null = null;
   if (HELDOUT_DIR) {
     const heldOutData = loadSV(HELDOUT_DIR);
-    const heldOutExamples = extractExamples(heldOutData.inventory, heldOutData.imports, heldOutData.classifications);
-    console.log(`\nLoaded ${heldOutExamples.length} labeled examples from held-out codebase ${HELDOUT_DIR}.`);
-
-    const fullModel = trainArchetypeELM(allExamples, { seed: SEED }); // train on ALL n-dx data this time
-    const heldOutCurve = precisionCoverageCurve(fullModel, heldOutExamples);
-    printCurve("Out-of-domain (genuinely different codebase)", majorityBaseline(heldOutExamples), heldOutCurve);
-
-    // A threshold clearing 95% precision on a handful of resolved predictions
-    // (e.g. 1/47) isn't a meaningful pass — it's noise from a tiny n. Require
-    // real coverage too, or the gate silently overstates a trivial result.
-    const MIN_MEANINGFUL_COVERAGE = 0.1;
-    const gateRow = heldOutCurve.find((r) => r.precision >= 0.95 && r.coverage >= MIN_MEANINGFUL_COVERAGE);
-    const trivialRow = heldOutCurve.find((r) => r.precision >= 0.95 && r.n > 0 && r.coverage < MIN_MEANINGFUL_COVERAGE);
-    if (gateRow) {
-      console.log(`\nGATE: threshold ${gateRow.threshold} clears >=95% precision at ${(gateRow.coverage * 100).toFixed(1)}% coverage (n=${gateRow.n}) on held-out data. Passes.`);
-    } else if (trivialRow) {
-      console.log(
-        `\nGATE: threshold ${trivialRow.threshold} technically clears >=95% precision but only resolves ${trivialRow.n} example(s) ` +
-        `(${(trivialRow.coverage * 100).toFixed(1)}% coverage) — below the ${(MIN_MEANINGFUL_COVERAGE * 100).toFixed(0)}% coverage floor for a meaningful result. ` +
-        `Does NOT pass the ADR's bar in any practically useful sense.`,
-      );
-    } else {
-      console.log(`\nGATE: no threshold in [${THRESHOLDS.join(", ")}] clears >=95% precision at >=${(MIN_MEANINGFUL_COVERAGE * 100).toFixed(0)}% coverage on held-out data. Does not pass the ADR's bar as currently trained.`);
-    }
+    heldOutExamples = extractExamples(heldOutData.inventory, heldOutData.imports, heldOutData.classifications);
+    console.log(`Loaded ${heldOutExamples.length} labeled examples from held-out codebase ${HELDOUT_DIR}.`);
   } else {
-    console.log("\nSKIPPED out-of-domain eval — set SV_ELM_HELDOUT_DIR to a second codebase's .sourcevision/ dir to run it.");
-    console.log("The ADR's acceptance gate is measured on held-out data, not the in-domain split above — run with SV_ELM_HELDOUT_DIR before treating any number here as a real result.");
+    console.log("SKIPPED out-of-domain eval — set SV_ELM_HELDOUT_DIR to a second codebase's .sourcevision/ dir to run it.");
+    console.log("The ADR's acceptance gate is measured on held-out data — run with SV_ELM_HELDOUT_DIR before treating any number here as a real result.");
   }
+
+  runRepresentation("text", inDomainTrain, inDomainTest, allExamples, heldOutExamples);
+  runRepresentation("numeric", inDomainTrain, inDomainTest, allExamples, heldOutExamples);
 }
 
 main();
