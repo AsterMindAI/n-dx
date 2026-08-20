@@ -1,0 +1,2348 @@
+{
+  "schema": "elm-archetype-corpus/v1",
+  "generatedAt": "2026-08-20T19:11:22.675Z",
+  "generatedBy": "scripts/elm-corpus-build.mjs",
+  "provenance": {
+    "sources": [
+      "llm"
+    ],
+    "seed": 42,
+    "holdout": 0.25,
+    "repos": [
+      {
+        "repo": "n-dx-1",
+        "path": "/Users/nolanmoore/n-dx-1",
+        "git": {
+          "commit": "b8770042cb333334d864cca116c1c5e4189248ad",
+          "branch": "nolan-work",
+          "remote": "https://github.com/AsterMindAI/n-dx.git",
+          "dirty": true
+        },
+        "totalFiles": 683,
+        "classified": 683,
+        "unclassified": 0,
+        "harvested": 255
+      },
+      {
+        "repo": "AsterMind-Community-Edition",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/AsterMind-Community-Edition",
+        "git": {
+          "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+          "branch": "main",
+          "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git",
+          "dirty": true
+        },
+        "totalFiles": 114,
+        "classified": 114,
+        "unclassified": 0,
+        "harvested": 69
+      }
+    ]
+  },
+  "stats": {
+    "total": 324,
+    "classes": 13,
+    "distribution": {
+      "service": 123,
+      "utility": 116,
+      "entrypoint": 27,
+      "types": 24,
+      "middleware": 7,
+      "route-handler": 7,
+      "cli-command": 6,
+      "config": 6,
+      "store": 3,
+      "gateway": 2,
+      "schema": 1,
+      "hook": 1,
+      "test-helper": 1
+    },
+    "majorityBaseline": {
+      "label": "service",
+      "rate": 0.37962962962962965
+    },
+    "thinClasses": [
+      "middleware",
+      "route-handler",
+      "cli-command",
+      "config",
+      "store",
+      "gateway",
+      "schema",
+      "hook",
+      "test-helper"
+    ]
+  },
+  "train": [
+    {
+      "text": "packages/sourcevision/src/cli/serve.ts",
+      "label": "cli-command",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/sourcevision-core.ts",
+      "label": "cli-command",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/help.ts",
+      "label": "cli-command",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/cli/mcp.ts",
+      "label": "cli-command",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/deployed-mode.ts",
+      "label": "config",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/workflow/default.ts",
+      "label": "config",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/project-config.ts",
+      "label": "config",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/enrich-config.ts",
+      "label": "config",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "node_examples/experiments/weighted_hybrid_residual_rrf.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/synth/examples/quickstart.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/pro/workers/dev-worker.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/server/start.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/L04-online-learning/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/bootstrap.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/L06-kernels-nystrom/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "node_examples/book-index-elm-tfidf.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/pro/workers/prod-worker.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "node_examples/experiments/multiview-encoder-elm-fusion.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L00-elm-primer/elm-worker.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/build.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/L03-embeddings-similarity/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L05-classification-confidence/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L02-first-classifier/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/ag-news-demo/agnews-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/elm-drum-demo-mainthread/app.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "node_examples/deepelm-kelm-retrieval.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "node_examples/tfidf-elm-dense-retrieval.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/chain-with-save/worker.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/api.ts",
+      "label": "gateway",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/engine/use-polling-suspension.ts",
+      "label": "hook",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/websocket.ts",
+      "label": "middleware",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/messaging/ws-pipeline.ts",
+      "label": "middleware",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/messaging/call-rate-limiter.ts",
+      "label": "middleware",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/messaging/fetch-pipeline.ts",
+      "label": "middleware",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/quota/token-validation-hook.ts",
+      "label": "middleware",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/execution.ts",
+      "label": "route-handler",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/requirements.ts",
+      "label": "route-handler",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/reads.ts",
+      "label": "route-handler",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/prune.ts",
+      "label": "route-handler",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/index-markdown.ts",
+      "label": "route-handler",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/tool-schema.ts",
+      "label": "schema",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/workflow.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/codex-cli-provider.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/context.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/mcp-schema-watcher.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/workspace-aggregate.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/generators/HybridGenerator.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/enrich-batch.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/go-imports.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/reranking/OmegaRR.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/enrich.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/search-index.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/spin.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/retrieval/index-builder.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/classify.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/tools/rex.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/move-recommendations.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/llm-bridge.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/guided.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/task-usage/incremental-task-usage.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/next-steps.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/adaptive.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/quota/claude-quota.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/loaders/loadPretrained.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/workspace-crossings.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/quota/google-quota.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/propose.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/infoflow/TransferEntropy.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/pro/infoflow/TEController.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/llm-client/src/suggest.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/manifest.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/quota/codex-quota.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/extract.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/tasks/ConfidenceClassifierELM.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/tools/git.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/planning/prompt.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/reconcile.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/fix/tree.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/generators/PerfectGenerator.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/louvain.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/tasks/RefinerELM.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/pro/retrieval/hybrid-retriever.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/llm-client/src/llm-client.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/completion.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/llms-txt.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/aggregation-cache.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/tools/dispatch.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/task-usage.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/adapters/claude-cli-adapter.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/tools/dead-code-analyzer.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/propose-group-renames.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/openai-api-provider.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/risk-scoring.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/landing/landing.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/convergence.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/infoflow/TransferEntropyPWS.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/tasks/CharacterLangEncoderELM.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/tools/files.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/go-route-detection.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/api-provider.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/polling-manager.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/cli-provider.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/callgraph-findings.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/decompose.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/merge-history.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/callgraph.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/summarization/OmegaSumDet.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/task-completion-gate.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/tasks/IntentClassifier.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/synth/generators/ELMGenerator.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/queue/priority-scheduler.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/project-profile.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/tools/test-runner.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/tick-timer.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/swift-imports.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/adapters/codex-cli-adapter.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/tab-visibility.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/inventory.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/branch-work-collector.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/acknowledge.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/review.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/token-budget.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/lifecycle.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/OmegaSynth.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/recommend/create-from-recommendations.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/tasks/EncoderELM.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/loop.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/generators/ExactGenerator.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/export/pdf-report.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/zones.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/workspace.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/cli-loop.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/provider-session.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/engine/polling-state.ts",
+      "label": "store",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/branch-work-store.ts",
+      "label": "store",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "test-token-format.js",
+      "label": "test-helper",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/provider-interface.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/L04-online-learning/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/shared/data-files.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/llm-types.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/cli-brand.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/shared/view-id.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/reason.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/batch-types.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/guard/contracts.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/runtime-contract.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/L03-embeddings-similarity/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/visualization/colors.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/_template/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L01-js-ts-in-this-repo/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/tools/contracts.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/modify-reason.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/L02-first-classifier/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L05-classification-confidence/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/response-buffer-gate.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/language/swift.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/generators/pr-markdown-template.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/consolidation-guard.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/queue/format.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/task-display.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/preprocessing/Tokenizer.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/codex-cli-token-parser.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/util/sort.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/heartbeat.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/language/python.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/visualization/metrics.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/ml/KNN.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/analyze/file-validation.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/tools/test-command-resolver.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/language/typescript.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/analyze-shared.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/parse-utils.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/llm-error-classifier.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/ml/TFIDF.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/crash/crash-detector.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/limiter.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/plan-only-detection.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/vendor-model-reset.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/event-accumulator.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/dom-update-gate.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/visualization/flow.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/rename-resolve.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/shared/view-routing.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/migration-notification.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/port.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/change-magnitude.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/update-batcher.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/tools/pr-status-trailers.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/graceful-degradation.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/zone-hash.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/scroll-reveal.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/exec.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/util/exec-cli.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/token-usage.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/process-memory-tracker.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/encoders/FixedLength.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/validation/completion.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/util/merge.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/exec.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/create-client.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/rate-limit.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/validate-modification.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/concurrent-execution-metrics.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/recommend/text-similarity-shared.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "pr-check.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/encoders/StringEncoder.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/analyze/dedupe.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/json.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/quota/token-validation.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/commit-msg-watcher.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/token-logging.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/quota/format.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/guard/commands.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/recommend/tree.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/token-usage.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/process-memory-tracker.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/dom-performance-monitor.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/language/detect.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/recommend/similarity.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/prompt-diagnostics.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/git-changed-files.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/_shared/lesson-deck.js",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/guard/policy.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/task-usage/register-scheduler.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/budget-preflight.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/branch-work-filter.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/batched-tick-dispatcher.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/help-format.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/math/rff.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/pro/math/krr.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/analyze/diff.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/llm-error-classifier.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/enrich-parsing.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/math/online-ridge.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/refresh-throttle.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/language/registry.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/refresh-throttle-memory.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/encoders/CharVocab.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/src/viewer/messaging/request-dedup.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/concurrent-execution-metrics.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/validate-input.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    }
+  ],
+  "heldOut": [
+    {
+      "text": "packages/rex/src/cli/mcp.ts",
+      "label": "cli-command",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/cli/help.ts",
+      "label": "cli-command",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/shared/features.ts",
+      "label": "config",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/llm-config.ts",
+      "label": "config",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/examples/trainELMFromSynth.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/_template/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L00-elm-primer/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "node_examples/experiments/agnews-tfidf-elm-distillation.ts",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L01-js-ts-in-this-repo/live-demo.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/ag-news-demo/agnews-worker.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/web/dev.js",
+      "label": "entrypoint",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/external.ts",
+      "label": "gateway",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/messaging/message-coalescer.ts",
+      "label": "middleware",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/messaging/message-throttle.ts",
+      "label": "middleware",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/health.ts",
+      "label": "route-handler",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/items.ts",
+      "label": "route-handler",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/auth.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/generators/RetrievalGenerator.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/archetypes.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/zone-output.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/components.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/token-usage.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/branch-work-classifier.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/loader/data-loader.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/enrich-per-zone.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/tasks/VotingClassifierELM.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/server-route-detection.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/omega/Omega.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/agent/planning/brief.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/imports.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/summary.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/analysis/stuck.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/engine/polling-restart.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/quota/codex-token-retrieval.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/prd-io.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/tasks/LanguageClassifier.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/tasks/FeatureCombinerELM.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/llm-client/src/google-api-provider.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/polling/tick-visibility-gate.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/task-usage/usage-cleanup-scheduler.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/queue/execution-queue.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/vendor-failover.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/analyzers/claude-client.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/mcp-subprocess-proxy.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/mcp-tools.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/pool.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/tasks/AutoComplete.ts",
+      "label": "service",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/llm-client/src/provider-registry.ts",
+      "label": "store",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/vendor-adapter.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/reshape-reason.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/shared-types.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/shared.ts",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "examples/lessons/L00-elm-primer/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "examples/lessons/L06-kernels-nystrom/speaker-notes.js",
+      "label": "types",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/rex/src/cli/folder-tree-path.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/preprocessing/UniversalEncoder.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/tools/exec-shell.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "scan_transcripts.py",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/routes-rex/rex-route-helpers.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/suppress-deprecations.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/auth-guidance.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/recommend/conflict-detection.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/performance/memory-monitor.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/memory-monitor.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/viewer/utils.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/synth/encoders/OneHot.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/llm-client/src/project-dirs.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/pr-markdown-refresh-diagnostics.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "src/pro/retrieval/vectorization.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "src/preprocessing/TextEncoder.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "AsterMind-Community-Edition"
+    },
+    {
+      "text": "packages/hench/src/tools/shell.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/analyze/scanners.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/exec-shell.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/language/go.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/help.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/process/memory-throttle.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/tools/cleanup-transformations.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/web/src/server/response-utils.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/guard/paths.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/sourcevision/src/util/paths.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/hench/src/agent/lifecycle/plan-mode-prompt.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/llm-client/src/vendor-header.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    },
+    {
+      "text": "packages/rex/src/cli/model-resolution.ts",
+      "label": "utility",
+      "confidence": 0.7,
+      "source": "llm",
+      "repo": "n-dx-1"
+    }
+  ]
+}
