@@ -25,6 +25,8 @@ owner a note before assuming it's stale — don't just delete it.
 
 
 
+| 2026-08-20 | Jam | Nolan | `TN-J7` — IMPL Step 2 corpus run, **now unblocked**. Nolan authorised using their Claude CLI (VS Code extension binary, found on disk — nothing installed). Runs `analyze` **without** `--fast` on n-dx + AsterMind-CE so LLM enrichment produces `source: "llm"` rows. **This spends tokens** — ~12 batches, est. $1–2. CLI reached via `PATH` for the run, **not** written to `.n-dx.json`: that file is committed and shared, and the path is machine- and extension-version-specific (`2.1.237`), so it would break Jarrett, Thomas, and Nolan on the next update. | `sourcevision analyze <repo> --full` (no `--fast`) → writes `.sourcevision/*.json`; then `scripts/elm-corpus-build.mjs` → `scripts/data/`. | Same session |
+
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
 `packages/core/assistant-assets/**` · `tests/e2e/**` · `.n-dx.json` ·
