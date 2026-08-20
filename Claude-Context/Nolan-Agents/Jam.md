@@ -131,6 +131,59 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-20 — Corpus built with Nolan's CLI. Premise confirmed; the bar went up.
+
+**Did:**
+- Found the Claude CLI already on disk — the VS Code extension's bundled binary, just not on
+  `PATH`. **Installed nothing.** Verified it completes headlessly and is authenticated before using it.
+- Ran `analyze --full` (no `--fast`) on n-dx and AsterMind-CE, stopping each **immediately after
+  phase 3**. Built `scripts/data/elm-archetype-corpus.json` — 324 LLM-labelled rows, 13 classes,
+  seed 42, 241/83 split (commit `2e6a3e43`).
+
+**Learned:**
+- **The ADR's central bet paid off:** LLM labels populate what rules cannot see. `service` 0 →
+  **123**, `middleware` 0 → 7, `test-helper` 0 → 1. Training on rule output would have been useless.
+- **But the bar rose, not fell.** Majority baseline **38.0%** (vs 19.6% on rule labels), because
+  `service` + `utility` are **74%** of rows and 9 of 13 classes have under 10. The teacher's output
+  is *more* concentrated than the rules'. An ELM now has to beat 38% while 9 classes are unlearnable.
+- **The teacher is inconsistent exactly where the mass is.** `polling-manager.ts`, `tick-timer.ts`,
+  `tick-visibility-gate.ts` and `landing.ts` → `service`; `request-dedup.ts`, `budget-preflight.ts`
+  → `utility`. A landing page is not a service. The LLM is using `service` as a catch-all for
+  "module with behaviour", and 74% of the corpus rests on that boundary. Filed `TN-J10` — this is
+  the "inherits the teacher's mistakes" risk from the ADR, now **observed** rather than predicted.
+- **`--fast` gates two things, not one.** Dropping it to get classification labels also switches on
+  phase-4 zone enrichment — the expensive Tier C generation path, useless for the corpus. Killed
+  both runs the moment phase 3 wrote. Anyone repeating this must do the same.
+- **A CLI spawn costs ~7.3k cache-creation tokens / ~$0.08 before any real prompt.** So an avoided
+  classify batch saves more than its prompt size implies — this *helps* the ELM's case and is a
+  useful input for `TN-J3`.
+- **`.n-dx.json` was the wrong place for `cli_path`** even though the error message suggests it:
+  the file is committed and shared, and the path contains `2.1.237`, so it would break Jarrett and
+  Thomas immediately and Nolan on the next extension update. Used `PATH` for the run instead.
+
+**Broke / still broken:**
+- **I lost the first AsterMind clone.** Staged it in the session scratchpad under `/private/tmp`;
+  it was reaped mid-session — every file deleted, directory tree and an empty `.git` husk left, so
+  the analyze reported `0 files cataloged` and silently overwrote good results with empty ones. Cost
+  **zero tokens** (0 files → 0 batches) and re-cloning fixed it, but it looked exactly like a real
+  regression and I nearly reported it as one. Clones now live in `~/n-dx-elm-corpus/`.
+- Nothing else broken. No source changed this session. NUL bytes verified untouched.
+
+**Left undone and why:**
+- **Step 3 (benchmark) not started**, and I would not start it before `TN-J10` is answered:
+  measuring "at or above LLM accuracy" against labels this fuzzy measures *agreement with a noisy
+  teacher*, not correctness.
+- `TN-J9` still open — the corpus is still two TypeScript repos. `model` and `route-module` remain
+  at zero rows.
+
+**Notes sent / received:** findings posted to `IN-FLIGHT.md` § 3 for all teams.
+
+**Handoff:**
+- Get `TN-J10` decided (gold set or not). Then Step 3, using the library's `Evaluation` module and
+  reporting against **38.0%** — recomputed from whatever corpus is actually used, never quoted.
+
+---
+
 ### 2026-08-13 (c) — Step 2: harness shipped, corpus blocked on auth, ELM case got stronger
 
 **Did:**

@@ -25,7 +25,6 @@ owner a note before assuming it's stale — don't just delete it.
 
 
 
-| 2026-08-20 | Jam | Nolan | `TN-J7` — IMPL Step 2 corpus run, **now unblocked**. Nolan authorised using their Claude CLI (VS Code extension binary, found on disk — nothing installed). Runs `analyze` **without** `--fast` on n-dx + AsterMind-CE so LLM enrichment produces `source: "llm"` rows. **This spends tokens** — ~12 batches, est. $1–2. CLI reached via `PATH` for the run, **not** written to `.n-dx.json`: that file is committed and shared, and the path is machine- and extension-version-specific (`2.1.237`), so it would break Jarrett, Thomas, and Nolan on the next update. | `sourcevision analyze <repo> --full` (no `--fast`) → writes `.sourcevision/*.json`; then `scripts/elm-corpus-build.mjs` → `scripts/data/`. | Same session |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -57,6 +56,25 @@ right now" so nobody has to ask.
 Things every team needs to know — ADRs accepted, interfaces changed, measured ELM results,
 direction changes. Link the ADR; don't restate it here.
 
+- **2026-08-20 — Path B corpus built (324 LLM-labelled rows). The premise held; the bar went up.**
+  Ask Jam / Nolan (Team Nolan). `scripts/data/elm-archetype-corpus.json`, commit `2e6a3e43`.
+  - **`TN-J8` resolved:** the Claude CLI was already on disk (VS Code extension binary), just off
+    `PATH`. **Nothing installed.** Deliberately *not* written to `.n-dx.json` — that file is
+    committed and shared, and the path is machine- and extension-version-specific, so persisting it
+    would break Jarrett and Thomas.
+  - **Premise confirmed:** the LLM populates what rules cannot see — `service` 0 → **123**,
+    `middleware` 0 → 7, `test-helper` 0 → 1. Training on LLM labels was the right call.
+  - **⚠️ But the bar rose.** Majority-class baseline is now **38.0%** (was 19.6% on rule labels),
+    because `service` + `utility` are **74%** of the corpus, and **9 of 13 classes have under 10
+    rows**. The teacher's output is more concentrated than the rules'.
+  - **⚠️ And the teacher is inconsistent where it matters.** `polling-manager.ts`, `tick-timer.ts`
+    and `landing.ts` are labelled `service`; `request-dedup.ts` is `utility`. 74% of the corpus
+    rests on that boundary. Filed `TN-J10`: **do we need a hand-labelled gold set before Step 3 is
+    meaningful?** A three-lead call.
+  - **Two operational traps worth knowing:** `--fast` gates *both* classification and phase-4 zone
+    enrichment, so dropping it to get labels also buys expensive generation you don't need — stop
+    after phase 3. And don't stage corpus clones in the session scratchpad; `/private/tmp` reaped
+    one mid-session, leaving a directory skeleton and a silent `0 files cataloged` run.
 - **2026-08-13 — Path B Step 2: the ELM case got *stronger*, but the corpus is blocked on auth.**
   Ask Jam / Nolan (Team Nolan).
   - **A second real codebase is 60.5% unclassified vs n-dx's 37.3%** (`AsterMind-Community-Edition`,

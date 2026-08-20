@@ -165,7 +165,71 @@ is the wrong distribution (ADR § Decision, commitment 1).
 **Budget note:** this is the one deliberate token spend in the plan. It is bounded and one-off, and
 its purpose is to end the recurring spend.
 
-### 🔴 BLOCKED 2026-08-13 — no LLM is reachable, so the real corpus cannot be built
+### ✅ UNBLOCKED + DONE 2026-08-20 — corpus built (324 rows), and it changed the picture
+
+Nolan authorised using their Claude CLI. **Nothing was installed** — it was already on disk as the
+VS Code extension's bundled binary (`.../anthropic.claude-code-2.1.237-darwin-arm64/resources/native-binary/claude`),
+just not on `PATH`. Reached via `PATH` for the run, deliberately **not** written to `.n-dx.json`:
+that file is committed and shared, and the path is machine- *and* extension-version-specific, so
+persisting it would break Jarrett, Thomas, and Nolan on the next extension update.
+
+**Corpus: `scripts/data/elm-archetype-corpus.json`** (commit `2e6a3e43`) — 324 LLM-labelled rows
+from n-dx (255) + AsterMind-CE (69), seed 42, 241 train / 83 held-out.
+
+**The premise is confirmed.** The LLM populates classes the rules cannot see:
+`service` 0 → **123**, `middleware` 0 → 7, `test-helper` 0 → 1, `gateway` → 2. Choosing LLM labels
+over rule labels was the right call.
+
+**But two things got worse, and both matter more than the win.**
+
+**1. The bar went UP.** The teacher's output is *more* concentrated than the rules':
+
+| | n-dx rule labels | LLM labels (this corpus) |
+|---|---|---|
+| Majority-class baseline | 19.6% | **38.0%** |
+| Top-2 share | 36% | **74%** (`service` 123 + `utility` 116) |
+| Classes under 10 rows | 2 of 12 | **9 of 13** |
+
+An ELM must now beat **38%**, not 19.6% — and with 9 classes too thin to learn, it is effectively
+being asked to learn one binary distinction and guess the rest.
+
+**2. That binary distinction is one the teacher draws inconsistently.** Spot-checking labels:
+
+| Labelled `service` | Labelled `utility` |
+|---|---|
+| `viewer/polling/polling-manager.ts` | `viewer/messaging/request-dedup.ts` |
+| `viewer/polling/tick-timer.ts` | `llm-client/budget-preflight.ts` |
+| `viewer/polling/tick-visibility-gate.ts` | `hench/agent/lifecycle/commit-msg-watcher.ts` |
+| `web/landing/landing.ts` | `hench/agent/analysis/change-magnitude.ts` |
+
+A landing page is not a service, and the polling internals are not obviously services while
+`request-dedup` is a utility. The LLM appears to be using `service` as a catch-all for
+"module with behaviour". **74% of the corpus rests on that boundary.** This is the "ELM inherits
+the teacher's mistakes" risk the ADR named — now observed, not predicted.
+
+**Consequence for the kill criterion:** the ADR's bar was "≥30% of the residue at or above the
+LLM's own accuracy". Two things now need saying out loud before Step 3 runs: the ELM cannot exceed
+a teacher this noisy, and "at or above LLM accuracy" is measured against labels we have reason to
+distrust. **Recommend the leads decide whether a hand-labelled gold set is required before Step 3
+is meaningful** — otherwise Step 3 measures agreement with a fuzzy teacher, not correctness.
+
+### Operational notes from the run
+
+- **`--fast` gates *both* enrichment paths.** Dropping it to get classification labels also enables
+  phase-4 zone enrichment, which is the expensive Tier C *generation* path and is useless for the
+  corpus. Both runs were **stopped immediately after phase 3 wrote `classifications.json`**, which
+  is all the corpus needs. Anyone repeating this should do the same, or add a flag that enriches
+  classification only.
+- **Each CLI spawn carries fixed overhead.** A trivial `claude -p` call reported ~7.3k
+  cache-creation tokens and $0.08. So an avoided classify batch saves considerably more than its
+  prompt size suggests — which *helps* the ELM's case, and is a useful input for `TN-J3`.
+- **Do not stage corpus repos in the session scratchpad.** The first AsterMind clone under
+  `/private/tmp/...` was reaped mid-session: every file deleted, directory tree and an empty `.git`
+  husk left behind, causing a silent `0 files cataloged` run. Clones now live in
+  `~/n-dx-elm-corpus/`. Cost nothing (0 files → 0 batches) but it looks exactly like a real
+  regression, so it is recorded here.
+
+### 🔴 Previously BLOCKED 2026-08-13 — no LLM was reachable (resolved above)
 
 Verified by executing a completion, not by inspecting config:
 
