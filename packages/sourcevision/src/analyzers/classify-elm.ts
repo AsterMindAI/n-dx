@@ -10,8 +10,16 @@
  * already produce and export.
  */
 
+import { basename } from "node:path";
 import { ELM } from "@astermind/astermind-community";
-import type { Classifications, FileClassification } from "../schema/index.js";
+import type {
+  ArchetypeDefinition,
+  ArchetypeSignal,
+  Classifications,
+  FileClassification,
+  Imports,
+  Inventory,
+} from "../schema/index.js";
 
 const HIDDEN_UNITS = 128;
 const MAX_LEN = 120;
@@ -125,5 +133,160 @@ export interface ELMPrediction {
  */
 export function predictArchetype(trained: TrainedArchetypeELM, text: string): ELMPrediction {
   const [top] = trained.elm.predict(text, 1);
+  return { archetype: top.label, confidence: top.prob };
+}
+
+// ── Numeric feature representation (Realm's review, 2026-08-19/20) ─────────────
+//
+// The text-mode functions above encode a file as tokenized text (path + up to 5
+// "archetypeId(weight)" hints), which is what classifyFile's algorithmic pass evidence
+// naturally looks like as a prompt hint. Realm's review pointed out this indirectly encodes
+// a fixed-length numeric signal (the per-archetype weighted score every file already gets
+// scored against) as a string, which a ridge-regression readout has to re-derive from
+// tokenized text rather than receiving directly. This section builds the same score
+// deliberately as a raw numeric vector instead, trained via NumericConfig (no tokenizer).
+//
+// matchSignal/scoreArchetypes below are reimplemented independently from classify.ts's
+// private matchSignal/classifyFile (classify.ts:135-250) rather than importing anything new
+// from that module — classify.ts stays genuinely untouched (see IMPL Files-touched table).
+// Known tradeoff: this duplicates signal-matching logic, so it can drift out of sync if
+// classify.ts's archetype-matching regexes change. Acceptable for a prototype; would need
+// reconciling (ideally by exporting the scoring function from classify.ts for real) before
+// any production use.
+
+function matchesSignal(signal: ArchetypeSignal, filePath: string, fileName: string, exportsForFile?: string[]): boolean {
+  const re = new RegExp(signal.pattern);
+  switch (signal.kind) {
+    case "path":
+      return re.test(filePath);
+    case "filename":
+      return re.test(fileName);
+    case "directory":
+      return filePath.includes(signal.pattern);
+    case "export":
+      return !!exportsForFile && exportsForFile.some((sym) => re.test(sym));
+    default:
+      return false;
+  }
+}
+
+/**
+ * Compute the same per-archetype weighted score classifyFile computes internally
+ * (classify.ts:147-171), but returned as a full fixed-length vector (one entry per
+ * archetype, 0 if unmatched) instead of only the winning archetype + truncated evidence.
+ */
+export function scoreArchetypeVector(
+  filePath: string,
+  archetypes: ArchetypeDefinition[],
+  exportsForFile?: string[],
+  projectLanguages?: string[],
+): number[] {
+  const fileName = basename(filePath);
+  return archetypes.map((archetype) => {
+    let score = 0;
+    for (const signal of archetype.signals) {
+      if (signal.languages && signal.languages.length > 0 && projectLanguages && projectLanguages.length > 0) {
+        if (!projectLanguages.some((lang) => signal.languages!.includes(lang))) continue;
+      }
+      if (matchesSignal(signal, filePath, fileName, exportsForFile)) score += signal.weight;
+    }
+    return score;
+  });
+}
+
+/** Mirrors classify.ts's buildExportMap (classify.ts:256-274) — reexport edges only. */
+function buildExportMap(imports: Imports): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  for (const edge of imports.edges) {
+    if (edge.type !== "reexport") continue;
+    let list = result.get(edge.to);
+    if (!list) {
+      list = [];
+      result.set(edge.to, list);
+    }
+    for (const sym of edge.symbols) {
+      if (!list.includes(sym)) list.push(sym);
+    }
+  }
+  return result;
+}
+
+export interface NumericArchetypeExample {
+  vector: number[];
+  archetype: string;
+}
+
+/**
+ * Extract (score-vector, archetype) pairs by recomputing the algorithmic score fresh from
+ * inventory.json/imports.json, joined with classifications.json's FINAL label regardless of
+ * which stage resolved it. Unlike fileToText's evidence-hint approach, this needs no
+ * source: "algorithmic"-only carve-out — recomputing from first principles instead of reading
+ * the stored (and, for source: "llm" entries, answer-shaped) `evidence` field sidesteps the
+ * leakage question entirely rather than working around it.
+ */
+export function extractNumericExamples(
+  classifications: Classifications,
+  inventory: Inventory,
+  imports: Imports,
+): NumericArchetypeExample[] {
+  const exportMap = buildExportMap(imports);
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
+  const examples: NumericArchetypeExample[] = [];
+
+  for (const file of inventory.files) {
+    if (file.role !== "source") continue;
+    const fc = classificationByPath.get(file.path);
+    if (!fc?.archetype) continue;
+    if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
+    const vector = scoreArchetypeVector(file.path, classifications.archetypes, exportMap.get(file.path));
+    examples.push({ vector, archetype: fc.archetype });
+  }
+  return examples;
+}
+
+export interface TrainedArchetypeELMNumeric {
+  elm: ELM;
+  categories: string[];
+}
+
+/** Train a base ELM on raw numeric score vectors (NumericConfig, no tokenizer) instead of text. */
+export function trainArchetypeELMNumeric(
+  examples: NumericArchetypeExample[],
+  categories: string[],
+  seed: number,
+): TrainedArchetypeELMNumeric {
+  const inputSize = examples[0]?.vector.length;
+  if (!inputSize) {
+    throw new Error("trainArchetypeELMNumeric: no examples to infer vector length from");
+  }
+
+  const elm = new ELM({
+    categories,
+    hiddenUnits: HIDDEN_UNITS,
+    useTokenizer: false,
+    inputSize,
+    seed,
+  });
+
+  const categoryIndex = new Map(categories.map((c, i) => [c, i]));
+  const X: number[][] = [];
+  const y: number[] = [];
+  for (const ex of examples) {
+    const idx = categoryIndex.get(ex.archetype);
+    if (idx === undefined) continue;
+    X.push(ex.vector);
+    y.push(idx);
+  }
+  if (X.length === 0) {
+    throw new Error("trainArchetypeELMNumeric: no examples matched the given category set");
+  }
+
+  elm.trainFromData(X, y);
+  return { elm, categories };
+}
+
+/** Classify one file's precomputed score vector. Same confidence semantics as predictArchetype. */
+export function predictArchetypeNumeric(trained: TrainedArchetypeELMNumeric, vector: number[]): ELMPrediction {
+  const [top] = trained.elm.predictTopKFromVector(vector, 1);
   return { archetype: top.label, confidence: top.prob };
 }
