@@ -113,17 +113,22 @@ itself has not started.
 
 ## Next up
 
-- [ ] `TN-J1` — survey LLM call sites across the monorepo for ELM/KELM replacement candidates.
-      Verify each at `file:line`; do not carry the lead's starting list forward as fact.
-- [ ] Characterise each candidate: classification-shaped (replaceable) vs open-ended generation
-      (mostly not), plus rough token cost, so the split is ordered by value and not by guesswork.
-- [ ] Propose a three-way split across Teams Nolan / Jarrett / Thomas, split by **merge surface**
-      so each team can work a day without touching a file another team has open
-      (`OWNERSHIP.md` § Assignments).
-- [ ] Write it up as an ADR (`ADR-2026-08-10-jam-<slug>.md`) — the split is a decision for the
-      three leads, so it needs to be a document they can accept, not a chat message.
-- [ ] Before claiming anything measured: `pnpm typecheck && pnpm test`, and no accuracy number
-      without its seed and its baseline.
+*(Corrected 2026-08-23 — this section previously still listed the `TN-J1` survey bullets, all
+delivered 2026-08-11. Butter flagged that a revived session reads `Next up` as its instructions.)*
+
+- [ ] **Blocked on Butter's ADR + IMPL** for the Jam/Butter collaboration. Do not start work in
+      `packages/llm-client/**` or `hench/**` before it lands — that is Butter's claim.
+- [ ] `TN-J10` — needs the three leads: does Step 3 require a hand-labelled gold set? The corpus
+      teacher labels `landing.ts` as `service`, and `service`+`utility` are 74% of rows, so
+      "at or above LLM accuracy" may measure agreement with a fuzzy teacher rather than correctness.
+- [ ] `TN-J4` Step 3 (benchmark) — **hold until `TN-J10` is answered.** When it runs: use the
+      library's `Evaluation` module, report against the **majority-class baseline recomputed from
+      the corpus actually used** (38.0% for the current one), never a figure quoted from a document.
+- [ ] `TN-J9` — corpus still lacks ecosystem diversity; `model` and `route-module` have zero rows.
+      Needs repos from other ecosystems, not more TypeScript libraries.
+- [ ] Update the published `SYNC-001` artifact once Butter lands the token fix — it carries a stat
+      tile reading "0 — Tokens we can currently measure" and lives outside the repo, so no grep
+      will find it.
 
 ## Session log
 
