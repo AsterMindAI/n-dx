@@ -113,6 +113,12 @@ clean, `gh` default set to `AsterMindAI/n-dx`. `TN-J3` claimed — it was `PENDI
 both boards, confirmed before claiming. **No investigation work done yet beyond the verification
 recorded above**, and no source file has been edited.
 
+Waiting on one thing: whether an LLM is actually reachable. A `claude` binary now exists on PATH
+(`2.1.231`) that was **not** there when Jam recorded `TN-J8` — but presence is not authentication
+and I have not verified it can complete a request. Asked Jam for the probe result rather than
+duplicating it. If it is reachable, the first fresh hench run is unblocked and `TN-J3` stops being
+a five-month-old question.
+
 ## Next up
 
 - [ ] Produce one hench run on current code and observe what `tokenUsage` actually records. This is
@@ -133,6 +139,69 @@ Newest at the top. One entry per session. **Do not edit past entries** — appen
 new entry, and if a past entry is wrong, say so explicitly in the new one.
 
 ---
+
+### 2026-08-13 (b) — Read Jam's work; note sent. `TN-J8` may already be unblocked.
+
+**Did:**
+
+- Read Jam's charter end to end, the three 08-13 session entries, `scripts/elm-corpus-build.mjs`,
+  and the 08-13 ADR/IMPL. Then verified independently rather than inheriting Jam's conclusions.
+- Sent `Notes/NOTE-nolan-internal-2026-08-13-tn-j8-may-be-unblocked.md` (Butter → Jam).
+
+**Learned:** (gotchas, API surprises, measured numbers — always with seed + baseline)
+
+- **`TN-J8` — "no LLM reachable" — is probably stale.** `command -v claude` →
+  `/Users/nolanmoore/Library/pnpm/claude`, `--version` → `2.1.231 (Claude Code)`, on PATH at
+  position 12. Binary `mtime` is **13:53:56**, against Jam's `TN-J8` record at **13:01:55** and last
+  commit at **13:06:10** — it arrived ~47 min after Jam stopped. Jam's finding was correct when
+  made; it appears to have been actioned since.
+- **Two limits on that, stated because they matter:** `mtime` is inference, not proof of install
+  time; and **presence is not authentication**. All five candidate API-key vars are unset, so if it
+  works it is a signed-in session, not a key. I could not check the stored credential — the
+  sandbox blocked the keychain read and **I did not work around it**. So: reachable-looking,
+  unverified.
+- **If the probe still fails while `command -v claude` succeeds, it is a different bug.**
+  `resolveCliPath` (`config.ts:385-387`) returns `claudeConfig.cli_path ?? "claude"` — a bare name
+  handed to the spawn, relying on the child inheriting a PATH containing `~/Library/pnpm`. That is
+  exactly the failure mode a pnpm-global install produces, and the fix is
+  `ndx config llm.claude.cli_path <path>`, not an install.
+- **I was wrong about `TN-J7` board drift.** I reported to the lead that `TN-J7` was claimed on the
+  backlog with no `IN-FLIGHT.md` row, and called it the same failure mode as the earlier `TN-J5`
+  mismatch. It is not. Jam **added** the row in `90362703` (13:01:55) and **removed it themselves**
+  in `f52eb253` (13:06:10) on stopping work — which is what `IN-FLIGHT.md` § 1 instructs. An open
+  backlog item plus a released claim is correct, not drift. Checked my own commit first to be sure
+  I had not clobbered the row: `git show 5d895d41 -- Claude-Context/IN-FLIGHT.md` touches no
+  `TN-J7` line. Corrected to the lead; kept out of the note.
+
+**Broke / still broken:**
+
+- Nothing. Still no source file edited and no test run, so I still claim no test result.
+
+**Left undone and why:**
+
+- **Did not run the `complete()` probe myself.** It is Jam's `TN-J8`, Jam already wrote the probe,
+  and duplicating it risks two agents spending tokens on the same question. Asked for the result
+  instead.
+- **Did not verify CLI authentication** — blocked, see above. Named as unverified rather than
+  guessed at.
+- Still no fresh hench run, so `TN-J3` remains an open question, not a finding.
+
+**Notes sent / received:**
+
+- **Sent:** `Claude-Context/Nolan-Agents/Notes/NOTE-nolan-internal-2026-08-13-tn-j8-may-be-unblocked.md`
+  → Jam. Covers: (1) `TN-J8` likely unblocked + the `resolveCliPath` alternative; (2) `TN-J3`'s
+  evidence is five months stale and I have claimed and corrected it; (3) worktrees do not isolate
+  `.hench/runs/` and new runs will not commit. Asks two things back: the probe result, and whether
+  "we cannot measure tokens" is relied on anywhere beyond `SYNC-001` § 5, the survey ADR, and the
+  IMPL open questions.
+- **Delivery caveat, per Jam's own `TN-F3`:** the note is committed on `Nolan-Work-Butter`, not
+  Jam's branch. Until this merges to `dev` and `dev` reaches `Nolan-Work`, it is **written, not
+  sent**. Raised with the lead.
+
+**Handoff:**
+
+- Chase the probe result. If the LLM is reachable, the first hench run — the measurement nobody has
+  taken since February — becomes possible immediately, and it is the gate on everything in `TN-J3`.
 
 ### 2026-08-13 — Onboarding; claimed `TN-J3`; found its evidence base is five months stale
 
