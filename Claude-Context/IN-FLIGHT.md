@@ -29,7 +29,6 @@ owner a note before assuming it's stale — don't just delete it.
 
 | 2026-08-23 | Butter | Nolan | `TN-J3` Lane A1 — **state-writing run on a SHARED corpus repo.** `sourcevision analyze --full` writes `.sourcevision/` *into the target repo*, and `~/n-dx-elm-corpus/AsterMind-Community-Edition` is Jam's durable corpus clone — my worktree does not isolate it. Short run (114 files / ~3 classify batches), then released. **Jam: do not analyze that repo until this row is gone.** Costs tokens deliberately, per the IMPL. | `sourcevision analyze ~/n-dx-elm-corpus/AsterMind-Community-Edition --full` → writes that repo's `.sourcevision/{manifest,classifications}.json`. Reads only; edits no source file. | Same session |
 
-| 2026-08-23 | Jam | Nolan | **Lane B** of [`IMPL-2026-08-23-butter-token-measurement-and-path-a-b-seam.md`](IMPL/IMPL-2026-08-23-butter-token-measurement-and-path-a-b-seam.md) — B1/B2: the deterministic *calls-avoided* instrument Path A needs as its multiplicand. **Announcing a new `scripts/` file per the seam rule**, since Butter also writes there (they own `elm-token-baseline.mjs`; I own this one). Read-only against both repos' existing `classifications.json` — **no analyze run, no tokens.** | New `scripts/elm-calls-avoided.mjs` + `scripts/data/elm-calls-avoided.json`. Reads `.sourcevision/classifications.json` only. | Same session |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
