@@ -25,6 +25,7 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 |---|---|---|---|
 | Jam | [`Jam.md`](Jam.md) | Survey of LLM call sites for ELM/KELM replacement; proposes the three-way split. Analysis + ADR only — implements nothing. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, see below)_ |
 | Fluff | [`Fluff.md`](Fluff.md) | The `Claude-Context/` agent system itself — doctrine, onboarding, and workflow docs. Finds where doctrine and reality disagree and drafts the correction; does **not** decide which convention wins, that goes to the leads as an ADR. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, branch `Nolan-Work`, see below)_ |
+| Butter | [`Butter.md`](Butter.md) | **Path A, measurement half** — token accounting end to end: parse → accumulate → persist → report (`llm-client/src/{token-usage,cli-provider,api-provider}.ts`, `hench/src/agent/lifecycle/event-accumulator.ts`, `ndx usage`). Gates Paths B and C, neither of which can state a saving without it. Does **not** touch `sourcevision/src/analyzers/**` (Jam's) or the `Claude-Context/` root doctrine docs (Fluff's). | `/Users/nolanmoore/n-dx-butter`, branch `Nolan-Work-Butter` |
 
 > `(TBD)` and `(shared checkout)` are not valid worktree entries for an agent that works alongside
 > others. See [`../Command-Structure`](../Command-Structure) → *One agent, one worktree*.
@@ -47,6 +48,19 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 > So **no agent on Team Nolan has worktree isolation**, and two agents now share one branch in one
 > working directory. `OWNERSHIP.md` § Untracked-state hazard is still blank, and the claim board is
 > now the only thing standing between the two of us and silent PRD corruption.
+>
+> **Update (2026-08-13):** the sentence above is no longer true in full — **Butter has worktree
+> isolation** (`/Users/nolanmoore/n-dx-butter`, branch `Nolan-Work-Butter`), on the lead's standing
+> instruction to split off if Butter's work could collide with Jam's. It could: Butter's
+> verification must run hench, which writes `.hench/`, while Jam runs `sourcevision analyze`, which
+> writes `.sourcevision/`. The hazard was also observed directly — during Butter's onboarding, HEAD
+> in the shared checkout moved twice (`07bafec7` → `26a191e7` → `f52eb253`) mid-session.
+> **Jam and Fluff remain on the shared checkout on `Nolan-Work`** and carry the claim-first
+> mitigation unchanged. `OWNERSHIP.md` § Untracked-state hazard is still blank.
+>
+> One caveat worth knowing: **a worktree does not isolate `.hench/runs/`.** Those six run files are
+> tracked in git despite `.gitignore:5` (committed before the rule), so they are present in every
+> worktree. Isolation covers newly written state, not that committed history.
 
 ## Seams
 
@@ -55,7 +69,8 @@ Fill in as scopes and dependencies become clear.
 
 | Seam | Other side | Protocol |
 |---|---|---|
-| | | |
+| **Token numbers** — Path A produces the measurement Path B must quote to claim a saving | Jam (Path B, `TN-J4`) | Butter publishes the number with its method; Path B quotes it rather than deriving its own. Butter does not edit `sourcevision/src/analyzers/**`. Within-team note (`NOTE-nolan-internal-…`) if either side's number moves. |
+| **`packages/llm-client/`** — Butter works `token-usage.ts`, `cli-provider.ts`, `api-provider.ts`; the four shared files in that package are on the monorepo "nobody edits unilaterally" list | All three teams | Butter claims its three files in `../IN-FLIGHT.md`. If a fix reaches `provider-registry.ts`, `provider-interface.ts`, `llm-types.ts`, or `llm-config.ts`, it is claimed and announced **before** the edit, not after. |
 
 ## Communication
 
