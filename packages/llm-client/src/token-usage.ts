@@ -110,11 +110,18 @@ export function parseApiTokenUsageWithDiagnostic(
 /**
  * Parse token usage from a Claude CLI JSON envelope.
  *
- * Claude CLI --output-format json includes usage fields at the top level:
- * `input_tokens` / `total_input_tokens`, `output_tokens` / `total_output_tokens`.
+ * Two envelope shapes exist and both must be handled:
+ * - **Nested (current CLI):** counts live in a nested `usage` object. Verified
+ *   against `claude -p --output-format json` on CLI 2.1.237 (2026-08-23), whose
+ *   top-level keys contain no `input_tokens` at all.
+ * - **Flat (older CLI):** `input_tokens` / `total_input_tokens` and
+ *   `output_tokens` / `total_output_tokens` at the top level.
+ *
+ * Top-level fields win when present, matching {@link parseStreamTokenUsage}.
  *
  * Returns undefined when no token fields are found.
- * Cache fields are omitted when zero or absent.
+ * Cache fields are read from whichever object supplied the counts, and are
+ * omitted when zero or absent.
  */
 export function parseCliTokenUsage(
   envelope: Record<string, unknown>,
@@ -132,8 +139,25 @@ export function parseCliTokenUsage(
 export function parseCliTokenUsageWithDiagnostic(
   envelope: Record<string, unknown>,
 ): TokenParseResult {
-  const rawInput = envelope.input_tokens ?? envelope.total_input_tokens;
-  const rawOutput = envelope.output_tokens ?? envelope.total_output_tokens;
+  let rawInput: unknown = envelope.input_tokens ?? envelope.total_input_tokens;
+  let rawOutput: unknown = envelope.output_tokens ?? envelope.total_output_tokens;
+  let cacheSource: Record<string, unknown> = envelope;
+
+  // Current CLI versions nest the counts under `usage`. Only fall back when the
+  // top level has nothing, so a flat envelope keeps precedence — same rule as
+  // parseStreamTokenUsage, which has always handled the nested shape.
+  if (
+    typeof rawInput !== "number" &&
+    typeof rawOutput !== "number" &&
+    envelope.usage &&
+    typeof envelope.usage === "object" &&
+    !Array.isArray(envelope.usage)
+  ) {
+    const nested = envelope.usage as Record<string, unknown>;
+    rawInput = nested.input_tokens ?? nested.total_input_tokens;
+    rawOutput = nested.output_tokens ?? nested.total_output_tokens;
+    cacheSource = nested;
+  }
 
   const hasInput = typeof rawInput === "number";
   const hasOutput = typeof rawOutput === "number";
@@ -142,7 +166,7 @@ export function parseCliTokenUsageWithDiagnostic(
     usage: {
       input: hasInput ? (rawInput as number) : 0,
       output: hasOutput ? (rawOutput as number) : 0,
-      ...extractCacheFields(envelope),
+      ...extractCacheFields(cacheSource),
     },
     diagnosticStatus: classifyPresence(hasInput, hasOutput),
   };

@@ -466,3 +466,56 @@ describe("mapCodexUsageToTokenUsage", () => {
     expect(mapped.diagnosticStatus).toBe("complete");
   });
 });
+
+/**
+ * Regression: the Claude CLI nests token counts under `usage`, not at the
+ * top level. Captured from `claude -p --output-format json` (CLI 2.1.237,
+ * 2026-08-23) — the top-level keys contain no `input_tokens` at all.
+ *
+ * Before the fix, parseCliTokenUsage read only top-level fields, returned
+ * "unavailable" -> undefined, and accumulateTokenUsage counted the call while
+ * leaving both token totals at zero. That is the mechanism behind
+ * `manifest.tokenUsage = {calls: 9, inputTokens: 0, outputTokens: 0}`
+ * observed on a real `sourcevision analyze --full` run (TN-J3).
+ */
+describe("parseCliTokenUsage — real CLI envelope (nested usage)", () => {
+  /** Trimmed from a real envelope; field names and nesting are verbatim. */
+  const realEnvelope = {
+    type: "result",
+    subtype: "success",
+    is_error: false,
+    result: "OK",
+    session_id: "77e7bda4",
+    total_cost_usd: 0.081633,
+    usage: {
+      input_tokens: 2,
+      output_tokens: 4,
+      cache_creation_input_tokens: 19734,
+      cache_read_input_tokens: 14792,
+      service_tier: "standard",
+    },
+  };
+
+  it("finds tokens nested under `usage` when absent from the top level", () => {
+    const usage = parseCliTokenUsage(realEnvelope);
+    expect(usage).toBeDefined();
+    expect(usage?.input).toBe(2);
+    expect(usage?.output).toBe(4);
+  });
+
+  it("extracts cache fields from the nested object, not the envelope root", () => {
+    const usage = parseCliTokenUsage(realEnvelope);
+    expect(usage?.cacheCreationInput).toBe(19734);
+    expect(usage?.cacheReadInput).toBe(14792);
+  });
+
+  it("reports the nested envelope as complete, not unavailable", () => {
+    expect(parseCliTokenUsageWithDiagnostic(realEnvelope).diagnosticStatus).toBe("complete");
+  });
+
+  it("still prefers top-level fields when both are present", () => {
+    const usage = parseCliTokenUsage({ input_tokens: 10, output_tokens: 20, usage: { input_tokens: 1, output_tokens: 2 } });
+    expect(usage?.input).toBe(10);
+    expect(usage?.output).toBe(20);
+  });
+});
