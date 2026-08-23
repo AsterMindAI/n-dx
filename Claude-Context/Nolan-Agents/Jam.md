@@ -136,6 +136,62 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-23 — Read Butter's ADR/IMPL; accepted Lane B and shipped its instrument
+
+**Did:**
+- Read Butter's two notes, `ADR-2026-08-23-butter-savings-measurement-contract.md`, and
+  `IMPL-2026-08-23-butter-token-measurement-and-path-a-b-seam.md`. Accepted Lane B as written.
+- Shipped `scripts/elm-calls-avoided.mjs` + data (`f91370f8`) — Lane B B1/B2. Claimed the new
+  `scripts/` file in `IN-FLIGHT.md` first, per Butter's seam rule.
+- Sent two notes: the `TN-J3` root cause, and Lane B acceptance with the multiplicand.
+
+**Learned:**
+- **`TN-J3` root cause, proven by execution and handed to Butter unfixed** (their claimed files).
+  `complete()` succeeds but returns `tokenUsage: undefined`. The CLI's JSON envelope nests counts
+  under `usage`, while `parseCliTokenUsage` reads only top-level `input_tokens` /
+  `total_input_tokens` (`token-usage.ts:135-136`), so `classifyPresence` → `"unavailable"` → `:123`
+  → `undefined`. Ran the real parsers to confirm: modern → `undefined`, legacy flat →
+  `{input:2,output:4}`, and **`parseStreamTokenUsage` handles the modern shape correctly and
+  recovers the cache fields**. The right parser already exists in the same file; only the
+  single-envelope branch of `parseJsonOutput` is wrong.
+- **`TN-J8`'s PATH mystery was timing, not environment.** The pnpm launcher's mtime is 13:53; my
+  probe ran ~13:01, 52 minutes before it existed. Same shell, same PATH, different clocks. Butter's
+  `resolveCliPath` analysis was sound but there is no live bug to chase.
+- **⚠️ Calls-avoided is lumpy, and it makes my own Step 1 worth zero.** Batches are
+  `ceil(files/30)`, so the gateway fix — a real bug fix, `gateway` 0 → 4 — avoided **zero calls**:
+  259 → 255 is 9 → 9 batches. Recorded in the script's `knownResults` so nobody reads
+  "424 → 428 classified" as a saving later. Thresholds before the *first* call is avoided: n-dx
+  **15 files (5.9%)**, AsterMind-CE **9 files (13.0%)**.
+- **The ADR's 30% kill criterion maps to 4 of 12 calls avoided.** Useful for the leads judging
+  `TN-J10` — coherent as a bar, neither trivial nor unreachable.
+- Two CLI binaries coexist: pnpm's **2.1.231** (on PATH, what n-dx actually spawns) and the VS Code
+  extension's **2.1.237**. Any token figure should record which produced it.
+
+**Broke / still broken:**
+- Nothing. **I did not touch `token-usage.ts` or `cli-provider.ts`** despite having the fix in hand
+  — Butter's claim, reported instead. NUL bytes untouched.
+- New script is read-only against existing `classifications.json`; no analyze run, no tokens.
+
+**Left undone and why:**
+- **Did not fix `TN-J3`.** Crossing a live claim to land a one-line fix is exactly what the claim
+  protocol prevents; the proven root cause plus the already-correct parser is more useful to Butter
+  than a surprise commit in their files.
+- **`TN-J4` Step 3 still paused on `TN-J10`** — Butter's B4 confirms nothing in their IMPL changes
+  that.
+- The published `SYNC-001` artifact still reads *"0 — Tokens we can currently measure"*. It is
+  outside the repo so no grep finds it; I will redeploy once Butter lands a number.
+
+**Notes sent / received:**
+- Received: `NOTE-nolan-internal-2026-08-23-tn-j8-may-be-unblocked.md` (Butter).
+- Sent: `NOTE-nolan-internal-2026-08-23-tn-j3-root-cause.md`,
+  `NOTE-nolan-internal-2026-08-23-lane-b-accepted.md`.
+
+**Handoff:**
+- Butter runs A1–A4; I quote their number rather than deriving one. `TN-J12` (steppy vs averaged
+  reporting) and `TN-J10` (gold set) both need the leads.
+
+---
+
 ### 2026-08-23 — Read Butter's work; sent them the token-accounting evidence
 
 **Did:**
