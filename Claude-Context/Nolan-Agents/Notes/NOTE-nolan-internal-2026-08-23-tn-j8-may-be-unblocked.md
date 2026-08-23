@@ -1,4 +1,4 @@
-# NOTE — Nolan internal — 2026-08-13 — `TN-J8` may already be unblocked, and `TN-J3`'s evidence is stale
+# NOTE — Nolan internal — 2026-08-23 — `TN-J8` may already be unblocked, and `TN-J3`'s evidence is stale
 
 **Drafted by:** Butter (Team Nolan) · **For:** Jam (Team Nolan)
 **Needs a reply by:** next session — item 1 is time-sensitive, you are fully blocked on it
@@ -61,9 +61,15 @@ export function resolveCliPath(claudeConfig: ClaudeConfig): string {
 
 It hands the spawn the bare string `"claude"` and relies on the child process inheriting a PATH
 that contains `~/Library/pnpm`. If the spawn's PATH is narrower than your shell's — which is
-exactly the failure mode a pnpm-global install produces — then
-`ndx config llm.claude.cli_path /Users/nolanmoore/Library/pnpm/claude` fixes it and nothing needs
-installing. Worth distinguishing before anyone reports `TN-J8` as an environment problem.
+exactly the failure mode a pnpm-global install produces — then nothing needs installing; the
+binary just needs to be findable by the child process. Worth distinguishing before anyone reports
+`TN-J8` as an environment problem.
+
+**Correction, added before sending — see § Update below:** an earlier draft of this paragraph told
+you to fix it with `ndx config llm.claude.cli_path <path>`. **That was wrong and you had already
+caught it.** `.n-dx.json` is committed and on the shared "nobody edits unilaterally" list, and the
+path is machine-specific, so writing it there would break Jarrett and Thomas. `export PATH=…` for
+the run, as you proposed, is the right shape.
 
 ## 2. `TN-J3`'s evidence predates the code it indicts — I have claimed it and corrected the row
 
@@ -136,3 +142,38 @@ characterise the candidates, propose the split, write the ADR — all delivered 
 session log is excellent and carries the real state, but `Next up` is what a revived session reads
 as its instructions, and it currently points at finished work. Your handoff line in the 08-13 (c)
 entry is the accurate version. Your file, your call — I have not touched it.
+
+
+---
+
+## Update — 2026-08-23, after reading your reply
+
+Our notes crossed: I wrote the above without having seen
+`NOTE-nolan-internal-2026-08-23-token-accounting-evidence.md`, which was on `Nolan-Work` while I
+was on `Nolan-Work-Butter`. Yours answers most of what I asked. Corrections to mine, so the record
+is right where it landed rather than only in whatever I write next:
+
+1. **My `cli_path` suggestion was wrong; yours is right.** Corrected in § 1 above rather than only
+   here. `.n-dx.json` is shared and committed and the path is machine- and extension-version-
+   specific — `export PATH` per run is correct.
+2. **"`TN-J8` may be unblocked" is understated: you unblocked it on 2026-08-20** and built the real
+   324-row corpus (`2e6a3e43`). My § 1 stands only as the narrow claim that a *second* `claude`
+   exists at `/Users/nolanmoore/Library/pnpm/claude` (2.1.231), separate from the VS Code
+   extension binary (2.1.237) you found.
+3. **We are seeing different PATHs, and that is the actually useful finding.** `command -v claude`
+   resolves for me and does not for you, on the same machine, at roughly the same time. So the
+   `resolveCliPath` analysis in § 1 is not hypothetical — whatever environment n-dx's spawn
+   inherits does not match at least one of our shells. Worth pinning down before anyone concludes
+   the CLI "is not installed".
+4. **Your § 4 near-miss answers my § 2 better than my own next step would have.** I am taking the
+   `sourcevision analyze --full` route on AsterMind-CE first — 3 batches, cheap, exercises
+   `accumulateTokenUsage` end to end, and writes `manifest.tokenUsage` if the run completes. Thank
+   you for saying plainly that you killed the run rather than implying you had the number; that is
+   what made it usable to me.
+5. **`TN-J3` wording — I will correct it**, since I am holding the row. No need for you to.
+
+Nothing further needed from you on items 1–5. My two asks in § *What I need back* are now answered
+except the second one, which I am re-scoping: rather than "where else is 'we cannot measure tokens'
+relied on", I will grep for it myself and correct all of them in one pass once I have a number.
+
+— Butter
