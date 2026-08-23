@@ -140,6 +140,71 @@ new entry, and if a past entry is wrong, say so explicitly in the new one.
 
 ---
 
+### 2026-08-23 (c) — ADR + IMPL written and merged; Lane A1 measurement running
+
+**Did:**
+
+- Merged `Nolan-Work-Butter` → `nolan-work` twice and pushed (`1077c766`, `a36213e3`), delivering
+  my note to Jam and then the ADR/IMPL. Per `TN-F3`, a note is delivered by merging, not writing.
+- Read Jam's reply (`NOTE-nolan-internal-2026-08-23-token-accounting-evidence.md`) and **corrected
+  my own note in place before it shipped** — I had advised `ndx config llm.claude.cli_path`, which
+  is wrong: `.n-dx.json` is committed and shared, and the path is machine- and extension-version-
+  specific. Jam caught it independently. Fixed in § 1 of the note, not only in an appended update.
+- Wrote [`ADR-2026-08-23-butter-savings-measurement-contract.md`](../ADR/ADR-2026-08-23-butter-savings-measurement-contract.md)
+  (Proposed) and [`IMPL-2026-08-23-butter-token-measurement-and-path-a-b-seam.md`](../IMPL/IMPL-2026-08-23-butter-token-measurement-and-path-a-b-seam.md),
+  splitting the work into Lane A (mine) and Lane B (proposed for Jam, explicitly not assigned).
+- Raised `TN-B1`, deliberately `BLOCKED`, and claimed the shared corpus repo in `IN-FLIGHT.md`
+  **before** running against it.
+- Started Lane A1: `sourcevision analyze ~/n-dx-elm-corpus/AsterMind-Community-Edition --full`.
+
+**Learned:** (gotchas, API surprises, measured numbers — always with seed + baseline)
+
+- **The token undercount is systemic across two packages, not one bad line.** Verified by reading:
+  `rex/src/cli/commands/usage.ts:43` and `:60` total `inputTokens + outputTokens`;
+  `rex/src/core/item-token-rollup.ts:97-98` accumulates only those two while declaring the cache
+  fields at `:207-208`. **And `packages/web` repeats the pattern exactly** —
+  `routes-token-usage.ts:30-31`/`:54-55` carry `cacheCreationTokens`/`cacheReadTokens` through the
+  types, then `:544`, `:585` and `viewer/views/token-usage.ts:222-223` total on input+output only.
+  Both data models know about cache tokens; every total drops them. **A rex-only fix would not
+  change what the dashboard shows.**
+- **On Jam's measured payload that is 6 tokens counted out of 22,116 — 0.027%.** Arithmetic on
+  Jam's numbers, which I have **not** independently reproduced; re-measuring is A4.
+- **A worktree does not isolate `sourcevision analyze <other-repo>`.** The isolation is
+  per-checkout, and `--full` writes `.sourcevision/` into the *target* repo — which is Jam's
+  durable corpus clone, outside both checkouts. Claimed it in `IN-FLIGHT.md` before running. This
+  is a gap in how I had been reasoning about worktree safety and is worth remembering.
+- Jam's `analyze.ts:201-210` account checks out: `finalizeTokenUsage` prints the usage line and
+  writes `manifest.tokenUsage` only at end of run, gated on `calls > 0`. So Jam's empty manifest
+  was an early kill, not a zero counter — and mid-run `tokenUsage: null` is expected, not a result.
+
+**Broke / still broken:**
+
+- Nothing. No source file edited yet; the only writes are docs and the corpus repo's
+  `.sourcevision/`, which is claimed.
+
+**Left undone and why:**
+
+- **A1 has not finished, so I still have no token number and am claiming none.** The run was live
+  when I wrote this entry.
+- **A5 not started, correctly:** blocked on the ADR's weighting question (a three-lead call) and on
+  notes to the teams owning `packages/rex` and `packages/web`. A1–A4 do not depend on it.
+- **Notes to Jarrett and Thomas not sent** — the ADR is Proposed, and broadcasting an unaccepted
+  ADR as settled is the exact mislabelling it exists to prevent. They go out on acceptance.
+
+**Notes sent / received:**
+
+- **Received:** Jam's token-accounting evidence note — the CLI path, the usage payload, the
+  `--fast` and scratchpad traps, and an acknowledgement on `TN-J3`.
+- **Sent:** my note, merged to `Nolan-Work` and now actually delivered.
+
+**Handoff:**
+
+- Read A1's output: the `Token usage:` line printed by `finalizeTokenUsage`, and
+  `~/n-dx-elm-corpus/AsterMind-Community-Edition/.sourcevision/manifest.json` → `tokenUsage`.
+  **Then release the `IN-FLIGHT` claim on that repo** — Jam is blocked from analyzing it until I do.
+
+---
+
 ### 2026-08-13 (b) — Read Jam's work; note sent. `TN-J8` may already be unblocked.
 
 **Did:**
