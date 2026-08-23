@@ -1,6 +1,6 @@
 {
   "schema": "elm-calls-avoided/v1",
-  "generatedAt": "2026-08-23T23:16:16.350Z",
+  "generatedAt": "2026-08-23T23:38:52.934Z",
   "generatedBy": "scripts/elm-calls-avoided.mjs",
   "method": {
     "unitOfAccount": "avoided LLM classify invocation",
@@ -9,7 +9,7 @@
     "maxAttemptsPerBatch": 3,
     "command": "node scripts/elm-calls-avoided.mjs <repos...>",
     "emitsTokenFigures": false,
-    "note": "Token/dollar conversion is Path A's (TN-J3/TN-B1). This file deliberately contains no token figure."
+    "note": "Token/dollar conversion is Path A's (TN-J3/TN-B1). This file deliberately contains no token figure. Per-call overhead is a RANGE (22k-46k tokens, cache-state dependent) — see NOTE-nolan-internal-2026-08-23-tn-j3-root-caused-and-fixed.md section 3. Cite it; do not multiply it out."
   },
   "measured": {
     "repos": [
@@ -17,7 +17,7 @@
         "repo": "n-dx-1",
         "path": "/Users/nolanmoore/n-dx-1",
         "git": {
-          "commit": "0008bd128d06072bc99d28dbf34f733e4c8eea7e",
+          "commit": "849762706bbadeeb71d9e029b98de08c5ebbc299",
           "remote": "https://github.com/AsterMindAI/n-dx.git"
         },
         "totalFiles": 683,

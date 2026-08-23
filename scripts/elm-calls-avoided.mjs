@@ -15,12 +15,40 @@
  *   node scripts/elm-calls-avoided.mjs <repo-path> [<repo-path>...] [--out=<path>]
  *
  * ── Why calls and not tokens ──────────────────────────────────────────────
- * Per-spawn overhead dominates prompt size by ~3 orders of magnitude (a trivial
- * call measured 7,318 cache-creation + 14,792 cache-read tokens against 6
- * prompt tokens). A savings figure built from prompt tokens understates by
- * ~99.97%. So Path B publishes calls — a count, not an estimate — and Path A
- * converts to tokens from measured per-call cost. This script deliberately
- * emits NO token or dollar figure.
+ * Per-spawn overhead dominates prompt size by ~3 orders of magnitude. A savings
+ * figure built from prompt tokens understates by ~99.97%. So Path B publishes
+ * calls — a count, not an estimate — and Path A converts to tokens from
+ * measured per-call cost. This script deliberately emits NO token or dollar
+ * figure.
+ *
+ * The conversion is Path A's, published in
+ * Claude-Context/Nolan-Agents/Notes/NOTE-nolan-internal-2026-08-23-tn-j3-root-caused-and-fixed.md § 3:
+ * **22k–46k tokens of fixed overhead per invocation**, measured three times on
+ * the same trivial 2-in/4-out prompt. It moves with cache state and varies by
+ * better than 2x, so it is a RANGE and must never be quoted as a constant or
+ * multiplied out here. Cite that note; do not derive a number from it.
+ *
+ * (An earlier revision of this header quoted a single observation — 7,318 +
+ * 14,792 — as if it were the per-call cost. It is the low end of the range.)
+ *
+ * ── ⚠ What this number is the denominator OF ──────────────────────────────
+ * These are CLASSIFY calls, not all the LLM calls an analyze makes. A non-fast
+ * analyze also runs zone enrichment, gated by the same !fastMode flag
+ * (analyze-phases.ts:219 classify, :277 enrichment) but calling separate sites
+ * (enrich-batch.ts:70,217 and enrich-per-zone.ts:159). Those generate prose and
+ * are NOT ELM-replaceable — they are in the "20 of 22 call sites stay hosted"
+ * bucket from the survey ADR.
+ *
+ * The one instrumented full analyze we have (Butter, TN-J3, AsterMind-CE):
+ * 9 total calls, of which 3 were classify. **Path B's ceiling there is 3 of 9
+ * (33%) of the analyze's LLM invocations, at a hypothetical 100% ELM hit rate.**
+ * So do not read the projection table below as a fraction of analyze spend —
+ * it is a fraction of the classify calls only.
+ *
+ * n-dx's total is UNMEASURED (manifest tokenUsage is null; every run here has
+ * been --fast). n-dx has 26 zones to AsterMind-CE's 11, so its enrichment share
+ * is plausibly larger and classify's share correspondingly smaller — but that
+ * is an expectation, not a measurement, and must not be quoted as one.
  *
  * ── The lumpiness this exists to make visible ─────────────────────────────
  * Batches are ceil(files / LLM_BATCH_SIZE). Reclassifying files saves a call
@@ -106,13 +134,17 @@ function main() {
   console.log("Calls-avoided instrument — Path B primary metric");
   console.log(`  batch size ${LLM_BATCH_SIZE} · up to ${MAX_ATTEMPTS_PER_BATCH} attempts per batch`);
   console.log("  MEASURED: current call cost. PROJECTED: what an ELM tier would avoid.");
-  console.log("  No token or dollar figure is emitted — that conversion is Path A's.\n");
+  console.log("  ⚠ CLASSIFY calls only — a full analyze also makes zone-enrichment calls");
+  console.log("    that are prose and NOT ELM-replaceable. Only instrumented full analyze:");
+  console.log("    AsterMind-CE = 9 total calls, 3 of them classify. n-dx total is unmeasured.");
+  console.log("  No token or dollar figure is emitted — that conversion is Path A's.");
+  console.log("  Per-call cost is a range (22k-46k tokens, cache-dependent): see Butter's TN-J3 note S3.\n");
 
   for (const r of loaded) {
     console.log(`  ${r.repo}  (${r.totalFiles} source files)`);
     console.log(`    rules classified      ${r.byRules}`);
     console.log(`    reached the LLM       ${r.reachedLLM}`);
-    console.log(`    MEASURED calls/analyze ${r.batches} batches  (worst case ${r.worstCaseCalls} with retries)`);
+    console.log(`    MEASURED classify calls  ${r.batches} batches  (worst case ${r.worstCaseCalls} with retries)`);
     const t = firstUsefulHitRate(r.reachedLLM);
     if (t) {
       console.log(`    lumpiness threshold   ${t.filesNeeded} file(s) = ${(t.rate * 100).toFixed(1)}% hit rate before the FIRST call is avoided`);
@@ -123,8 +155,8 @@ function main() {
   const totalBatches = loaded.reduce((n, r) => n + r.batches, 0);
   const totalReached = loaded.reduce((n, r) => n + r.reachedLLM, 0);
 
-  console.log(`  TOTAL across ${loaded.length} repo(s): ${totalBatches} batches/analyze, ${totalReached} files reaching the LLM\n`);
-  console.log("  PROJECTED calls avoided per analyze, by ELM hit rate (tier not built — projection, not result):");
+  console.log(`  TOTAL across ${loaded.length} repo(s): ${totalBatches} classify batches/analyze, ${totalReached} files reaching the LLM\n`);
+  console.log("  PROJECTED classify calls avoided per analyze, by ELM hit rate (projection, tier not built):");
   console.log("    rate   " + loaded.map((r) => r.repo.slice(0, 12).padStart(13)).join("") + "        total");
 
   const projection = [];
@@ -146,7 +178,7 @@ function main() {
       maxAttemptsPerBatch: MAX_ATTEMPTS_PER_BATCH,
       command: "node scripts/elm-calls-avoided.mjs <repos...>",
       emitsTokenFigures: false,
-      note: "Token/dollar conversion is Path A's (TN-J3/TN-B1). This file deliberately contains no token figure.",
+      note: "Token/dollar conversion is Path A's (TN-J3/TN-B1). This file deliberately contains no token figure. Per-call overhead is a RANGE (22k-46k tokens, cache-state dependent) — see NOTE-nolan-internal-2026-08-23-tn-j3-root-caused-and-fixed.md section 3. Cite it; do not multiply it out.",
     },
     measured: {
       repos: loaded,
