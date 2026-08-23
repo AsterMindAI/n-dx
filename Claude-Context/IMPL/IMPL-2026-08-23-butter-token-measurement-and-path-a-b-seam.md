@@ -29,6 +29,8 @@ what it counts and what we report.**
 | `packages/rex/src/cli/commands/usage.ts` | **rex — Path C's package, unclaimed** | Edit `:43`, `:60` — cache-aware totals | **Required before A5** |
 | `packages/rex/src/core/item-token-rollup.ts` | **rex — Path C's package, unclaimed** | Edit `:97-98` — accumulate cache fields | **Required before A5** |
 | `packages/rex/tests/**` (rollup + usage) | rex | Edit — red-first tests for A5 | with the above |
+| `packages/web/src/server/routes-token-usage.ts` | **web — unclaimed** | Edit `:544`, `:585` — cache-aware totals | **Required before A5** |
+| `packages/web/src/viewer/views/token-usage.ts` | **web — unclaimed** | Edit `:222-223` — displayed totals | with the above |
 | `scripts/elm-token-baseline.mjs` | shared `scripts/` | **New** | **announce in `IN-FLIGHT.md`** |
 | `scripts/data/elm-token-baseline.json` | shared `scripts/` | **New** — fixture with provenance | with the above |
 | `Claude-Context/**` (this IMPL, charter, boards) | Butter | Edit | n/a |
@@ -196,9 +198,19 @@ changes — but if the JSON shape changed, anything reading it must be checked f
 - **How is a "total tokens" figure weighted?** Cache-read is not priced as input, so summing the
   four fields is a decision, not arithmetic. **Three-lead call; blocks A5, not A1–A4.** Carried from
   the ADR.
-- **Does anything consume `ndx usage --format=json` today?** If the web dashboard reads the current
-  shape, A5 is a breaking change and needs a compatible shape or a coordinated update. **Unverified
-   — I have not checked, and A5 does not start until I have.**
+- ~~**Does anything consume `ndx usage --format=json` today?**~~ **Answered 2026-08-23 — yes, and
+  A5 is bigger than one package.** `packages/web` reads token usage in 8 files. Critically, the web
+  layer **already carries the cache fields through its types** —
+  `web/src/server/routes-token-usage.ts:30-31` and `:54-55` declare `cacheCreationTokens` /
+  `cacheReadTokens` — but **drops them at every aggregation point**, exactly as rex does:
+  `routes-token-usage.ts:544` and `:585` sort and total on `inputTokens + outputTokens`, and
+  `web/src/viewer/views/token-usage.ts:222-223` does the same for the displayed per-package totals.
+  So the undercount is **systemic and consistent across two packages**, not one bad line in rex —
+  the data model knows about cache tokens and every total ignores them. Consequence for A5: fixing
+  `rex/src/core/item-token-rollup.ts` alone would **not** change what the dashboard shows. A5 must
+  cover rex *and* web, or it is not a fix. This also raises a question the ADR did not anticipate —
+  whether changing displayed totals is a user-visible behaviour change needing its own sign-off,
+  since existing dashboards would suddenly report far larger numbers for unchanged past runs.
 - **Is Lane B agreed?** It is proposed. Jam may reasonably want B2 scoped differently, and their
   sequencing is theirs.
 - **`TN-J10`** (hand-labelled gold set) is unresolved and unrelated to this IMPL. Flagged so it is
