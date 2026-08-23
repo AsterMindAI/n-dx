@@ -140,6 +140,70 @@ new entry, and if a past entry is wrong, say so explicitly in the new one.
 
 ---
 
+### 2026-08-23 (d) — `TN-J3` root-caused and fixed. The counter was genuinely broken.
+
+**Did:**
+
+- Ran Lane A1 to completion. **`manifest.tokenUsage = {calls: 9, inputTokens: 0, outputTokens: 0}`**
+  — nine real LLM calls on current code, both counters zero.
+- Root-caused it to `parseCliTokenUsage` reading only top-level token fields while the current CLI
+  (2.1.237) nests them under `usage`. **Verified by dumping a real envelope**, not by inferring from
+  Jam's payload: none of the four fields it looks for exist at top level.
+- Fixed it by mirroring `parseStreamTokenUsage`, which already handled nesting. **Test written
+  first and watched go red** (3 failures, `expected 'unavailable' to be 'complete'`), then green.
+- Proved it through the live chain: `callClaude` went from `tokenUsage: undefined` to
+  `{input: 2, output: 4, cacheCreationInput: 22617, cacheReadInput: 23331}`.
+- Released the corpus-repo claim; sent Jam the result note; merged everything to `Nolan-Work`.
+
+**Learned:** (gotchas, API surprises, measured numbers — always with seed + baseline)
+
+- **`calls` increments before the usage guard** (`accumulateTokenUsage`: `calls++` then
+  `if (!usage) return`). That asymmetry is what made the bug diagnosable — `calls: 9` with zero
+  tokens proves the parser returned `undefined` nine times, and points past the parsers to the
+  envelope shape. A counter that failed on both fields would have said much less.
+- **The stale assumption was documented as fact.** The old doc comment asserted the CLI "includes
+  usage fields at the top level" — true once, false now, and trusted in between. The sibling
+  stream parser had the correct behaviour the whole time.
+- **Per-spawn overhead is a range, not a constant: 22,110 / 34,526 / 45,948 tokens** across three
+  observations of the same trivial 2-in/4-out prompt (Jam's, and two of mine). Better than 2x
+  spread, moving with cache state. **Any single multiplier quoted for "tokens per avoided call" is
+  wrong**; A4 must report a range from real classify calls.
+- **My own framing needs correcting where it landed:** I said the six February runs could not
+  establish a live defect. That reasoning was right and the conclusion still came out "broken" —
+  the evidence was insufficient, not misleading. Corrected the backlog row rather than only saying
+  so here.
+
+**Broke / still broken:**
+
+- **`pnpm test`: 1 failed | 1991 passed | 1 skipped.** The failure is **not mine** —
+  `tests/e2e/architecture-policy.test.js` rejects direct `child_process` imports in
+  `scripts/elm-calls-avoided.mjs` and `scripts/elm-corpus-build.mjs`, both Jam's. **Verified by
+  stashing my diff and re-running: it still fails.** Reported to Jam by note, not fixed — the IMPL
+  seam table puts `scripts/elm-*` on their side, and `tests/e2e/**` needs a claim.
+- Typecheck clean across all 6 packages. 51/51 in the token-usage file.
+
+**Left undone and why:**
+
+- **A2, the hench path, is unverified.** Same shared parser so it is *probably* fixed, but probably
+  is not verified. **No hench token number should be quoted yet.**
+- **A5 / `TN-B1` still blocked**, correctly — on the ADR weighting question and on notes to the
+  teams owning `packages/rex` and `packages/web`.
+- **No dollar figure.** `total_cost_usd` sits in the envelope and nothing reads it.
+- **A4 not done** — the overhead range above comes from trivial prompts, not real classify calls.
+
+**Notes sent / received:**
+
+- **Sent:** `NOTE-nolan-internal-2026-08-23-tn-j3-root-caused-and-fixed.md` — the result, the
+  mechanism, the overhead range, what I have *not* verified, and the architecture-test failure in
+  their scripts.
+
+**Handoff:**
+
+- **A2 next:** one hench run, read `.hench/runs/*.json`, confirm the fix reaches that path too.
+  Then A4 across real classify calls to turn the overhead range into a defensible multiplier.
+
+---
+
 ### 2026-08-23 (c) — ADR + IMPL written and merged; Lane A1 measurement running
 
 **Did:**
