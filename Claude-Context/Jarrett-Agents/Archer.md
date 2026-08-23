@@ -35,6 +35,22 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-08-23 update — moving to production wiring, planned first.** Read Realm's coordination
+note (`Notes/NOTE-realm-to-archer-and-knight-2026-08-20-management-role.md` — Realm now coordinates
+day-to-day across Team Jarrett's agents, doesn't change the three-lead structure) and Knight's
+independent confirmation of the numeric-feature fix (`TJ-K1`, commit `405fdc18`: 97.0% precision @
+42.3% coverage on the same held-out set, plus a sharper root cause — `useTokenizer: true`'s
+tokenizer is measurably broken, not just indirect). Two independent implementations now agree.
+User instructed getting this into a real working state, starting with a separate implementation
+plan — written as `IMPL-2026-08-23-jarrett-classify-elm-production-hardening.md`, claimed as
+`TJ-A2` (distinct from `TJ-A1`'s now-closed prototype scope). Plan covers the thing neither
+prototype addressed — how a trained model actually exists at runtime — and proposes a hybrid
+train-fresh/bundled-baseline design, flagged for the user's confirmation before more code gets
+written against that assumption. Both `TJ-A1`'s and `TJ-K1`'s flagged residual risk (only one
+held-out codebase tested) is carried into the plan explicitly, mitigated by a config kill-switch
+and conservative default threshold rather than closed outright — the user's instruction to proceed
+is treated as an informed decision to record, not a gap to paper over.
+
 **2026-08-20 update — Realm's item 2 (numeric feature representation) clears the gate.** Fed
 `classifyFile`'s full per-archetype score as a raw numeric vector instead of tokenized text.
 Controlled A/B against the original 2-codebase data: out-of-domain went from 60.9% @ 29.5%
