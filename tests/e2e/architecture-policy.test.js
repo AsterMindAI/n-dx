@@ -53,6 +53,14 @@ const ALLOWED = new Set([
   "packages/web/dev.js",
   "scripts/cli-smoke-parity.mjs",
   "scripts/run-vitest-bind-aware.mjs",
+  // ELM analysis scripts (Path B) — read-only measurement harnesses that never
+  // ship. Both shell out to `git` solely for corpus/report provenance
+  // (rev-parse, remote.origin.url). They cannot use the foundation abstraction:
+  // `@n-dx/llm-client` is not a root dependency and does not resolve from
+  // `scripts/`, and adding it there would pull a package tier into the repo root
+  // to serve two throwaway scripts.
+  "scripts/elm-corpus-build.mjs",
+  "scripts/elm-calls-avoided.mjs",
   // Process monitoring — needs raw execFile for system commands (vm_stat, sysctl)
   "packages/hench/src/process/memory-monitor.ts",
   // Git operations — need execFileSync/execFile for git CLI calls
