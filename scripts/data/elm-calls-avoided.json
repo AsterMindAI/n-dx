@@ -1,0 +1,145 @@
+{
+  "schema": "elm-calls-avoided/v1",
+  "generatedAt": "2026-08-23T23:16:16.350Z",
+  "generatedBy": "scripts/elm-calls-avoided.mjs",
+  "method": {
+    "unitOfAccount": "avoided LLM classify invocation",
+    "adr": "ADR-2026-08-23-butter-savings-measurement-contract.md",
+    "batchSize": 30,
+    "maxAttemptsPerBatch": 3,
+    "command": "node scripts/elm-calls-avoided.mjs <repos...>",
+    "emitsTokenFigures": false,
+    "note": "Token/dollar conversion is Path A's (TN-J3/TN-B1). This file deliberately contains no token figure."
+  },
+  "measured": {
+    "repos": [
+      {
+        "repo": "n-dx-1",
+        "path": "/Users/nolanmoore/n-dx-1",
+        "git": {
+          "commit": "0008bd128d06072bc99d28dbf34f733e4c8eea7e",
+          "remote": "https://github.com/AsterMindAI/n-dx.git"
+        },
+        "totalFiles": 683,
+        "byRules": 428,
+        "byLLM": 255,
+        "stillUnclassified": 0,
+        "reachedLLM": 255,
+        "batches": 9,
+        "worstCaseCalls": 27
+      },
+      {
+        "repo": "AsterMind-Community-Edition",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/AsterMind-Community-Edition",
+        "git": {
+          "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+          "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git"
+        },
+        "totalFiles": 114,
+        "byRules": 45,
+        "byLLM": 69,
+        "stillUnclassified": 0,
+        "reachedLLM": 69,
+        "batches": 3,
+        "worstCaseCalls": 9
+      }
+    ],
+    "totalBatchesPerAnalyze": 12,
+    "totalFilesReachingLLM": 324
+  },
+  "projected": {
+    "caveat": "The ELM tier does not exist (TN-J4 Step 3 paused on TN-J10). These are projections, not results.",
+    "byHitRate": [
+      {
+        "hitRate": 0.1,
+        "perRepo": {
+          "n-dx-1": 1,
+          "AsterMind-Community-Edition": 0
+        },
+        "total": 1
+      },
+      {
+        "hitRate": 0.2,
+        "perRepo": {
+          "n-dx-1": 2,
+          "AsterMind-Community-Edition": 1
+        },
+        "total": 3
+      },
+      {
+        "hitRate": 0.3,
+        "perRepo": {
+          "n-dx-1": 3,
+          "AsterMind-Community-Edition": 1
+        },
+        "total": 4
+      },
+      {
+        "hitRate": 0.4,
+        "perRepo": {
+          "n-dx-1": 3,
+          "AsterMind-Community-Edition": 1
+        },
+        "total": 4
+      },
+      {
+        "hitRate": 0.5,
+        "perRepo": {
+          "n-dx-1": 4,
+          "AsterMind-Community-Edition": 1
+        },
+        "total": 5
+      },
+      {
+        "hitRate": 0.6,
+        "perRepo": {
+          "n-dx-1": 5,
+          "AsterMind-Community-Edition": 2
+        },
+        "total": 7
+      },
+      {
+        "hitRate": 0.7,
+        "perRepo": {
+          "n-dx-1": 6,
+          "AsterMind-Community-Edition": 2
+        },
+        "total": 8
+      },
+      {
+        "hitRate": 0.8,
+        "perRepo": {
+          "n-dx-1": 7,
+          "AsterMind-Community-Edition": 2
+        },
+        "total": 9
+      },
+      {
+        "hitRate": 0.9,
+        "perRepo": {
+          "n-dx-1": 8,
+          "AsterMind-Community-Edition": 2
+        },
+        "total": 10
+      },
+      {
+        "hitRate": 1,
+        "perRepo": {
+          "n-dx-1": 9,
+          "AsterMind-Community-Edition": 3
+        },
+        "total": 12
+      }
+    ]
+  },
+  "knownResults": {
+    "step1GatewayFix": {
+      "commit": "26a191e7",
+      "filesReclassified": 4,
+      "batchesBefore": 9,
+      "batchesAfter": 9,
+      "callsAvoided": 0,
+      "note": "259 -> 255 files did not cross a 30-file boundary. Real fix, zero call saving."
+    }
+  }
+}
