@@ -252,6 +252,65 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-23 (b) — Unblocked the branch's test suite; found the denominator error in my own metric
+
+**Butter's note arrived** (`NOTE-nolan-internal-2026-08-23-tn-j3-root-caused-and-fixed.md`) with
+two things: the `TN-J3` fix and a bug report against me.
+
+**`TN-J13` — my scripts were making `pnpm test` red for everyone.** Both ELM scripts import
+`node:child_process` for git provenance and failed `architecture-policy.test.js`. Reproduced,
+confirmed pre-existing, fixed via `ALLOWED` (`855dac54`).
+
+- **Route 1 was closed, and this is worth not re-deriving:** `node -e "import('@n-dx/llm-client')"`
+  → `ERR_MODULE_NOT_FOUND`. It is not a root dependency and does not resolve from `scripts/`.
+  Using `exec()` means adding a package tier to the repo root or importing built `dist/` by path.
+- Precedent settled it: both existing `scripts/*.mjs` entries in `ALLOWED` are there for the same
+  reason; `run-vitest-bind-aware.mjs` imports `spawnSync` directly.
+- **Root suite: `1996 passed | 1 skipped | 0 failed`.**
+
+**Trap found:** `pnpm test` **never reached `tests/e2e/` at all.** `packages/rex`'s
+`folder-tree-parser` 200-item perf test flaked under parallel load (613 ms vs a 500 ms budget;
+passes in isolation at 307 ms), and pnpm stops the recursive run at the first failing package
+(`ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`). **To actually run the architecture tests, use
+`npx vitest run tests/` at the root.** Not rex's fault to fix here; not mine to file.
+
+**`TN-J14` — the correction that matters, and it is against my own number.**
+Butter measured **9 calls** on AsterMind-CE; my instrument said **3 batches**. I assumed one of us
+was wrong. Neither was — their run's own output shows 69 LLM-labelled files = `ceil(69/30)` = 3
+classify calls, and **the other 6 are zone enrichment**.
+
+- Enrichment rides the *same* `!fastMode` gate as classify (`analyze-phases.ts:219` vs `:277`) but
+  calls separate sites: `enrich-batch.ts:70,217`, `enrich-per-zone.ts:159`. **Prose — not
+  ELM-replaceable**, i.e. the "20 of 22 stay hosted" bucket from my own survey ADR.
+- **So Path B's ceiling on AsterMind-CE is 3 of 9 invocations (33%) at a hypothetical 100% hit
+  rate** — 1 of 9 at the ADR's 30% kill criterion. My projection table was labelled
+  "calls avoided per analyze", which invites reading it as a share of analyze spend. It is not.
+  Relabelled to "classify calls" throughout (`bcdfd9c9`).
+- **n-dx's total is unmeasured** — `manifest.tokenUsage` is `null`, every run here was `--fast`.
+  26 zones vs AsterMind-CE's 11, so its classify share is plausibly *smaller*. Written into the
+  script as an expectation, explicitly not a measurement.
+- **This pulls against Butter's "substantially stronger" framing, and both are true:** their 22k–46k
+  per-call overhead makes each avoided call worth much more; this makes avoidable calls a minority
+  of the analyze. Told them so directly.
+
+**Also corrected in the instrument:** its header had been quoting my single observation
+(7,318 + 14,792) as *the* per-call cost. Butter's three samples span 22k–46k, varying by better
+than 2x with cache state. It is a range; the header now cites their note and forbids multiplying
+it out.
+
+**Requested of Butter:** IMPL step A4 measured on **real classify calls**, not the trivial
+2-in/4-out prompt — a classify batch carries 30 files of context, so cache-creation likely differs,
+and that is the number Path B's case rests on.
+
+**Housekeeping:** `git status -sb` reports the branch as `nolan-work` but the ref on disk is
+`Nolan-Work` (macOS case-insensitive FS — same ref). There is **no upstream configured**, so a
+plain `git push -u origin HEAD` would create a *second*, separate `origin/nolan-work` on GitHub,
+which IS case-sensitive. **Always push as `git push origin HEAD:Nolan-Work`.**
+
+**Verified:** NUL bytes intact — 2 at [16345, 16374].
+
+---
+
 ### 2026-08-23 — Read Butter's ADR/IMPL; accepted Lane B and shipped its instrument
 
 **Did:**
