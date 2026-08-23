@@ -32,54 +32,170 @@ Team Nolan's behalf.
 
 ## Standing context
 
-Facts verified at `file:line` in this repo on 2026-08-10 unless marked *(inherited)*.
+**Rewritten 2026-08-23.** Everything below is verified at `file:line` or by execution. The
+2026-08-10 version listed unverified candidates as if they were facts; that is deleted, not kept.
 
-**The ELM library**
-- `@astermind/astermind-community` pinned `^3.0.0` at `package.json:61` (root; not a workspace
-  package dependency).
-- *(inherited, from `claude-context-instruction`)* npm's latest is `3.0.0`. v4 is tagged on GitHub
-  but **unpublished and breaking — do not chase v4.**
-- **Gotcha 1 — `charSet` is interpolated unescaped into a RegExp character class**, so a literal
-  `-` must come **last** or it forms an invalid range and throws.
-  (`scripts/elm-hello-world.mjs:21-22`)
-- **Gotcha 2 — text training requires `useTokenizer: true`**, or `train()` throws.
-  (`scripts/elm-hello-world.mjs:16`, `:65`)
-- The working proof of concept is `scripts/elm-hello-world.mjs`: trains on 30 file paths across 3
-  archetype labels, predicts 6 held-out paths. `seed: 42`, `hiddenUnits: 512`, `maxLen: 32`,
-  `activation: "relu"`, tokenizer delimiter `/[/._-]+/`. Its `MIN_ACCURACY = 0.66` is an explicit
-  **floor, not a target** — 2x the 33% random baseline for 3 classes. Deliberately not pinned to a
-  library version's exact output. Added by commit `43d6db51`.
+### Who is where (shared checkout — this matters)
 
-**The integration seam**
-- **The ELM is a registered vendor, not a fork.** `ProviderRegistry.register(vendor, factory)` at
-  `packages/llm-client/src/provider-registry.ts:96`. Built-in vendors register through the same
-  method in the same file: `claude` (:175), `codex` (:182), `google` (:206).
-- Bolting ELM into the existing provider files guarantees three-way conflicts — all three teams
-  have reason to touch them. `provider-registry.ts`, `provider-interface.ts`, `llm-types.ts` and
-  `llm-config.ts` are all on the shared-files list in `OWNERSHIP.md`.
+- **Jam (me):** branch `Nolan-Work`, **shared checkout** `/Users/nolanmoore/n-dx-1`, no worktree.
+- **Fluff:** same checkout, same branch. Owns `Claude-Context/` root doctrine docs (`TN-F1`).
+- **Butter:** own worktree `/Users/nolanmoore/n-dx-butter`, branch `Nolan-Work-Butter`. Owns Path A
+  measurement (`TN-J3`, `TN-B1`).
+- **Consequence:** `.rex/`, `.sourcevision/`, `.hench/` have no locking. **Claim `IN-FLIGHT.md`
+  before every state-writing command and release after.** Never `git add -A` — stage explicit paths.
+- **Notes are delivered by merging, not by writing** (`TN-F3`). A note on my branch is invisible to
+  Butter until branches merge.
 
-**Replacement candidates (starting set, from the lead — not yet verified as replaceable)**
-- `enrichClassificationsWithLLM` — **verified to exist** at
-  `packages/sourcevision/src/analyzers/classify.ts:328`. Has substantial existing unit coverage at
-  `packages/sourcevision/tests/unit/analyzers/classify.test.ts:394+`, which is the natural
-  regression harness for any swap. This is the call site `elm-hello-world.mjs` was written to
-  mirror.
-- rex item placement, and sourcevision classification more broadly — named by the lead, **not yet
-  located or verified by Jam.** Do not quote these as findings until verified at `file:line`.
+### ⚠️ `analyze-phases.ts` is invisible to grep
 
-**The unlocked-state hazard (matters more than usual here — shared checkout)**
-- `.rex/prd_tree/`, `.sourcevision/`, and `.hench/` have **no file locking**. Concurrent writers
-  lose data with **no error** — last writer silently wins (root `CLAUDE.md`).
-- A worktree would make this disappear. Jam does not have one. Therefore: `ndx plan`, `ndx work`,
-  `ndx ci`, `ndx refresh`, `ndx self-heal`, and any rex MCP write tool **must be claimed in
-  `IN-FLIGHT.md` before running and released after.** `ndx status` and `ndx usage` are read-only
-  and always safe.
+Two raw NUL bytes at offsets **16345 and 16374**, deliberate delimiters in a template literal,
+committed on `origin/main`. `file` reports the file as `data`, so **`grep` exits 1 and prints
+nothing — silence, not an error.** I lost time to this twice. Use `python3`, `grep -a`, or
+`rg --text`. **Nolan's decision: leave the bytes alone.**
 
-**Git topology (verified 2026-08-10)**
-- `origin` = `AsterMindAI/n-dx`, `upstream` = `en-dash-consulting/n-dx`. `gh repo set-default`
-  already returns `AsterMindAI/n-dx` in this clone.
-- Branch flow per the lead: work on `Nolan-Work` → commit/PR into `dev` → `dev` merges to
-  AsterMind `main`, so our work and the actively-moving en-dash upstream can be reconciled there.
+### The LLM call-site map (the `TN-J1` survey result)
+
+All inference flows through two chokepoints plus hench's CLI agent loop:
+
+| Chokepoint | File | Sites |
+|---|---|---|
+| `callClaude` / `callLLM` | `sourcevision/src/analyzers/claude-client.ts:145` | 4 |
+| `spawnClaude` | `rex/src/analyze/llm-bridge.ts:135` | 18 |
+
+**Only 2 of 22 are ELM-replaceable** (closed label set): `classifyBatchWithLLM`
+(`classify.ts:404`, 17 archetypes) and `assessGranularity` (`reason.ts:1481`,
+`z.enum(["break_down","consolidate","keep"])` at `:1327`). The other 20 generate prose.
+
+**Two corrections to the original premise, both verified:** rex placement is *already
+deterministic* (`core/move.ts:91`, `core/structural.ts:125`; `rex/src/recommend/` has **zero** LLM
+calls), and `enrichClassificationsWithLLM` is the *classification* path despite its name — the
+`enrich*.ts` files are generation and not replaceable.
+
+### `classify.ts` anchors (verified, re-verified 2026-08-13)
+
+`PRIMARY_THRESHOLD` 0.4 `:33` · `SECONDARY_THRESHOLD` 0.3 `:36` · `analyzeClassifications` `:60` ·
+`secondaryArchetypes` `:189-195` · `new RegExp` per-call `:219` · **dead `"import"` branch
+`:242-245`** · `computeSummary`/`bySource` `:308` · `enrichClassificationsWithLLM` `:328` ·
+**unused params `inventory` `:330`, `imports` `:331`** (0 references in body) ·
+unclassified filter `:337-339` · `LLM_BATCH_SIZE = 30` `:322` · retry ladder `:392-397` (3 attempts) ·
+**hardcoded `confidence: 0.7` `:464`** · `mergeClassificationResults` `:559` ·
+incremental cache reuse `:99-110`.
+
+**Pipeline wiring** (`analyze-phases.ts`, read with python): phase `:183` · `previousClassifications`
+`:196` · deterministic call `:209` · **`--full` cache bypass `:210`** · **LLM gate `:219`** ·
+enrich `:221` · merge `:223` · write `:229-230`.
+
+**Schema:** `source` union at `schema/v1.ts:606` and `schema/validate.ts:139` (zod). Adding `"elm"`
+needs both.
+
+### The integration decision (ADR amendment)
+
+`CompletionRequest {prompt: string}` / `CompletionResult {text: string}` (`types.ts:68-87`) — the
+vendor seam is **text-in, text-out**, and `LLMVendor` is a closed union. An ELM registered as a
+vendor would parse a rendered prompt and re-serialise JSON, **losing the confidence score**.
+**Decision: option (b) — an ELM tier at the call site (`analyze-phases.ts:219`), touching no
+provider file.** That does not violate "registered vendor, not a fork", which exists to stop ELM
+being bolted *into* the provider files.
+
+### Measurements — all reproducible
+
+| | value | source |
+|---|---|---|
+| n-dx source files | 683 | `analyze --fast --full` |
+| n-dx before Step 1 | 424 classified / 259 unclassified | |
+| n-dx after Step 1 | **428 / 255**, `gateway` 0→4 | commit `26a191e7` |
+| AsterMind-CE | 114 files, 45 / **69 (60.5% unclassified)** | n-dx is the *favourable* case |
+| Corpus | **324 LLM rows, 13 classes**, seed 42, 241/83 | `2e6a3e43` |
+| Calls per analyze | n-dx **9**, AsterMind **3**, total **12** (36 worst case) | `f91370f8` |
+
+**⚠️ Baselines are corpus-dependent — recompute, never quote:** 5.9% (wrong, uniform-random,
+published then corrected) → **19.6%** (n-dx rule labels) → 23.0% (sanity combined) → **38.0%**
+(the real LLM corpus). I published the wrong one once; the builder now recomputes it every run.
+
+**⚠️ Calls-avoided is lumpy.** `ceil(files/30)`, so **Step 1 avoided ZERO calls** despite being a
+real fix (259→255 is 9→9). Thresholds before the *first* call is avoided: n-dx **15 files (5.9%)**,
+AsterMind **9 files (13.0%)**. The ADR's 30% kill criterion = **4 of 12 calls**.
+
+### Corpus facts
+
+- Train on **`source: "llm"` rows, never rule labels** — rule labels describe files the rules
+  already handle (covariate shift); a naive held-out split hides it.
+- LLM populates what rules cannot: `service` 0→123, `middleware` 0→7, `test-helper` 0→1.
+- **But `service` + `utility` = 74%** and **9 of 13 classes have <10 rows**.
+- **The teacher is inconsistent where the mass is:** `polling-manager.ts`, `tick-timer.ts`,
+  `landing.ts` → `service`; `request-dedup.ts` → `utility`. This is `TN-J10`.
+- 5 archetypes are unreachable from n-dx (`middleware`, `model`, `service`, `route-module`,
+  `test-helper` signals target Rails/Angular/Remix conventions this repo doesn't use). **Repo
+  *diversity* is the lever, not repo count** — two TS libraries added 473 rows and zero new classes.
+
+### Environment (hard-won)
+
+- **Two `claude` binaries:** pnpm `2.1.231` at `/Users/nolanmoore/Library/pnpm/claude` (**on PATH —
+  what n-dx actually spawns**) and VS Code `2.1.237` at
+  `~/.vscode/extensions/anthropic.claude-code-2.1.237-darwin-arm64/resources/native-binary/`.
+  Record which produced any number.
+- **NEVER `ndx config llm.claude.cli_path`.** `.n-dx.json` is committed and shared; the path is
+  machine- and version-specific and would break Jarrett and Thomas. `export PATH` per run.
+- **`--fast` gates TWO things** — classify enrichment *and* phase-4 zone enrichment. Dropping it to
+  get labels also buys expensive generation. Stop after phase 3 if that's all you need.
+- **Per-spawn overhead: 7.3k–19.2k cache-creation tokens, $0.08–$0.20 before any real prompt**, and
+  it varies 2.6× on identical prompts. Any "tokens saved" counting only prompt tokens understates
+  by ~99.97%.
+- **Never stage anything in the session scratchpad.** `/private/tmp` reaped a corpus clone
+  mid-session — every file deleted, directory husk and empty `.git` left, producing a silent
+  `0 files cataloged` run that looked exactly like a regression. Durable clones: `~/n-dx-elm-corpus/`.
+- **Rule changes are invisible without `--full`** (`analyze-phases.ts:210`). Users upgrading for
+  better archetype rules see nothing until a full re-analysis (`TN-J6`).
+- Vitest prints `fatal: not a git repository` and `Switched to a new branch feature/*` — temp repos,
+  **not** my checkout. Verified. Don't panic.
+
+### `TN-J3` root cause — found by me, **Butter's to fix, do not touch**
+
+`complete()` succeeds but returns `tokenUsage: undefined`. The CLI envelope nests counts under
+`usage`; `parseCliTokenUsage` reads only top-level `input_tokens`/`total_input_tokens`
+(`token-usage.ts:135-136`) → `classifyPresence` → `"unavailable"` → `:123` → `undefined`. Proven:
+
+```
+parseCliTokenUsage(modern nested) = undefined
+parseCliTokenUsage(legacy flat)   = {input:2, output:4}
+parseStreamTokenUsage(modern)     = {input:2,output:4,cacheCreationInput:19205,cacheReadInput:13672}
+```
+
+**The correct parser already exists in the same file**; only the single-envelope branch of
+`parseJsonOutput` calls the wrong one.
+
+### The Path A ↔ Path B contract (Butter's ADR, agreed)
+
+**The avoided invocation is the unit of account.** Path A publishes token numbers; **Path B quotes
+them and never derives its own** — two independent numbers is how the baseline moved three times.
+Path B's primary metric is **calls avoided**, deterministic and publishable today. Every figure
+carries repo, commit, command, seed, baseline, date.
+
+**Seam:** I own `sourcevision/src/analyzers/**`, `elm-corpus-build.mjs`, `elm-calls-avoided.mjs`.
+Butter owns `llm-client/src/{token-usage,cli-provider,api-provider}.ts`,
+`hench/.../event-accumulator.ts`, `elm-token-baseline.mjs`. Both write to `scripts/` — announce in
+`IN-FLIGHT.md` first.
+
+### Artifacts I own
+
+`ADR-2026-08-11-jam-elm-replacement-survey-and-split.md` (+ amendment) ·
+`ADR-2026-08-13-jam-proceed-with-elm-classification.md` ·
+`IMPL-2026-08-13-jam-elm-classification-build.md` (live; the 08-11 one is superseded) ·
+`Nolan-Agents/syncs/SYNC-001-2026-08-11-elm-path-assignment.md` ·
+`scripts/elm-corpus-build.mjs` + `scripts/data/elm-archetype-corpus{,-sanity}.json` ·
+`scripts/elm-calls-avoided.mjs` + data.
+
+**Outside the repo, no grep will find it:** the published SYNC-001 artifact at
+`https://claude.ai/code/artifact/57194d8b-3459-4ca7-8a5d-95e38ffb4183` still shows a stat tile
+reading **"0 — Tokens we can currently measure"**. Redeploy it once Butter lands a number.
+
+## Current state
+
+Path B Steps 0–2 are done; **Step 3 (the benchmark) is deliberately paused on `TN-J10`** — whether
+a hand-labelled gold set is needed, because measuring "at or above LLM accuracy" against a teacher
+that calls `landing.ts` a `service` measures agreement, not correctness. Lane B of Butter's IMPL is
+accepted and its instrument shipped (`f91370f8`). No source file is dirty; I hold no open
+`IN-FLIGHT` claim. Nothing is blocked on me — the open items need the leads or Butter.
 
 ## Deviations from doctrine (recorded deliberately, decided by the lead 2026-08-10)
 
