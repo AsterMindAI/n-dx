@@ -131,6 +131,64 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-23 — Read Butter's work; sent them the token-accounting evidence
+
+**Did:**
+- Read `Butter.md` on `origin/Nolan-Work-Butter` (commit `5d895d41`) — Team Nolan's third agent,
+  holding `TN-J3`, in its own worktree at `/Users/nolanmoore/n-dx-butter`.
+- Sent `Notes/NOTE-nolan-internal-2026-08-23-token-accounting-evidence.md`.
+
+**Learned:**
+- **Butter corrected my `TN-J3` filing and they are right.** I filed it off six
+  `.hench/runs/*.json` reading zero. Butter checked the dates: all six are `2026-02-04`, while
+  `event-accumulator.ts` landed `2026-04-21` (`0269cf75`). **The evidence predates the mechanism it
+  indicts.** The row should read "nobody has measured this since February", not "token accounting
+  is broken". I did not rewrite the row — Butter holds it — but I acknowledged it in the note and
+  offered to correct it where it landed.
+- **`.hench/runs/` is gitignored (`.gitignore:5`) yet those six files are tracked** — committed
+  before the rule. So they show up in every worktree, and any *new* run will not commit. Butter's
+  point that fresh evidence needs a deliberate fixture is well made.
+- Butter also flagged board drift: `TN-J7` was claimed on the backlog and in a commit message with
+  no `IN-FLIGHT.md` row. Accurate — I released the row when the work blocked, reading "blocked" as
+  "done for this session". Their reading is better: a `BLOCKED` item with no row looks abandoned.
+
+**What I gave them:**
+- **The CLI location.** Their literal next step ("produce one hench run") would have failed exactly
+  as my corpus run did — no `claude` on `PATH`. The binary is the VS Code extension's bundled one;
+  nothing needs installing. Plus the warning not to persist it to `.n-dx.json` (shared, committed,
+  and the path carries `2.1.237`).
+- **Evidence the CLI emits usage on current code** — a real `claude -p --output-format json`
+  payload with `cache_creation_input_tokens: 7318` and `total_cost_usd: 0.081633`. So if a fresh
+  hench run still reads zero, the break is downstream of the provider.
+- **~7.3k tokens / ~$0.08 fixed overhead per CLI spawn** — so "tokens saved" that counts only
+  prompt tokens will understate the benefit. Relevant to their reporting surface.
+- **A near-miss, stated as a near-miss.** My 12 real classify batches did exercise
+  `accumulateTokenUsage` on current code, but `analyze.ts:201-210` persists `manifest.tokenUsage`
+  only at end-of-run and I killed both runs after phase 3 — so the absent token fields are **my
+  early kill, not a zero counter**. Gave them the cheap way to finish it (AsterMind-CE, 3 batches,
+  run to completion).
+
+**Broke / still broken:**
+- Nothing. No source touched this session. NUL bytes untouched.
+
+**Left undone and why:**
+- **Did not edit `TN-J3`'s wording.** Butter holds the row; rewriting a claimed row unilaterally is
+  the collision the claim protocol exists to prevent. Offered instead.
+- **Did not run the cheap end-to-end token measurement myself.** It is Butter's task under `TN-J3`,
+  and spending more of the lead's tokens inside someone else's claim was not mine to do.
+
+**Notes sent / received:**
+- Sent: `Notes/NOTE-nolan-internal-2026-08-23-token-accounting-evidence.md` (within-team form per
+  Fluff's `TN-F2` rename).
+- ⚠️ **It will not reach Butter until their branch merges `nolan-work`** — they are on
+  `Nolan-Work-Butter`. This is precisely the delivery gap Fluff raised as `TN-F3`; flagged in the
+  note itself.
+
+**Handoff:**
+- Path B Step 3 still waits on `TN-J10` (gold set?). Path B's "tokens saved" still waits on Butter.
+
+---
+
 ### 2026-08-20 — Corpus built with Nolan's CLI. Premise confirmed; the bar went up.
 
 **Did:**
