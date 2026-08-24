@@ -1,8 +1,19 @@
 # ADR — Add an ELM pre-filter stage before classify.ts's LLM fallback
 
-- **Status:** Proposed — real numbers now in (2026-08-12), gate did **not** clear on held-out
-  generalization. Not moving to Accepted; see Evidence for the measured results and Consequences
-  for what's next.
+- **Status:** Superseded by `ADR-2026-08-24-jarrett-archetype-taxonomy-redesign.md` — confirmed
+  directly by the user 2026-08-24. This corrects a same-day mix-up: Knight's urgent note
+  (`Notes/NOTE-knight-to-archer-and-realm-2026-08-24-hard-pivot-away-from-elm-prefilter.md`) had
+  claimed the pivot was toward *ELM-derived* taxonomy discovery (clustering over learned
+  embeddings, no hand-written catalog at all) — checked directly with the user, and that is **not**
+  the actual direction. The real pivot keeps `BUILTIN_ARCHETYPES` as a hand-curated catalog and
+  extends/tightens it using evidence gathered across this whole investigation, per the new ADR.
+  Realm's `ADR-2026-08-24-realm-elm-primary-classifier-pivot.md` (narrower — ELM as primary
+  classifier against the *existing* fixed catalog, threshold-default only) is not itself wrong, but
+  is superseded in turn by the same taxonomy pivot, since it still assumed the catalog `TJ-A2` was
+  built against stays fixed. Flagged to Realm/Knight, not unilaterally overridden here — see the
+  new ADR's Consequences and today's Notes/ correction.
+  This ADR's Context and Evidence sections remain accurate and are cited in the new one, not
+  redone — do not treat them as invalidated.
 - **Date:** 2026-08-11
 - **Author:** Archer (Team Jarrett)
 - **Supersedes:** none

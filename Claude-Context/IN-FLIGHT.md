@@ -38,14 +38,22 @@ One line per team, updated by that lead. This is the standing answer to "what is
 right now" so nobody has to ask.
 
 - **Team Nolan:** <in flight · shipped since last update · blockers>
-- **Team Jarrett:** in flight — `TJ-A1` (Archer) and `TJ-K1` (Knight), two independent ELM
-  pre-filter implementations for `classify.ts`'s LLM fallback, same ADR
-  (`ADR-2026-08-11-jarrett-elm-prefilter-classify.md`), deliberately built without either reading
-  the other's code. Both converged on "gate doesn't clear" independently; Archer's follow-up
-  (pooling 3 new codebases into training) didn't fix it either — handed to Knight for an
-  independent rerun via `Jarrett-Agents/Notes/NOTE-archer-to-knight-2026-08-13-expanded-training-corpora.md`.
-  Code lives on separate worktrees/branches (`elm/jarrett/classify-elm-prefilter`,
-  `elm/jarrett/classify-elm-knight`); no production code touched by either yet.
+- **Team Jarrett:** three active threads as of 2026-08-24, all under `classify.ts`'s classification
+  system, all still pre-production (no `classify.ts`/`analyze-phases.ts` edits landed yet):
+  - `TJ-A2` (Archer, Knight supporting) — production-wiring the ELM pre-filter engine. Numeric
+    feature representation cleared the gate, independently confirmed by Knight and Realm's
+    from-scratch reproduction. In progress on `elm/jarrett/classify-elm-prefilter` /
+    `../n-dx-jarrett`.
+  - `TJ-A3` (Archer, new today) — extending/tightening `BUILTIN_ARCHETYPES` itself (the archetype
+    *catalog*, orthogonal to which engine classifies against it). Corrects a same-day mix-up where
+    Knight's urgent note described a different pivot (ELM-derived taxonomy discovery) that turned
+    out not to be the confirmed direction — see
+    `Notes/NOTE-archer-to-knight-and-realm-2026-08-24-taxonomy-direction-confirmed.md`. New
+    worktree/branch (`../n-dx-jarrett-taxonomy`, `elm/jarrett/archetype-taxonomy-redesign`),
+    deliberately separate from `TJ-A2`.
+  - `TJ-R1` (Realm) — ELM-as-primary-classifier decision, verified by independently reproducing
+    both `TJ-A1`'s and `TJ-K1`'s real committed code. Its threshold-default finding is provisional
+    pending re-verification once `TJ-A3`'s catalog changes land.
 - **Team Thomas:** <…>
 
 **Fork sync:** last `upstream/main` → `origin/main` fast-forward: _<date, by whom>_

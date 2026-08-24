@@ -35,6 +35,22 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-08-24 update (later) — TJ-A3 claimed: extend the archetype catalog, not ELM-derived
+discovery.** User: "hard pivot... to changing their classification all together." Asked before
+guessing which of several plausible readings that meant — user picked "redesign the archetype
+taxonomy itself." Mined the 5 codebases' already-gathered classification data for real evidence
+(unclassified-rate table, specific file clusters) and drafted `ADR-2026-08-24-jarrett-archetype-taxonomy-redesign.md`
+proposing new `analyzer`/`algorithm`/`tool` archetypes plus fixes for 4 same-word-domain
+collisions. **Before committing it, found Knight had sent an "URGENT" note claiming a different,
+bigger pivot** — ELM-*derived* taxonomy discovery via clustering, no hand-written catalog at all —
+attributed to the same user instruction. Two agents' documents both claiming to represent the same
+instruction, describing different things, plus Realm's separate (narrower, well-verified)
+ELM-as-primary-classifier pivot in the mix too. Did not silently pick one — checked directly with
+the user again rather than build a fourth divergent interpretation. Confirmed: my draft (hand-
+curated extension) was right; Knight's urgent note was not. Corrected the record for both Knight
+and Realm rather than leaving stale claims in `Notes/`/`BACKLOG.md` for the next session to trip
+over. Full detail below.
+
 **2026-08-24 update — TJ-A2 underway, Knight supporting in this worktree.** Read Knight's own
 production-wiring plan (they'd written one independently, same day as mine — `IMPL-2026-08-23-knight-classify-elm-production-wiring.md`)
 and flagged the emerging collision to the user before proceeding rather than silently building in
@@ -124,6 +140,79 @@ Status can move to Accepted.
       gated on this).
 
 ## Session log
+
+### 2026-08-24 (later) — TJ-A3: archetype taxonomy redesign, and a three-way documentation tangle
+
+User: "so we're going to be doing a hard pivot, from trying to implement an ELM into n-dx, to
+changing their classification all together. Update your ADR and implementation plan." Ambiguous
+enough that guessing wrong would waste real effort — this project's documents get acted on, not
+just read — so asked first rather than picking the most likely reading unilaterally. Three options
+offered: ELM becomes the primary classifier, redesign the archetype taxonomy, or apply the pivot
+beyond `classify.ts`. User picked the taxonomy option.
+
+**Built the evidence before drafting anything.** Pulled current unclassified-rates across all 5
+codebases gathered during `TJ-A1`'s investigation (still on disk):
+
+| Codebase | Domain | Unclassified |
+|---|---|---|
+| `AsterMind-Community-Edition` | ML library | 40.0% |
+| n-dx (this repo) | Dev-tooling monorepo | 24.3% |
+| `zustand` | State-mgmt library | 21.4% |
+| `express` | Backend framework | 10.4% |
+| `indie-stack` | Full-stack web app | 7.1% |
+
+Rate tracks cleanly with how web-app-shaped the codebase is — confirms the taxonomy itself, not
+the classifying engine, is the bottleneck for non-web-app code. Grouped n-dx's 166 and AsterMind's
+52 remaining unclassified files by directory to find real clusters rather than guessing at new
+categories: `sourcevision/analyzers/*` + `hench/agent/analysis/*` + `rex/analyze/*` (analysis/
+detection logic, no archetype today), `hench/tools/*` (agent tool implementations), AsterMind's
+`src/elm/*`/`src/ml/*`/`src/tasks/*` (42 of 52 files — algorithm/ML-model implementations, zero
+archetype fit). Also confirmed, by direct inspection, the same-word-different-domain collisions
+noted throughout this investigation are real and specific: `branch-work-store.ts` (backend
+persistence, not a React store), `token-validation-hook.ts` (generic callback, not a React hook),
+Zustand's own `middleware.ts` (state middleware, not HTTP), AsterMind's ELM files (ML models, not
+data models) — all four currently either mismatch or fail to match under `store`/`hook`/
+`middleware`/`model`'s signals as written.
+
+Drafted `ADR-2026-08-24-jarrett-archetype-taxonomy-redesign.md` on this basis: add `analyzer`/
+`algorithm`/`tool` archetypes, tighten the four collision-prone signal sets, treat `orchestrator`
+as a weaker fourth candidate pending broader evidence.
+
+**Before committing it, checked current repo state fresh — found a real tangle, not a quiet
+success.** Three things had happened in near-parallel, each claiming to represent "the user's
+direction":
+1. **Realm's `TJ-R1`** (marked DONE) — independently rebuilt and reran both my and Knight's actual
+   committed eval scripts (not just read claims), confirmed both results exactly, then made a
+   narrow, well-scoped change: ELM becomes primary classifier, threshold default shifts toward
+   coverage. Explicitly doesn't touch `TJ-A2`'s architecture.
+2. **Knight's "URGENT" note** — claimed a much bigger pivot: replace `BUILTIN_ARCHETYPES` entirely
+   with categories the ELM *derives* via clustering over learned embeddings, no hand-written catalog
+   at all. Said a new ADR for this was coming; none existed yet, on any branch.
+3. **My own draft** — a hand-curated catalog *extension*, not automatic discovery. Different from
+   both 1 and 2.
+
+These don't reconcile with each other. Rather than commit my draft on the assumption it was right,
+or defer to Knight's note because it was more dramatic, checked directly with the user again.
+**Confirmed: my draft was correct; Knight's urgent note was not** — a real second-hand
+miscommunication, not a disagreement to split the difference on.
+
+**Corrected the record rather than leaving it to surface later:**
+- Updated `ADR-2026-08-11-...`'s Status field (previously pointed at Realm's ADR) to point at the
+  new `TJ-A3` ADR instead, with the correction spelled out inline.
+- Wrote `IMPL-2026-08-24-jarrett-archetype-taxonomy-redesign.md` — the plan the user actually asked
+  for, not written before because I'd been mid-tangle-discovery.
+- Sent `Notes/NOTE-archer-to-knight-and-realm-2026-08-24-taxonomy-direction-confirmed.md`: Knight
+  should stand down from the clustering-based ADR; `TJ-A2`'s ELM engineering carries forward
+  unchanged (orthogonal to `TJ-A3`, not superseded by it); Realm's `TJ-R1` threshold number is
+  provisional until re-verified against `TJ-A3`'s eventual catalog, since the label set it was
+  tuned against is about to change.
+- Updated `BACKLOG.md` (claimed `TJ-A3`, corrected `TJ-A2`'s and `TJ-R1`'s status text) and
+  `IN-FLIGHT.md` (rewrote the stale Team Jarrett summary — it still described the pre-numeric-fix
+  state from over a week of session-time ago).
+
+**Not yet done:** actually creating `TJ-A3`'s worktree/branch and writing the archetype signal
+code — this session was the plan plus untangling three simultaneous claims about what the plan
+should be. Knight's and Realm's replies to the correction note aren't in yet.
 
 ### 2026-08-24 — reconciling with Knight's independent production plan; two open questions resolved
 
