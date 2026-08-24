@@ -1,0 +1,392 @@
+================================================================================
+TEAM NOLAN — ELM MIGRATION: CONSOLIDATED FINDINGS
+================================================================================
+Date:      2026-08-23
+Authors:   Butter (Path A, measurement) and Jam (Path B, classification)
+Status:    Butter drafted this from the committed record. Every number is
+           attributed to whoever measured it. JAM HAS NOT YET REVIEWED IT —
+           a note requesting corrections went out the same session. Treat
+           Jam-attributed numbers as theirs and this framing as Butter's
+           until Jam amends it in place.
+Branch:    Nolan-Work
+Repro:     every number below has a command or a committed artifact.
+
+--------------------------------------------------------------------------------
+0. THE ONE-PARAGRAPH VERSION
+--------------------------------------------------------------------------------
+n-dx pays a hosted LLM for every inference. We set out to replace those calls
+with free local ELMs. Of 22 LLM call sites, only 2 are ELM-replaceable; the
+other 20 generate prose and stay hosted. Team Nolan took the larger of the two
+(sourcevision archetype classification). We have since: fixed a real
+classification bug, built a 324-row labelled corpus, found and fixed a defect
+that made the project unable to measure its own objective, and priced what an
+LLM call actually costs. The ELM itself has NOT been built. The case for it is
+narrower than we started with, but it now rests on measurements instead of
+assumptions.
+
+--------------------------------------------------------------------------------
+1. SCOPE OF THE OPPORTUNITY                              [measured by Jam, TN-J1]
+--------------------------------------------------------------------------------
+Every LLM call routes through two chokepoints -- callClaude
+(sourcevision/analyzers/claude-client.ts:145) and spawnClaude
+(rex/analyze/llm-bridge.ts:135) -- plus hench's agent loop.
+
+  Total LLM call sites surveyed ................. 22
+  ELM-replaceable ................................ 2
+  Generate prose, must stay hosted ............... 20
+
+The dividing line is output shape. An ELM emits a label from a closed set. It
+cannot write prose. That is the answer, not a limitation to engineer around.
+
+The two candidates:
+  Path B  sourcevision archetype classification  classify.ts:404   17 classes
+  Path C  rex granularity assessment             reason.ts:1481     3 classes
+
+Two corrections found during the survey, both worth keeping:
+  - "rex placement" is ALREADY deterministic (core/move.ts:91,
+    core/structural.ts:125; rex/src/recommend/ has zero LLM calls). There is no
+    token spend there to remove.
+  - enrichClassificationsWithLLM is the classification path despite its name.
+    The enrich*.ts files are generation and are NOT replaceable. Easy to
+    conflate.
+
+--------------------------------------------------------------------------------
+2. HOW BIG IS PATH B, REALLY                          [measured by Jam, TN-J5/J7]
+--------------------------------------------------------------------------------
+Command: sourcevision analyze <repo> --fast --full   (--fast = zero tokens)
+
+  n-dx                                   AsterMind-Community-Edition
+    source files ............. 683         source files ............. 114
+    classified by rules ...... 424         unclassified ........... 60.5%
+    unclassified ............. 259         files reaching LLM ....... 69
+    unclassified ............ 37.3%        batches per analyze ....... 3
+
+IMPORTANT: n-dx is the FAVOURABLE case. A second real codebase is 60.5%
+unclassified against n-dx's 37.3%, so the prize on users' repos is plausibly
+LARGER than on ours.
+
+Batching: LLM_BATCH_SIZE = 30 (classify.ts:322), up to 3 attempts per batch
+with progressively simpler prompts (classify.ts:392-397). A retry is a FULL
+ADDITIONAL SPAWN, which matters a great deal given section 5.
+
+  Repo            files->LLM   batches   worst case (3 attempts)
+  n-dx                   255         9                        27
+  AsterMind-CE            69         3                         9
+  TOTAL                  324        12                        36
+
+--------------------------------------------------------------------------------
+3. WHAT SHIPPED IN PATH B                                  [Jam, TN-J5 and TN-J7]
+--------------------------------------------------------------------------------
+STEP 1 -- a real bug, commit 26a191e7.
+The `gateway` archetype's only signal was anchored at ^:
+    ^(?:deps|gateway|barrel)\.[tj]sx?$
+so gateway.ts matched and rex-gateway.ts did not -- meaning all four *-gateway.ts
+files, which CLAUDE.md calls the architecture's backbone, were unclassified.
+Anchor relaxed to (?:^|[-.]). Test written first and watched fail.
+
+  classified ......... 424 -> 428        gateway class ....... 0 -> 4
+  unclassified ....... 259 -> 255        classes present .... 11 -> 12
+  batches ............. 9 -> 9  <-- ZERO calls avoided. See section 6.
+
+Also established: the other 5 empty archetypes (middleware, model,
+route-module, service, test-helper) are NOT fixable from this repo. Their
+signals are correct for conventions n-dx does not use. Tested each against the
+real unclassified paths: zero candidates. This turned "use more than one
+repository" from advice into a requirement.
+
+STEP 2 -- the corpus, commit 2e6a3e43.
+  rows .................. 324        seed ................... 42
+  classes ................ 13        train/held-out .... 241/83
+  sources ..... n-dx + AsterMind-CE
+
+  Premise CONFIRMED -- the LLM populates what rules cannot see:
+    service ....... 0 -> 123      middleware ..... 0 -> 7      test-helper .. 0 -> 1
+
+  But the bar ROSE:
+    majority-class baseline ....... 38.0%   (was 19.6% on rule labels)
+    service + utility ............. 74% of the corpus
+    classes with under 10 rows .... 9 of 13
+
+BASELINE HISTORY -- three values, and only the last is current:
+    5.9%   WRONG. Uniform-random over 17 classes. Published, then corrected.
+   19.6%   majority-class on n-dx rule labels.
+   38.0%   majority-class on the actual 324-row LLM corpus. <-- USE THIS.
+Beating 5.9% would have proved nothing. This is why the ADR requires a baseline
+attached to every accuracy number.
+
+--------------------------------------------------------------------------------
+4. THE MEASUREMENT DEFECT                             [Butter, TN-J3 -- FIXED]
+--------------------------------------------------------------------------------
+The project existed to reduce token usage and could not measure token usage.
+
+EVIDENCE, AND WHY THE ORIGINAL FILING WAS INSUFFICIENT.
+All 6 .hench/runs/*.json record tokenUsage {"input":0,"output":0}, on runs of
+21, 47, 53 and 60 turns. But all six are dated 2026-02-04, and
+event-accumulator.ts -- the code that accumulates -- landed 2026-04-21
+(0269cf75). The evidence predated the mechanism by 2.5 months. It established
+"nobody has measured since February", not "the counter is broken".
+
+THE FRESH MEASUREMENT (A1). sourcevision analyze AsterMind-CE --full, run to
+completion:
+    manifest.tokenUsage = { calls: 9, inputTokens: 0, outputTokens: 0 }
+Nine real LLM calls on current code, both token counters at zero. So it WAS a
+live defect -- just not provable from the February files.
+
+ROOT CAUSE. accumulateTokenUsage increments `calls` BEFORE the usage guard
+(`aggregate.calls++;` then `if (!usage) return;`), so calls:9 with zero tokens
+proves it was handed undefined nine times. It was: parseCliTokenUsage read only
+TOP-LEVEL fields --
+    envelope.input_tokens ?? envelope.total_input_tokens
+-- while the current CLI NESTS them under `usage`. Verified by dumping a real
+envelope (CLI 2.1.237); its top-level keys are:
+    api_error_status, duration_api_ms, duration_ms, fast_mode_state, is_error,
+    modelUsage, num_turns, permission_denials, result, session_id, stop_reason,
+    subtype, terminal_reason, time_to_request_ms, total_cost_usd, ttft_ms,
+    ttft_stream_ms, type, usage, uuid
+Not one of the four fields the parser looks for is present.
+
+The tell that this was a stale assumption rather than a design choice:
+parseStreamTokenUsage, IN THE SAME FILE, already handled the nested shape and
+documented it as "some CLI versions". Only the non-stream path was left behind.
+
+FIX. Mirror the stream parser's nested fallback, top-level still winning so
+older flat envelopes are unaffected. Test written first and WATCHED GO RED
+(3 failures, "expected 'unavailable' to be 'complete'"), then green.
+  token-usage.test.ts ....... 51/51 (47 pre-existing)
+  pnpm typecheck ............ clean, all 6 packages
+  live callClaude ........... before: tokenUsage undefined
+                              after:  {input:2, output:4,
+                                       cacheCreationInput:22617,
+                                       cacheReadInput:23331}
+
+--------------------------------------------------------------------------------
+5. WHAT AN LLM CALL ACTUALLY COSTS                       [Butter, TN-J3 step A4]
+--------------------------------------------------------------------------------
+Instrument: scripts/elm-token-baseline.mjs
+Fixture:    scripts/data/elm-token-baseline.json
+Repo: AsterMind-CE @ 7a2d763 | seed 42 | batch 30 | n=3
+Binary: pnpm claude 2.1.231 -- the one on PATH, i.e. the one n-dx actually spawns
+
+  call  prompt    input   output   cache-create   cache-read      TOTAL    wall
+     1  4,182ch      12   11,145         59,122      197,673    267,952  111.9s
+     2  4,088ch       2    7,326         23,976       22,249     53,553   74.4s
+     3  3,883ch       4    2,890         25,112       68,225     96,231   25.6s
+
+  RANGE: 53,553 - 267,952 tokens per classify call. 5.0x spread. n=3.
+  Prompt + completion = 5.12% OF THE CALL. The other ~95% is cache overhead.
+
+SUPERSEDED: an earlier range of 22,110 / 34,526 / 45,948 came from trivial
+2-in/4-out prompts. A real classify call is 1.2x to 12.1x that. Do not quote the
+trivial numbers.
+
+COST, cold cache, one classify call: total_cost_usd = $0.367548  (num_turns = 1)
+
+TWO BINARIES COEXIST and are not interchangeable for reproducibility:
+    pnpm            2.1.231   <- on PATH, what n-dx spawns
+    VS Code ext.    2.1.237   <- what both early probes used
+Every token number must record which produced it.
+
+--------------------------------------------------------------------------------
+6. THE THREE FINDINGS THAT CUT AGAINST EACH OTHER
+--------------------------------------------------------------------------------
+(a) EACH AVOIDED CALL IS WORTH A LOT.  [Butter]
+    53,553-267,952 tokens, not the few hundred a prompt-size estimate implies.
+
+(b) BUT PATH B ADDRESSES A MINORITY OF CALLS.  [Jam -- corrects Butter]
+    The 9 calls in the A1 run are NOT 9 classify calls. From that run's own
+    output: bySource {llm:69, algorithmic:45}, unclassified 0, zones 11
+        9 = 3 classify + 6 zone enrichment
+    Zone enrichment (enrich-batch.ts:70,217; enrich-per-zone.ts:159) generates
+    prose. It is in the "20 of 22 stay hosted" bucket. AN ELM CANNOT TOUCH IT.
+
+        Path B ceiling on AsterMind-CE:  3 of 9 invocations = 33%
+                                          ...at a hypothetical 100% hit rate
+        At the ADR's 30% kill criterion:  1 of 9
+
+    Butter had published "substantially stronger"; the honest statement is
+    Jam's: STRONGER PER CALL, ON A SMALLER SHARE OF CALLS.
+
+(c) SAVINGS ARE LUMPY, AND SMALL WINS CAN HONESTLY REPORT ZERO.  [Jam]
+    Batches are ceil(files/30), so reclassifying files saves a call only when it
+    crosses a boundary.
+
+        Repo          files needed before the FIRST call is avoided   hit rate
+        n-dx                                                     15       5.9%
+        AsterMind-CE                                              9      13.0%
+
+    Demonstrated by Jam's own Step 1: it reclassified 4 real files -- a genuine
+    bug fix -- and avoided ZERO calls (259->255 is 9->9 batches). Recorded in
+    the instrument as knownResults so it can never be mistaken for a saving.
+
+    Projection at 12 classify calls (NOT a result -- the ELM does not exist):
+        hit rate   10%   20%   30%   50%   70%   100%
+        avoided      1     3     4     5     8     12
+    The ADR's 30% kill criterion maps to 4 of 12 (~33%). Non-monotonic (30% and
+    40% both yield 4) -- that is the lumpiness, not an arithmetic error.
+
+--------------------------------------------------------------------------------
+7. THE PROVIDER PROBLEM -- AND WHY IT IS NOT AN N-DX BUG      [Butter, TN-B2]
+--------------------------------------------------------------------------------
+~95% of a classify call is cache overhead, not our prompt. The obvious worry was
+that n-dx spawns a full agent harness and lets it loop. MEASURED, ON A REAL
+CLASSIFY PROMPT:
+
+        num_turns = 1
+
+n-dx does the right thing: one prompt, one turn. It passes only
+    -p -  --output-format json  --model <model>
+(cli-provider.ts:124-129). There is no agent loop to remove.
+
+THE OVERHEAD IS INHERENT TO USING THE CLAUDE CODE CLI AS A COMPLETION BACKEND.
+The CLI loads its own system prompt and tool definitions as cache-creation on
+every invocation (45,967 tokens on a cold cache). That is a property of the
+backend, not a defect in n-dx, and it exists because THIS MACHINE HAS NO API KEY
+(ANTHROPIC_API_KEY, CLAUDE_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY and
+GOOGLE_API_KEY are all unset), so llm-client falls back to the CLI provider.
+n-dx already ships api-provider.ts for the API path.
+
+>>> CONSEQUENCE THAT AFFECTS EVERY SAVINGS NUMBER WE WILL EVER PUBLISH <<<
+
+    What an avoided call saves depends ENTIRELY on the backend:
+
+        CLI backend (no API key) ..... ~53,553 - 267,952 tokens saved per call
+        API backend (with key) ....... ~2,700 - 13,700 tokens saved per call
+                                       (prompt + completion only -- the 5.12%)
+
+    THE SAME ELM SAVES ROUGHLY 20x MORE ON THE CLI THAN ON THE API.
+
+Any published figure must therefore state which backend it assumes. A number
+measured on the CLI will substantially overstate the benefit for an API user,
+and understate nothing -- but it is not the same number.
+
+The only n-dx-shaped residue, and it is UNMEASURED and therefore NOT CLAIMED:
+n-dx passes no tool-restriction flags to the CLI. Whether that would shrink the
+harness is untested. It is the one lever on our side; everything else here is a
+provisioning question.
+
+Also concrete and free: total_cost_usd is in EVERY envelope and llm-client never
+reads it. CompletionResult (types.ts:82-87) carries only text and tokenUsage.
+The vendor hands us the dollar figure and we discard it.
+
+--------------------------------------------------------------------------------
+8. THE REPORTING SURFACE STILL UNDER-REPORTS               [Butter, TN-B1 blocked]
+--------------------------------------------------------------------------------
+Fixing the parser (section 4) makes the data correct. It does NOT make the
+reports correct. Cache tokens are dropped at EVERY aggregation, in BOTH packages
+-- and the data model knows about them:
+
+  rex   cli/commands/usage.ts:43, :60 ......... total = inputTokens + outputTokens
+        core/item-token-rollup.ts:97-98 ....... accumulates input/output only
+        core/item-token-rollup.ts:207-208 ..... cache fields DECLARED, summed nowhere
+  web   server/routes-token-usage.ts:30-31, :54-55 ... cache fields DECLARED
+        server/routes-token-usage.ts:544, :585 ........ totals on input+output
+        viewer/views/token-usage.ts:222-223 ........... same
+
+On a measured payload (2 in / 4 out / 7,318 cache-create / 14,792 cache-read),
+ndx usage reports 6 of 22,116 tokens = 0.027%.
+
+Given section 5 -- ~95% of a call is cache tokens -- this is not a rounding
+error. It is nearly the whole bill. A rex-only fix would NOT change what the
+dashboard shows.
+
+BLOCKED, deliberately, on a decision the leads owe: cache-read is not priced
+like input, so a "total tokens" figure is a WEIGHTING CHOICE, not an addition.
+
+--------------------------------------------------------------------------------
+9. WHAT HAS NOT BEEN BUILT, AND WHAT IS BLOCKED
+--------------------------------------------------------------------------------
+NOT BUILT: the ELM tier. No ELM has been trained on the corpus. No accuracy
+number exists for the 17-class task. Everything in section 6(c) beyond the
+measured rows is projection and is labelled as such.
+
+  TN-J10  Does Step 3 need a hand-labelled gold set?  THREE-LEAD DECISION.
+          The teacher is inconsistent exactly where the mass is: service and
+          utility are 74% of rows, and polling-manager.ts, tick-timer.ts and
+          landing.ts are labelled `service` while request-dedup.ts is `utility`.
+          Measuring "at or above LLM accuracy" against labels we distrust
+          measures AGREEMENT, not correctness.
+  TN-B1   Cache-token weighting (section 8). THREE-LEAD DECISION.
+  TN-B2   Provider overhead (section 7). Largely a provisioning question.
+  TN-F1   Branch/base conventions ADR (Fluff). THREE-LEAD DECISION.
+  A2      hench token path unverified. Same shared parser as the fix in
+          section 4, so PROBABLY fixed -- but probably is not verified, and NO
+          HENCH TOKEN NUMBER SHOULD BE QUOTED until it is.
+
+KNOWN-GOOD BASELINE FOR THE ELM LIBRARY ITSELF (scripts/elm-hello-world.mjs):
+3 classes, 6 held-out samples, seed 42, 33% random baseline, 66% floor. This is
+a smoke test. IT IS NOT EVIDENCE ABOUT THE 17-CLASS TASK and must not be quoted
+as such.
+
+--------------------------------------------------------------------------------
+10. OPERATIONAL GOTCHAS EARNED THE HARD WAY
+--------------------------------------------------------------------------------
+  * analyze-phases.ts IS INVISIBLE TO GREP. Two raw NUL bytes at offsets 16345
+    and 16374, deliberate, committed. `file` reports it as data, so grep exits 1
+    and prints NOTHING -- silence, not an error. Every repo-wide grep has a hole
+    in exactly the file that wires the analyze pipeline. Use python3, grep -a,
+    or rg --text. Decision (Nolan, 2026-08-11): leave the bytes alone.  [Jam]
+  * --fast GATES TWO PATHS, not one. Dropping it to get classification labels
+    also switches on phase-4 zone enrichment, the expensive generation path.  [Jam]
+  * RULE FIXES ARE INVISIBLE WITHOUT --full. Incremental mode reuses cached
+    archetype:null (classify.ts:99-110; only --full bypasses it,
+    analyze-phases.ts:210). Jam nearly recorded a working fix as ineffective.
+    User impact: anyone upgrading for better rules sees nothing until a full
+    re-analysis. Filed TN-J6.  [Jam]
+  * DO NOT STAGE ANYTHING IN THE SESSION SCRATCHPAD. /private/tmp reaped a
+    corpus clone mid-session, leaving a directory husk and a silent
+    "0 files cataloged" run that looked exactly like a regression. Durable
+    clones live in ~/n-dx-elm-corpus/.  [Jam]
+  * pnpm test STOPS AT THE FIRST FAILING PACKAGE
+    (ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL), so while a rex timing test flakes it
+    NEVER REACHES tests/e2e/ AT ALL. Two runs reporting 1991 and 1996 tests were
+    different SUITES, not different results. Use `npx vitest run tests/` at the
+    root for the architecture tests.  [Jam]
+  * A WORKTREE DOES NOT ISOLATE `analyze <other-repo>`. Isolation is
+    per-checkout; --full writes .sourcevision/ into the TARGET repo, which may
+    be a shared corpus clone outside both checkouts. Claim it.  [Butter]
+  * .hench/runs/ IS GITIGNORED (.gitignore:5) YET THE SIX FILES ARE TRACKED --
+    committed before the rule landed. So they appear in every worktree, and any
+    NEW run will not commit. Fresh evidence needs a deliberate fixture.  [Butter]
+  * ELM LIBRARY: charSet is interpolated UNESCAPED into a RegExp character
+    class, so a literal '-' must come LAST or it throws. Text training requires
+    useTokenizer:true. npm latest is 3.0.0 and the repo pins ^3.0.0; v4 is
+    tagged on GitHub but UNPUBLISHED and breaking -- do not chase v4.
+
+--------------------------------------------------------------------------------
+11. HOW WE WORK -- the measurement contract
+--------------------------------------------------------------------------------
+ADR-2026-08-23-butter-savings-measurement-contract.md (Proposed), accepted by
+Jam in full for Lane B:
+
+  1. THE AVOIDED INVOCATION IS THE UNIT OF ACCOUNT. Tokens and dollars are
+     derived from measured per-call cost, never from prompt-token arithmetic.
+  2. ONE INSTRUMENT, ONE OWNER. Path A measures and publishes; Path B quotes.
+  3. EVERY FIGURE CARRIES ITS METHOD: repo, commit, command, seed, baseline,
+     binary, date, and the committed script that produced it.
+  4. MEASURED AND EXTRAPOLATED ARE LABELLED IN THE SAME SENTENCE AS THE NUMBER.
+
+Rule 2 exists because this project has already chased a wrong baseline through
+multiple documents twice (5.9% -> 19.6% -> 38.0%). Two independently-derived
+numbers is not a hypothetical failure mode here.
+
+--------------------------------------------------------------------------------
+12. CORRECTIONS MADE TO OUR OWN PUBLISHED CLAIMS
+--------------------------------------------------------------------------------
+Recorded because the record of what we got wrong is part of the finding.
+
+  Jam:    "~30 of 259 files reachable by simple name rules" was an ESTIMATE from
+          an ad-hoc regex list, not a measurement. Step 1 landed 4, not 30.
+  Jam:    "target the six empty classes first" was WRONG -- only gateway was a
+          bug; the other five are conventions this repo does not use.
+  Jam:    the 5.9% uniform-random baseline was wrong; 19.6%, then 38.0%.
+  Butter: "we are seeing different PATHs" was WRONG. The pnpm launcher's mtime
+          is 13:53 and Jam's probe ran ~13:01 -- 52 minutes before the file
+          existed. Same shell, different clocks. No resolveCliPath bug exists.
+  Butter: "substantially stronger" OVERSTATED Path B in Jam's favour, by
+          treating 9 analyze calls as 9 classify calls. Corrected by Jam.
+  Butter: TN-J3's original framing implied the February files proved a live
+          defect. They did not -- but a fresh run showed one anyway.
+
+================================================================================
+END. Numbers without a named author are Butter's. Jam: amend in place.
+================================================================================
