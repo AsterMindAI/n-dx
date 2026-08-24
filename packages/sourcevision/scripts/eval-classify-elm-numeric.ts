@@ -16,6 +16,17 @@
  * Usage:
  *   SV_ELM_HELDOUT_DIR=/path/to/AsterMind-Community-Edition/.sourcevision \
  *     node --experimental-strip-types packages/sourcevision/scripts/eval-classify-elm-numeric.ts
+ *
+ * TJ-A2 addition (2026-08-24): SV_ELM_EXTRA_TRAINING_DIRS (comma-separated .sourcevision dirs)
+ * pools additional codebases into training, held-out set held fixed — retests the 2026-08-13
+ * pooling question ("does more/diverse data help?") under the numeric representation, since the
+ * only prior pooling result was measured under the text representation Knight's TextEncoder.ts
+ * finding has since shown was separately broken (word-boundary loss, not just "indirect
+ * encoding"). That result doesn't transfer automatically; this is the controlled re-run:
+ *
+ *   SV_ELM_EXTRA_TRAINING_DIRS=/path/to/express/.sourcevision,/path/to/indie-stack/.sourcevision,/path/to/zustand/.sourcevision \
+ *     SV_ELM_HELDOUT_DIR=/path/to/AsterMind-Community-Edition/.sourcevision \
+ *     node --experimental-strip-types packages/sourcevision/scripts/eval-classify-elm-numeric.ts
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -42,6 +53,10 @@ const THRESHOLDS = [0.09, 0.11, 0.13, 0.15, 0.17, 0.19, 0.21, 0.25, 0.30];
 
 const TRAINING_DIR = resolve(import.meta.dirname, "../../../.sourcevision");
 const HELD_OUT_DIR = process.env.SV_ELM_HELDOUT_DIR;
+const EXTRA_TRAINING_DIRS = (process.env.SV_ELM_EXTRA_TRAINING_DIRS ?? "")
+  .split(",")
+  .map((p) => p.trim())
+  .filter((p) => p.length > 0);
 
 interface SourcevisionData {
   classifications: Classifications;
@@ -150,7 +165,16 @@ async function main(): Promise<void> {
   const training = loadSourcevisionDir(TRAINING_DIR, "training-source (this repo)");
   const heldOut = loadSourcevisionDir(HELD_OUT_DIR, "held-out (AsterMind-Community-Edition)");
 
-  const allExamples = extractNumericExamples(training.classifications, training.inventory, training.imports);
+  let allExamples = extractNumericExamples(training.classifications, training.inventory, training.imports);
+  if (EXTRA_TRAINING_DIRS.length > 0) {
+    console.log(`Pooling ${EXTRA_TRAINING_DIRS.length} additional training source(s):`);
+    for (const dir of EXTRA_TRAINING_DIRS) {
+      const extra = loadSourcevisionDir(dir, `extra training source (${dir})`);
+      const extraExamples = extractNumericExamples(extra.classifications, extra.inventory, extra.imports);
+      console.log(`  ${dir} — ${extraExamples.length} examples`);
+      allExamples = allExamples.concat(extraExamples);
+    }
+  }
   const categories = [...new Set(allExamples.map((e) => e.archetype))].sort();
 
   const { train, heldOut: internalHeldOut } = splitTrainHeldOut(allExamples, SEED, TRAIN_FRACTION);
