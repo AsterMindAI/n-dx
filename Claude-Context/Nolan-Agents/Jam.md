@@ -252,6 +252,58 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-08-23 (c) — Synced with Butter; then caught that my own correction was inference
+
+Nolan asked me to sync with Butter and get moving again.
+
+**Butter is live in `/Users/nolanmoore/n-dx-butter`** and had already fast-forwarded onto my HEAD.
+I read their worktree (read-only, changed nothing, told them I'd looked) and found them mid-edit
+retracting two things off the back of my last note. So we converged without speaking. Sent a
+**shared-ledger note** — what we jointly hold as true, what is explicitly NOT established, and who
+owns what — so neither of us re-derives the other's work.
+
+**Then I tried to derive n-dx's enrichment denominator and discovered I'd overstated my own
+finding.** This matters more than the sync.
+
+- I had told Butter, the backlog, and this charter that AsterMind-CE's 9 calls were
+  **"3 classify + 6 enrichment, 33%"**. **That was inference stated as measurement.**
+- `manifest.tokenUsage` is a **single aggregate** — `{calls, inputTokens, outputTokens, vendor,
+  model}` — and **no `modules.*` entry carries a call count**. The 9 **cannot be decomposed from
+  any artifact on disk.** What is real: 9 total (measured), classify ≥ `ceil(69/30) = 3` (derived,
+  and higher if any batch retried — nothing records that).
+- **What survives is the direction, not the percentage:** classify is a **strict subset** of a full
+  analyze's LLM calls, so Path B's ceiling is a minority of analyze spend. *Stronger per call, on a
+  smaller share of calls* still stands.
+- Caught it *before* Butter committed a retraction crediting the number to me. Sent the narrowing
+  note immediately.
+
+**The static-derivation plan is dead, and here is why (do not retry it).** Enrichment calls are
+`Σ over passes ceil(|changed, non-structural zones| / ZONES_PER_BATCH=7)`, shrunk by **two
+data-dependent reducers**:
+1. **Structural-zone bypass** — `enrich.ts:133`, zones of only build/asset/doc/config files are
+   templated with **zero** LLM calls.
+2. **Per-zone content-hash filtering** — `enrich.ts:152`, passes 2+ enrich only *changed* zones.
+
+Neither is predictable from zone count; my naive model (11 ÷ 7 = 2 batches × 4 passes = 8)
+disagrees with reality and the gap *is* those reducers. **n-dx's denominator needs a paid full
+analyze or per-phase attribution** — I proposed the latter to Butter as a manifest change in their
+lane, since `enrichBatch` already builds a per-batch `batchTokenUsage` that gets summed away.
+
+**`TN-J15` — found while looking for something else.** `isStructuralZone` already avoids LLM calls
+**deterministically, with zero ML**, and nobody has ever counted it. The code's own comment cites
+*"gotobed: 4 of 9 zones"* — 44% of zones enriched free by a rule, in production, unmeasured. It
+validates Path B's thesis *and* has already eaten some of the residue an ELM could claim. Both
+implications are real and they pull opposite ways.
+
+**Standing correction to how I work:** twice now I've published a number that was consistent with
+the code rather than evidenced by it (the 5.9% baseline, and this). The tell is the same both
+times — a figure that *reconciles* is not a figure that is *recorded*. Check whether an artifact
+actually carries the number before quoting it.
+
+**Verified:** NUL bytes intact — 2 at [16345, 16374]. `packages/` clean. Pushed to `Nolan-Work`.
+
+---
+
 ### 2026-08-23 (b) — Unblocked the branch's test suite; found the denominator error in my own metric
 
 **Butter's note arrived** (`NOTE-nolan-internal-2026-08-23-tn-j3-root-caused-and-fixed.md`) with
