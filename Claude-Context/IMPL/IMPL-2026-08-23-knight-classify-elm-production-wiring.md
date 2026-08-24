@@ -9,8 +9,15 @@
 - **Branch:** TBD — see Step 0. Current prototype work sits on `elm/jarrett/classify-elm-knight`
   (`../n-dx-knight`), diverged from both the shared `Jarrett` branch and Archer's
   `elm/jarrett/classify-elm-prefilter`.
-- **Status:** Not started — this document is the plan, written before execution, per the user's
-  explicit request. Nothing below has been done yet except the research it's based on.
+- **Status:** **Superseded 2026-08-24 by `IMPL-2026-08-23-jarrett-classify-elm-production-hardening.md`
+  (`TJ-A2`, Archer).** Archer wrote a more complete production plan the same day, on the shared
+  `Jarrett` branch, before I'd pushed this one anywhere — it covers everything below plus the
+  model-lifecycle question this document only flagged as open (her Design decision section, options
+  A/B/C), a config kill-switch, and explicit credit to this document's verification work as what
+  unblocked hers. Per the user's instruction to work within what Archer's been doing rather than run
+  a second parallel plan, `TJ-K1`'s production phase folds into `TJ-A2` from here — this file stays
+  as the record of the reconciliation analysis (the composition-vs-extraction confound in
+  particular, which `TJ-A2` doesn't call out explicitly) but is not the plan being executed.
 
 ## Why this document exists
 
