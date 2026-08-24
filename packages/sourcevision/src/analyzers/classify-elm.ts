@@ -10,11 +10,10 @@
  * already produce and export.
  */
 
-import { basename } from "node:path";
 import { ELM } from "@astermind/astermind-community";
+import { analyzeClassifications } from "./classify.js";
+import { BUILTIN_ARCHETYPES } from "./archetypes.js";
 import type {
-  ArchetypeDefinition,
-  ArchetypeSignal,
   Classifications,
   FileClassification,
   Imports,
@@ -136,7 +135,8 @@ export function predictArchetype(trained: TrainedArchetypeELM, text: string): EL
   return { archetype: top.label, confidence: top.prob };
 }
 
-// ── Numeric feature representation (Realm's review, 2026-08-19/20) ─────────────
+// ── Numeric feature representation (Realm's review, 2026-08-19/20; extraction reworked
+// 2026-08-24 per Knight's TJ-K1 critique) ───────────────────────────────────────────────
 //
 // The text-mode functions above encode a file as tokenized text (path + up to 5
 // "archetypeId(weight)" hints), which is what classifyFile's algorithmic pass evidence
@@ -146,69 +146,27 @@ export function predictArchetype(trained: TrainedArchetypeELM, text: string): EL
 // tokenized text rather than receiving directly. This section builds the same score
 // deliberately as a raw numeric vector instead, trained via NumericConfig (no tokenizer).
 //
-// matchSignal/scoreArchetypes below are reimplemented independently from classify.ts's
-// private matchSignal/classifyFile (classify.ts:135-250) rather than importing anything new
-// from that module — classify.ts stays genuinely untouched (see IMPL Files-touched table).
-// Known tradeoff: this duplicates signal-matching logic, so it can drift out of sync if
-// classify.ts's archetype-matching regexes change. Acceptable for a prototype; would need
-// reconciling (ideally by exporting the scoring function from classify.ts for real) before
-// any production use.
-
-function matchesSignal(signal: ArchetypeSignal, filePath: string, fileName: string, exportsForFile?: string[]): boolean {
-  const re = new RegExp(signal.pattern);
-  switch (signal.kind) {
-    case "path":
-      return re.test(filePath);
-    case "filename":
-      return re.test(fileName);
-    case "directory":
-      return filePath.includes(signal.pattern);
-    case "export":
-      return !!exportsForFile && exportsForFile.some((sym) => re.test(sym));
-    default:
-      return false;
-  }
-}
+// Originally (2026-08-20) this reimplemented classify.ts's private matchSignal/classifyFile
+// independently, to avoid needing any new export from classify.ts. Knight's TJ-K1 correctly
+// called that out as a real maintenance risk — duplicated logic drifts silently if
+// classify.ts's archetype-matching regexes ever change. Reworked 2026-08-24 to instead call
+// the real, already-exported analyzeClassifications() and derive the per-archetype vector
+// from its returned evidence array. classify.ts still isn't modified — analyzeClassifications
+// was already public — this just uses it instead of reimplementing what it does.
 
 /**
- * Compute the same per-archetype weighted score classifyFile computes internally
- * (classify.ts:147-171), but returned as a full fixed-length vector (one entry per
- * archetype, 0 if unmatched) instead of only the winning archetype + truncated evidence.
+ * Build a fixed-length per-archetype score vector (one entry per archetype in `archetypes`,
+ * 0 if no signal matched) from a FileClassification's evidence array. Evidence can contain
+ * multiple entries for the same archetype (one per matched signal) — summed, matching how
+ * classifyFile accumulates archetypeScore internally (classify.ts:147-171).
  */
-export function scoreArchetypeVector(
-  filePath: string,
-  archetypes: ArchetypeDefinition[],
-  exportsForFile?: string[],
-  projectLanguages?: string[],
-): number[] {
-  const fileName = basename(filePath);
-  return archetypes.map((archetype) => {
-    let score = 0;
-    for (const signal of archetype.signals) {
-      if (signal.languages && signal.languages.length > 0 && projectLanguages && projectLanguages.length > 0) {
-        if (!projectLanguages.some((lang) => signal.languages!.includes(lang))) continue;
-      }
-      if (matchesSignal(signal, filePath, fileName, exportsForFile)) score += signal.weight;
-    }
-    return score;
-  });
-}
-
-/** Mirrors classify.ts's buildExportMap (classify.ts:256-274) — reexport edges only. */
-function buildExportMap(imports: Imports): Map<string, string[]> {
-  const result = new Map<string, string[]>();
-  for (const edge of imports.edges) {
-    if (edge.type !== "reexport") continue;
-    let list = result.get(edge.to);
-    if (!list) {
-      list = [];
-      result.set(edge.to, list);
-    }
-    for (const sym of edge.symbols) {
-      if (!list.includes(sym)) list.push(sym);
-    }
+function evidenceToVector(evidence: FileClassification["evidence"], archetypeIndex: Map<string, number>): number[] {
+  const vector = new Array(archetypeIndex.size).fill(0);
+  for (const e of evidence ?? []) {
+    const idx = archetypeIndex.get(e.archetypeId);
+    if (idx !== undefined) vector[idx] += e.weight;
   }
-  return result;
+  return vector;
 }
 
 export interface NumericArchetypeExample {
@@ -217,28 +175,39 @@ export interface NumericArchetypeExample {
 }
 
 /**
- * Extract (score-vector, archetype) pairs by recomputing the algorithmic score fresh from
- * inventory.json/imports.json, joined with classifications.json's FINAL label regardless of
- * which stage resolved it. Unlike fileToText's evidence-hint approach, this needs no
- * source: "algorithmic"-only carve-out — recomputing from first principles instead of reading
- * the stored (and, for source: "llm" entries, answer-shaped) `evidence` field sidesteps the
- * leakage question entirely rather than working around it.
+ * Extract (score-vector, archetype) pairs by re-running the free, deterministic
+ * analyzeClassifications() against inventory.json/imports.json to get fresh evidence for
+ * every file, then joining it with classifications.json's FINAL label regardless of which
+ * stage resolved it. Recomputing from analyzeClassifications() (rather than reading
+ * classifications.json's own stored evidence field) sidesteps the evidence-leakage question
+ * entirely rather than working around it — nothing stored to leak, since source: "llm"
+ * entries' stored evidence (classify.ts:461-469) is never read here.
+ *
+ * Passes through any custom archetypes present in `classifications.archetypes` so a project
+ * with `.n-dx.json` archetype overrides gets a faithful re-score, not just the built-in set.
  */
 export function extractNumericExamples(
   classifications: Classifications,
   inventory: Inventory,
   imports: Imports,
 ): NumericArchetypeExample[] {
-  const exportMap = buildExportMap(imports);
-  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
-  const examples: NumericArchetypeExample[] = [];
+  const builtinIds = new Set(BUILTIN_ARCHETYPES.map((a) => a.id));
+  const customArchetypes = classifications.archetypes.filter((a) => !builtinIds.has(a.id));
 
+  const freshPass = analyzeClassifications(inventory, imports, {
+    customArchetypes: customArchetypes.length > 0 ? customArchetypes : undefined,
+  });
+  const evidenceByPath = new Map(freshPass.files.map((f) => [f.path, f.evidence]));
+  const archetypeIndex = new Map(classifications.archetypes.map((a, i) => [a.id, i]));
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
+
+  const examples: NumericArchetypeExample[] = [];
   for (const file of inventory.files) {
     if (file.role !== "source") continue;
     const fc = classificationByPath.get(file.path);
     if (!fc?.archetype) continue;
     if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
-    const vector = scoreArchetypeVector(file.path, classifications.archetypes, exportMap.get(file.path));
+    const vector = evidenceToVector(evidenceByPath.get(file.path), archetypeIndex);
     examples.push({ vector, archetype: fc.archetype });
   }
   return examples;
