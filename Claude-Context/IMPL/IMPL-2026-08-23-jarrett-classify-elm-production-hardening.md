@@ -7,8 +7,13 @@
 - **Branch:** `elm/jarrett/classify-elm-prefilter` (continuing the existing worktree —
   `../n-dx-jarrett` — rather than cutting a new one; this is the same effort, now unblocked)
 - **Worktree:** `../n-dx-jarrett`
-- **Status:** Not started — this document is the plan, written before any production code changes
-  per the user's explicit instruction to plan first.
+- **Status:** In progress. User confirmed the hybrid model-lifecycle design (option C, 2026-08-24)
+  and the division of labor: Archer leads, Knight supports within this IMPL rather than running a
+  separate production plan. Since then: reworked `classify-elm.ts`'s extraction to reuse the real
+  `analyzeClassifications()` instead of reimplementing signal matching (Knight's `TJ-K1` critique —
+  result unchanged, 100%@59.0%, confirming the reimplementation had been faithful); Knight
+  contributed a pooling-retest capability directly in this worktree, used to resolve open question
+  2 below (pooling is neutral under the numeric representation, not harmful — see ADR Evidence).
 
 ## Why now, and what changed since `TJ-A1` stopped at the gate
 
@@ -86,21 +91,20 @@ script invocation and discards it. Production needs an actual answer. Three opti
 | **B. Ship a pre-trained baseline model** bundled with the npm package, trained offline from a curated multi-codebase corpus | Works immediately, even on a project's very first run | Needs a training/release pipeline; doesn't adapt to project-specific archetype overrides without a fallback; a static bundled model can go stale relative to `archetypes.ts` changes if not retrained on release |
 | **C. Hybrid** — ship a small baseline model (B) used only until a project's own history clears a minimum size (e.g. ≥30 classified files spanning ≥3 archetypes), then switch to training fresh per-run on the project's own data (A) | Works on first run *and* improves to project-specific accuracy over time; no persisted/versioned per-project model to manage — still stateless/recomputed each run past the cold-start phase | More logic than either alone; the baseline model still needs an occasional retrain as part of package releases |
 
-**Proposing C.** It matches this codebase's existing philosophy elsewhere (zones, classifications
-themselves — recomputed deterministically each run from cached inputs, not a persisted trained
-artifact) once past the cold-start phase, while actually solving the cold-start gap that would
-otherwise make this useless for any project's first run — which is exactly the scenario `ndx init`
-users hit immediately. The baseline model's training corpus should be the multi-codebase set
-already on disk from `TJ-A1`'s 2026-08-13 experiment (this repo + `AsterMind-Community-Edition` +
-`express` + `indie-stack` + `zustand`) — **but retested under the numeric representation first**
-(open question below): pooling was only ever measured to hurt under the *text* representation,
-which we now know was separately broken by the tokenizer bug. That result may not transfer.
+**Decision: C, confirmed by the user 2026-08-24.** It matches this codebase's existing philosophy
+elsewhere (zones, classifications themselves — recomputed deterministically each run from cached
+inputs, not a persisted trained artifact) once past the cold-start phase, while actually solving
+the cold-start gap that would otherwise make this useless for any project's first run — which is
+exactly the scenario `ndx init` users hit immediately.
 
-**Flagging for the user's confirmation before I build C**, since it's the one decision in this plan
-that isn't just an engineering detail — it determines whether this ships a bundled model artifact
-at all. If preferred, the simpler fallback is **A alone**: skip the cold-start case entirely (the
-ELM stage no-ops — falls through everything to the LLM, exactly like today — until a project
-accumulates enough history on its own). Slower to become useful, nothing to bundle or retrain.
+**Baseline model corpus, resolved 2026-08-24:** the multi-codebase set from `TJ-A1`'s 2026-08-13
+experiment (this repo + `AsterMind-Community-Edition` + `express` + `indie-stack` + `zustand`) —
+retested under the numeric representation first, as planned. Result: pooling is neutral on the
+measured out-of-domain metric (identical 100%@59.0% with or without it) but adds 2 archetype
+categories (`middleware`, `model`) otherwise absent — net positive for a shipped baseline meant to
+cover a cold-start project's *first* run, where broader coverage matters more than optimizing one
+held-out number. Ships trained on the pooled 5-codebase corpus. See ADR Evidence,
+"Reconciling `TJ-A1`/`TJ-K1`'s divergent extraction methods," for the numbers.
 
 ## Why `classify.ts` stays untouched
 
@@ -193,12 +197,19 @@ Two levels, because this is now real production code, not a side script:
 
 ## Open questions
 
-- [ ] **Model lifecycle: hybrid (C) or train-fresh-only (A)?** Blocks step 3 onward — see Design
-      decision section. Needs the user's call before more code gets written against one assumption.
-- [ ] **If C: does multi-codebase pooling actually help under the numeric representation?** Not
-      measured — the only pooling data point we have (2026-08-13) was under the text representation
-      Knight has since shown was separately broken. Needs its own controlled re-run before backing
-      a shipped baseline model with it.
+- [x] **Model lifecycle: hybrid (C) or train-fresh-only (A)? — resolved 2026-08-24, user confirmed
+      hybrid (C).** Unblocks step 3 onward.
+- [x] **If C: does multi-codebase pooling actually help under the numeric representation? —
+      resolved 2026-08-24.** Re-ran the pooling experiment under the numeric representation
+      (Knight's contribution to the eval script, `SV_ELM_EXTRA_TRAINING_DIRS`): out-of-domain result
+      is identical with or without pooling (100% @ 59.0% coverage either way) — **neutral, not
+      harmful**, unlike the sharp regression pooling caused under the (since-shown-broken) text
+      representation. Doesn't move this specific metric, but adds 2 archetype categories
+      (`middleware`, `model`) the 2-codebase set has zero examples of. **Decision: the bundled
+      cold-start baseline model (option C) should train on the pooled 5-codebase corpus** — costs
+      nothing on the measured metric and buys broader archetype coverage for projects whose first
+      run needs the baseline. See ADR Evidence, "Reconciling `TJ-A1`/`TJ-K1`'s divergent extraction
+      methods."
 - [ ] **Confidence threshold default:** both `TJ-A1` (t≈0.11-0.17) and `TJ-K1` (t=0.15) cleared the
       gate in a similar range on the same held-out set, but this was tuned by eyeballing a
       precision/coverage curve on one dataset, not a principled default. Ship a conservative

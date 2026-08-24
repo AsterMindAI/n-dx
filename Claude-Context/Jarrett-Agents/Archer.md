@@ -35,6 +35,19 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-08-24 update — TJ-A2 underway, Knight supporting in this worktree.** Read Knight's own
+production-wiring plan (they'd written one independently, same day as mine — `IMPL-2026-08-23-knight-classify-elm-production-wiring.md`)
+and flagged the emerging collision to the user before proceeding rather than silently building in
+parallel — resolved as "Archer leads, Knight supports." Adopted Knight's legitimate critique (reuse
+`analyzeClassifications()` instead of reimplementing signal matching) — result unchanged
+(100%@59.0%), confirming the original reimplementation had been faithful all along, just removing
+the drift risk going forward. Knight then contributed a pooling-retest capability directly to the
+eval script in this worktree (`SV_ELM_EXTRA_TRAINING_DIRS`); used it to resolve two of `TJ-A2`'s
+open questions: user confirmed the hybrid model-lifecycle design (option C), and pooling turned out
+neutral — not harmful — under the numeric representation (100%@59.0% either way), informing the
+bundled baseline model's training corpus (the pooled 5-codebase set, for the archetype-coverage
+gain even though it doesn't move this metric). Full detail in today's session log.
+
 **2026-08-23 update — moving to production wiring, planned first.** Read Realm's coordination
 note (`Notes/NOTE-realm-to-archer-and-knight-2026-08-20-management-role.md` — Realm now coordinates
 day-to-day across Team Jarrett's agents, doesn't change the three-lead structure) and Knight's
@@ -111,6 +124,64 @@ Status can move to Accepted.
       gated on this).
 
 ## Session log
+
+### 2026-08-24 — reconciling with Knight's independent production plan; two open questions resolved
+
+Instructed to "work in what Knight has been up to." Checked Knight's branch fresh rather than
+assuming nothing had changed — found Knight had independently written their own production-wiring
+plan the same day I wrote mine (`IMPL-2026-08-23-knight-classify-elm-production-wiring.md`),
+explicitly proposing to converge both prototypes on Knight's branch, without merging mine in
+(their stated reason: my extraction method's duplicated-logic tradeoff shouldn't get carried
+forward).
+
+**The substance of Knight's plan was right, and worth taking seriously rather than defending my
+own approach territorially:**
+- A real critique: my numeric extraction reimplemented `classify.ts`'s private signal-matching
+  logic independently; Knight's calls the real, already-exported `analyzeClassifications()`
+  instead. Knight's is more maintainable — mine can drift silently if `classify.ts`'s regexes
+  change, Knight's can't.
+- A confound neither of us isolated: our two builds differ in both feature *composition* (pure
+  evidence vector vs. evidence+path-concatenated) and *extraction method* (reimplemented vs.
+  reused) at once, so my better coverage number (59.0% vs. Knight's 30.8%, both at 100% precision)
+  can't be attributed to either difference specifically.
+- A sharp point I'd missed entirely: a bundled cold-start model trained on n-dx's own repo (my
+  original hybrid-lifecycle proposal) ships that bias to every downstream user of the tool,
+  regardless of how different their project's conventions are — the out-of-domain problem
+  reappearing at the product level, not just the eval level.
+
+**But the plan also assumed Knight would build the converged production version on their own
+branch** — meaning both of us would be independently building "the" production wiring in parallel,
+exactly the collision this whole `Claude-Context/` structure exists to prevent, except this time
+knowingly. Flagged this to the user directly rather than picking a side unilaterally or quietly
+continuing my own plan. User's call: Archer leads, Knight supports within `TJ-A2` rather than a
+separate `TJ-K1` production track.
+
+**Acted on that immediately** rather than treating it as just a status update:
+1. Reworked `classify-elm.ts`'s `extractNumericExamples` to call the real `analyzeClassifications()`
+   (importing it and `BUILTIN_ARCHETYPES` — both already public, `classify.ts` still not modified),
+   replacing the reimplemented `matchesSignal`/`scoreArchetypeVector`/`buildExportMap`. Had to build
+   the package and run against compiled `dist/` output to actually execute this — `--experimental-strip-types`
+   doesn't resolve a `.js`-extension import transitively through another uncompiled `.ts` file, only
+   discovered because `classify-elm.ts` now has an inter-module dependency within `src/` for the
+   first time.
+2. Re-ran the original 2-codebase eval: **identical result**, 100%@59.0% coverage — confirms the
+   original reimplementation had been faithful to the real matching logic, not just close.
+3. Found Knight had already contributed directly to this worktree (uncommitted, per the "supports"
+   arrangement) — `SV_ELM_EXTRA_TRAINING_DIRS`, a pooling-retest capability for the eval script,
+   picking up exactly the open question my own `TJ-A2` plan had flagged as unresolved. Used it:
+   pooling the same 3 codebases from 2026-08-13 under the numeric representation leaves the
+   out-of-domain result **unchanged** (100%@59.0% with or without), unlike the sharp regression
+   pooling caused under the text representation. Neutral, not harmful — and it adds 2 archetype
+   categories (`middleware`, `model`) the 2-codebase set has zero examples of.
+4. This resolved two of `TJ-A2`'s open questions in one pass: the user separately confirmed the
+   hybrid model-lifecycle design (option C) today, and the pooling question now has a real answer
+   informing what the bundled cold-start baseline should train on — the pooled 5-codebase corpus,
+   for the archetype-coverage gain, since it costs nothing on the measured metric.
+
+Updated the ADR (new "Independent verification" and "Reconciling..." subsections), `TJ-A2`'s open
+questions and Design decision section, and this entry. Did not touch `classify.ts` or
+`analyze-phases.ts` — still prototype-stage code, production wiring (`TJ-A2` steps 4 onward) not
+yet started.
 
 ### 2026-08-20 — numeric feature representation clears the gate (Realm's item 2)
 

@@ -316,3 +316,53 @@ against the pooled 5-codebase corpora from 2026-08-13, and not yet independently
 Knight the way the original result was cross-checked. One striking result is a strong lead, not
 by itself grounds to move to Steps 6-8 — same discipline as every other measurement in this
 document.
+
+### Independent verification (Knight, 2026-08-20) — confirmed, with a sharper root cause
+
+Knight built the same fix independently in `TJ-K1` (own extraction, own composition — evidence
+vector concatenated with a path-only encoded vector, vs. this ADR's pure evidence vector) and
+confirmed it: out-of-domain precision at the same threshold (t=0.15) went from 7.7% to 97.0%, at
+42.3% coverage. Knight went further and found *why* text mode was so much worse than "indirect
+encoding" would predict: reading `TextEncoder.ts` directly showed `useTokenizer: true` doesn't
+produce real token embeddings — `tokenize().join('')` with no separator destroys word boundaries,
+silently degrading to char-level one-hot on the joined string. The text-mode baseline both
+implementations compared against was measurably broken, not just suboptimal. Full detail:
+`ADR-2026-08-12-knight-elm-prefilter-classify.md`, "Third measurement."
+
+Two independent implementations now agree the fix works on this held-out codebase. Both IMPLs
+independently flagged the same remaining gap before treating this as ready to ship: one held-out
+codebase confirms the approach isn't an implementation-specific artifact, not that it generalizes
+broadly. Neither prototype closed that gap unilaterally — left for the user, per both.
+
+### Reconciling `TJ-A1`/`TJ-K1`'s divergent extraction methods (2026-08-24)
+
+Per the user's decision that Archer leads production wiring with Knight supporting: adopted
+Knight's legitimate critique that `TJ-A1`'s extraction reimplemented `classify.ts`'s private
+matching logic independently (a self-flagged maintenance risk). Reworked `extractNumericExamples`
+to instead call the real, already-exported `analyzeClassifications()` and derive the per-archetype
+vector from its returned evidence array — `classify.ts` still isn't modified (that function was
+already public), this just uses it instead of duplicating what it does.
+
+**Re-ran the original 2-codebase A/B with the reworked extraction: identical result** — 100%
+precision @ 59.0% coverage out-of-domain, byte-for-byte the same as the reimplemented version. This
+confirms the original reimplementation was faithful (no silent discrepancy was hiding in it), while
+removing the drift risk going forward.
+
+**Then used Knight's contribution** (a pooling-retest addition to the eval script, made directly in
+this worktree per the "Knight supports" arrangement) to finally answer the open question from the
+2026-08-13/2026-08-20 gap: does multi-codebase pooling help under the numeric representation, now
+that pooling's only prior test was under the text representation Knight has since shown was
+separately broken?
+
+| | Without pooling (2 codebases) | With pooling (5 codebases) |
+|---|---|---|
+| Categories | 14 | 16 (adds `middleware`, `model`) |
+| In-domain best point | 97.6% @ 79.8% / 100% @ 75.0% | 100% @ 77.0% |
+| Out-of-domain best point | **100% @ 59.0%** | **100% @ 59.0%** — identical |
+
+**Pooling is neutral under the numeric representation** — unlike text mode, where it caused a
+sharp regression, it neither helps nor hurts this held-out result. It does add two archetype
+categories the 2-codebase baseline has zero examples for, which matters for what a shipped
+cold-start model would need to cover even though it doesn't move this specific metric. This
+directly informs `IMPL-2026-08-23-jarrett-classify-elm-production-hardening.md`'s open question
+about what the bundled baseline model (if the hybrid lifecycle design is adopted) should train on.
