@@ -1,6 +1,6 @@
 {
   "schema": "elm-calls-avoided/v1",
-  "generatedAt": "2026-08-24T01:00:10.207Z",
+  "generatedAt": "2026-08-24T01:05:21.154Z",
   "generatedBy": "scripts/elm-calls-avoided.mjs",
   "method": {
     "unitOfAccount": "avoided LLM classify invocation",
@@ -17,7 +17,7 @@
         "repo": "n-dx-1",
         "path": "/Users/nolanmoore/n-dx-1",
         "git": {
-          "commit": "42689ed97c83759f3e2a906c7190b00d8cd7a58f",
+          "commit": "52f71517336a7e69d9009482bf89e58ae1e7dc55",
           "remote": "https://github.com/AsterMindAI/n-dx.git"
         },
         "totalFiles": 683,
@@ -26,11 +26,64 @@
         "stillUnclassified": 0,
         "reachedLLM": 255,
         "batches": 9,
-        "worstCaseCalls": 27
+        "worstCaseCalls": 27,
+        "zoneBudget": {
+          "totalZones": 26,
+          "structuralZones": 12,
+          "structuralShare": 0.46153846153846156,
+          "llmCandidateZones": 14,
+          "pass1EnrichCalls": 2,
+          "pass1CallsWithoutBypass": 4,
+          "pass1CallsSavedByBypass": 2,
+          "recordedEnrichmentPass": 2,
+          "bypassed": [
+            "Docs",
+            "Hench 2",
+            "Rex",
+            "Scripts",
+            "Tests E2e",
+            "Tests Fixtures",
+            "Tests Gauntlet",
+            "Tests Helpers",
+            "Tests Integration",
+            "Tests Setup",
+            "Tests Tests",
+            "Tests Unit"
+          ]
+        }
+      },
+      {
+        "repo": "AsterMind-Community-Edition",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/AsterMind-Community-Edition",
+        "git": {
+          "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+          "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git"
+        },
+        "totalFiles": 114,
+        "byRules": 45,
+        "byLLM": 69,
+        "stillUnclassified": 0,
+        "reachedLLM": 69,
+        "batches": 3,
+        "worstCaseCalls": 9,
+        "zoneBudget": {
+          "totalZones": 11,
+          "structuralZones": 2,
+          "structuralShare": 0.18181818181818182,
+          "llmCandidateZones": 9,
+          "pass1EnrichCalls": 2,
+          "pass1CallsWithoutBypass": 2,
+          "pass1CallsSavedByBypass": 0,
+          "recordedEnrichmentPass": 4,
+          "bypassed": [
+            "Build & CI Scripts",
+            "Tests"
+          ]
+        }
       }
     ],
-    "totalBatchesPerAnalyze": 9,
-    "totalFilesReachingLLM": 255
+    "totalBatchesPerAnalyze": 12,
+    "totalFilesReachingLLM": 324
   },
   "projected": {
     "caveat": "The ELM tier does not exist (TN-J4 Step 3 paused on TN-J10). These are projections, not results.",
@@ -38,72 +91,82 @@
       {
         "hitRate": 0.1,
         "perRepo": {
-          "n-dx-1": 1
+          "n-dx-1": 1,
+          "AsterMind-Community-Edition": 0
         },
         "total": 1
       },
       {
         "hitRate": 0.2,
         "perRepo": {
-          "n-dx-1": 2
+          "n-dx-1": 2,
+          "AsterMind-Community-Edition": 1
         },
-        "total": 2
+        "total": 3
       },
       {
         "hitRate": 0.3,
         "perRepo": {
-          "n-dx-1": 3
-        },
-        "total": 3
-      },
-      {
-        "hitRate": 0.4,
-        "perRepo": {
-          "n-dx-1": 3
-        },
-        "total": 3
-      },
-      {
-        "hitRate": 0.5,
-        "perRepo": {
-          "n-dx-1": 4
+          "n-dx-1": 3,
+          "AsterMind-Community-Edition": 1
         },
         "total": 4
       },
       {
-        "hitRate": 0.6,
+        "hitRate": 0.4,
         "perRepo": {
-          "n-dx-1": 5
+          "n-dx-1": 3,
+          "AsterMind-Community-Edition": 1
+        },
+        "total": 4
+      },
+      {
+        "hitRate": 0.5,
+        "perRepo": {
+          "n-dx-1": 4,
+          "AsterMind-Community-Edition": 1
         },
         "total": 5
       },
       {
-        "hitRate": 0.7,
+        "hitRate": 0.6,
         "perRepo": {
-          "n-dx-1": 6
-        },
-        "total": 6
-      },
-      {
-        "hitRate": 0.8,
-        "perRepo": {
-          "n-dx-1": 7
+          "n-dx-1": 5,
+          "AsterMind-Community-Edition": 2
         },
         "total": 7
       },
       {
-        "hitRate": 0.9,
+        "hitRate": 0.7,
         "perRepo": {
-          "n-dx-1": 8
+          "n-dx-1": 6,
+          "AsterMind-Community-Edition": 2
         },
         "total": 8
       },
       {
-        "hitRate": 1,
+        "hitRate": 0.8,
         "perRepo": {
-          "n-dx-1": 9
+          "n-dx-1": 7,
+          "AsterMind-Community-Edition": 2
         },
         "total": 9
+      },
+      {
+        "hitRate": 0.9,
+        "perRepo": {
+          "n-dx-1": 8,
+          "AsterMind-Community-Edition": 2
+        },
+        "total": 10
+      },
+      {
+        "hitRate": 1,
+        "perRepo": {
+          "n-dx-1": 9,
+          "AsterMind-Community-Edition": 3
+        },
+        "total": 12
       }
     ]
   },

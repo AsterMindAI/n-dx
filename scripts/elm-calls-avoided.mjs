@@ -65,10 +65,36 @@
  * zone count, so n-dx's denominator cannot be derived statically — it needs
  * either a paid full analyze or per-phase call attribution in the manifest.
  *
- * n-dx's total is UNMEASURED (manifest tokenUsage is null; every run here has
- * been --fast). n-dx has 26 zones to AsterMind-CE's 11, so its enrichment share
- * is plausibly larger and classify's share correspondingly smaller — but that
- * is an expectation, not a measurement, and must not be quoted as one.
+ * n-dx's TOTAL is still unmeasured (manifest tokenUsage is null; every run here
+ * has been --fast). But the PASS-1 budget is now measured on both repos, and it
+ * **refutes an expectation an earlier revision of this header stated**: that
+ * n-dx's larger zone count (26 vs 11) would make classify a *smaller* share.
+ * It does the opposite.
+ *
+ *              zones  structural  bypass saves  pass-1 enrich  classify  share
+ *   n-dx          26        12        2 calls/pass       2            9      82%
+ *   AsterMind-CE  11         2        0 calls/pass       2            3      60%
+ *
+ * Note the bypass column, and do not restate it as a zone percentage. n-dx's
+ * bypass removes 46% of zones but is worth 2 calls (4 -> 2); AsterMind-CE's
+ * removes 2 zones and is worth ZERO (2 -> 2). **The structural bypass is
+ * subject to exactly the same lumpiness as Path B** — zones removed pay only
+ * when they cross a multiple of ZONES_PER_BATCH, just as reclassified files pay
+ * only when they cross a multiple of LLM_BATCH_SIZE. An earlier revision of
+ * this header quoted "46.2% of zones" as the saving. Zones are not the unit;
+ * calls are.
+ *
+ * Zone count does not translate into call count: ZONES_PER_BATCH is 7 and the
+ * structural bypass removes nearly half of n-dx's zones before batching, so 26
+ * zones cost 2 calls while 683 files cost 9.
+ *
+ * **So Path B's share is not a constant and must never be quoted as one.** It
+ * spans roughly 33% (AsterMind-CE's full 4-pass first analyze: 9 total calls,
+ * classify >=3) to 82% (n-dx's pass-1 budget). It moves with repo shape AND
+ * with how many enrichment passes run — and a RE-analyze resumes at pass N+1
+ * enriching only CHANGED zones, which collapses the enrichment side while the
+ * classify side persists. Whatever we publish has to say which case it is.
+ * That is a third axis for TN-J12, on top of steppy-vs-averaged.
  *
  * ── The lumpiness this exists to make visible ─────────────────────────────
  * Batches are ceil(files / LLM_BATCH_SIZE). Reclassifying files saves a call
@@ -83,6 +109,9 @@ import { execFileSync } from "node:child_process";
 
 /** Must track LLM_BATCH_SIZE in packages/sourcevision/src/analyzers/classify.ts:322. */
 const LLM_BATCH_SIZE = 30;
+
+/** Must track ZONES_PER_BATCH in packages/sourcevision/src/analyzers/enrich-config.ts:21. */
+const ZONES_PER_BATCH = 7;
 
 /** classifyBatchWithLLM retries with progressively simpler prompts (classify.ts:392-397). */
 const MAX_ATTEMPTS_PER_BATCH = 3;
@@ -101,6 +130,52 @@ function gitInfo(repoPath) {
     } catch { return null; }
   };
   return { commit: run(["rev-parse", "HEAD"]), remote: run(["config", "--get", "remote.origin.url"]) };
+}
+
+/**
+ * Zone-enrichment side of the analyze call budget.
+ *
+ * Replicates isStructuralZone (enrich.ts:279-288) exactly: a zone is structural
+ * — templated with ZERO LLM calls — iff it has files and NONE of them has
+ * inventory role "source".
+ *
+ * Only PASS 1 is computable. The per-zone content-hash filter (enrich.ts:158)
+ * applies from pass 2 onward and depends on what changed between runs, so
+ * passes 2+ cannot be derived from artifacts. Returns null if the inputs are
+ * absent.
+ */
+function loadZoneBudget(abs) {
+  const zonesPath = join(abs, ".sourcevision", "zones.json");
+  const invPath = join(abs, ".sourcevision", "inventory.json");
+  if (!existsSync(zonesPath) || !existsSync(invPath)) return null;
+
+  const zonesDoc = JSON.parse(readFileSync(zonesPath, "utf-8"));
+  const inv = JSON.parse(readFileSync(invPath, "utf-8"));
+  const roleByPath = new Map(inv.files.map((f) => [f.path, f.role]));
+
+  let structural = 0, candidates = 0;
+  const bypassed = [];
+  for (const z of zonesDoc.zones ?? []) {
+    const files = z.files ?? [];
+    if (files.length === 0) continue;
+    if (files.some((f) => roleByPath.get(f) === "source")) candidates++;
+    else { structural++; bypassed.push(z.name ?? z.id); }
+  }
+  const totalZones = structural + candidates;
+  return {
+    totalZones,
+    structuralZones: structural,
+    structuralShare: totalZones ? structural / totalZones : 0,
+    llmCandidateZones: candidates,
+    pass1EnrichCalls: Math.ceil(candidates / ZONES_PER_BATCH),
+    // The bypass is subject to the SAME lumpiness as Path B: removing zones only
+    // saves a call when it crosses a multiple of ZONES_PER_BATCH.
+    pass1CallsWithoutBypass: Math.ceil(totalZones / ZONES_PER_BATCH),
+    pass1CallsSavedByBypass:
+      Math.ceil(totalZones / ZONES_PER_BATCH) - Math.ceil(candidates / ZONES_PER_BATCH),
+    recordedEnrichmentPass: zonesDoc.enrichmentPass ?? null,
+    bypassed,
+  };
 }
 
 function loadRepo(repoPath) {
@@ -128,6 +203,7 @@ function loadRepo(repoPath) {
     reachedLLM,
     batches: batches(reachedLLM),
     worstCaseCalls: batches(reachedLLM) * MAX_ATTEMPTS_PER_BATCH,
+    zoneBudget: loadZoneBudget(abs),
   };
 }
 
@@ -167,6 +243,18 @@ function main() {
     console.log(`    reached the LLM       ${r.reachedLLM}`);
     console.log(`    MEASURED classify calls  ${r.batches} batches  (worst case ${r.worstCaseCalls} with retries)`);
     const t = firstUsefulHitRate(r.reachedLLM);
+    if (r.zoneBudget) {
+      const z = r.zoneBudget;
+      const p1 = r.batches + z.pass1EnrichCalls;
+      console.log(`    ── zone enrichment (the other side of the analyze budget) ──`);
+      console.log(`    zones                 ${z.totalZones}  (${z.structuralZones} structural, templated with ZERO LLM calls)`);
+      console.log(`    bypass saves          ${z.pass1CallsSavedByBypass} call(s)/pass  (${z.pass1CallsWithoutBypass} -> ${z.pass1EnrichCalls}) — zones removed only pay when they cross a multiple of ${ZONES_PER_BATCH}`);
+      console.log(`    pass-1 enrich calls   ${z.pass1EnrichCalls}  (ceil(${z.llmCandidateZones}/${ZONES_PER_BATCH}) — exact; passes 2+ depend on what changed and are NOT derivable)`);
+      console.log(`    PASS-1 call budget    ${p1}  →  classify is ${((r.batches / p1) * 100).toFixed(0)}% of it`);
+      if (z.recordedEnrichmentPass !== null) {
+        console.log(`    recorded enrichmentPass ${z.recordedEnrichmentPass} (a re-analyze resumes at ${z.recordedEnrichmentPass + 1}, enriching only CHANGED zones)`);
+      }
+    }
     if (t) {
       console.log(`    lumpiness threshold   ${t.filesNeeded} file(s) = ${(t.rate * 100).toFixed(1)}% hit rate before the FIRST call is avoided`);
     }
