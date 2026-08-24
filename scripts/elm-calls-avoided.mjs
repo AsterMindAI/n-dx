@@ -39,11 +39,31 @@
  * are NOT ELM-replaceable — they are in the "20 of 22 call sites stay hosted"
  * bucket from the survey ADR.
  *
- * The one instrumented full analyze we have (Butter, TN-J3, AsterMind-CE):
- * 9 total calls, of which 3 were classify. **Path B's ceiling there is 3 of 9
- * (33%) of the analyze's LLM invocations, at a hypothetical 100% ELM hit rate.**
- * So do not read the projection table below as a fraction of analyze spend —
- * it is a fraction of the classify calls only.
+ * The one instrumented full analyze we have (Butter, TN-J3, AsterMind-CE)
+ * recorded **9 total calls**. What is and is not established about that 9:
+ *
+ *   MEASURED   9 total LLM calls; 69 files LLM-labelled; 11 zones; enrichmentPass 4.
+ *   DERIVED    classify made AT LEAST ceil(69/30) = 3 calls — more if any batch
+ *              retried, and nothing records whether one did.
+ *   NOT KNOWN  the exact classify/enrichment split. `manifest.tokenUsage` is a
+ *              single aggregate with NO per-phase breakdown, so the 9 cannot be
+ *              decomposed from any artifact. An earlier revision of this header
+ *              asserted "3 classify + 6 enrichment / 33%" as measured. It is
+ *              consistent with the code, but it was inference, not measurement.
+ *
+ * What survives and is the point: **classify is a STRICT SUBSET of a full
+ * analyze's LLM calls.** "9 calls" is not "9 classify calls". So Path B's
+ * ceiling is a minority of analyze invocations — stronger per call, on a smaller
+ * share of calls — even though the exact percentage is unproven.
+ *
+ * Why the split cannot simply be computed: enrichment calls are
+ * sum over passes of ceil(|changed non-structural zones| / ZONES_PER_BATCH=7),
+ * and TWO data-dependent reducers shrink that set — the structural-zone bypass
+ * (zones of only build/asset/doc/config files are templated with ZERO LLM
+ * calls; enrich.ts:133) and per-zone content-hash filtering (passes 2+ enrich
+ * only zones whose content changed; enrich.ts:152). Neither is predictable from
+ * zone count, so n-dx's denominator cannot be derived statically — it needs
+ * either a paid full analyze or per-phase call attribution in the manifest.
  *
  * n-dx's total is UNMEASURED (manifest tokenUsage is null; every run here has
  * been --fast). n-dx has 26 zones to AsterMind-CE's 11, so its enrichment share
@@ -136,7 +156,8 @@ function main() {
   console.log("  MEASURED: current call cost. PROJECTED: what an ELM tier would avoid.");
   console.log("  ⚠ CLASSIFY calls only — a full analyze also makes zone-enrichment calls");
   console.log("    that are prose and NOT ELM-replaceable. Only instrumented full analyze:");
-  console.log("    AsterMind-CE = 9 total calls, 3 of them classify. n-dx total is unmeasured.");
+  console.log("    AsterMind-CE = 9 total calls; classify was >=3 of them. The exact");
+  console.log("    split is NOT recorded anywhere. n-dx total is unmeasured.");
   console.log("  No token or dollar figure is emitted — that conversion is Path A's.");
   console.log("  Per-call cost is a range (22k-46k tokens, cache-dependent): see Butter's TN-J3 note S3.\n");
 
