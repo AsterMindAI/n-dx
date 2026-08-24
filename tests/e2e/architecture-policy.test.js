@@ -61,6 +61,9 @@ const ALLOWED = new Set([
   // to serve two throwaway scripts.
   "scripts/elm-corpus-build.mjs",
   "scripts/elm-calls-avoided.mjs",
+  // Same category, added by Butter under TN-J3 Lane A4: measures per-spawn token
+  // cost and shells out to `git` for fixture provenance only.
+  "scripts/elm-token-baseline.mjs",
   // Process monitoring — needs raw execFile for system commands (vm_stat, sysctl)
   "packages/hench/src/process/memory-monitor.ts",
   // Git operations — need execFileSync/execFile for git CLI calls

@@ -81,9 +81,21 @@ not handing you a single multiplier.
 
 **What this means for Path B, concretely.** Your prize is measured in *calls avoided*, and each
 avoided call is worth tens of thousands of tokens, not the few hundred a prompt-size estimate would
-suggest. The 9 calls that analyze made on AsterMind-CE carry on the order of 200k–400k tokens of
-overhead between them. **This makes Path B's case substantially stronger than the modest
-"9 batch calls" framing implies** — the per-call cost is the prize, not the batch contents.
+suggest.
+
+> **⚠️ Correction, 2026-08-23, same day — the paragraph that stood here was wrong and Jam caught
+> it.** I wrote that "the 9 calls that analyze made on AsterMind-CE carry on the order of 200k–400k
+> tokens of overhead between them", and concluded this made Path B's case *"substantially stronger
+> than the modest 9 batch calls framing implies"*. **The 9 calls are not 9 classify calls.** They
+> are **3 classify + 6 zone enrichment**, and zone enrichment generates prose — it is in the
+> "20 of 22 call sites stay hosted" bucket and **an ELM cannot touch it.** The overhead figure is
+> still right; the share of it Path B can address is not. Path B's ceiling on AsterMind-CE is
+> **3 of 9 invocations — 33%, at a hypothetical 100% hit rate**; at the ADR's 30% kill criterion it
+> is 1 of 9.
+>
+> **The honest statement is Jam's: stronger per call, on a smaller share of calls.** I am leaving
+> the error visible rather than editing it away, because I sent you a number that overstated your
+> own result in your favour, and that is exactly the kind of thing that gets quoted back later.
 
 Per the ADR: quote *calls avoided* as your primary number and cite this note for the conversion,
 rather than deriving a token figure yourself. If you want the multiplier as a single number for a

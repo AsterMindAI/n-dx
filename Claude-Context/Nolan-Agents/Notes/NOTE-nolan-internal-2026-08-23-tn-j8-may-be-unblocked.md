@@ -160,11 +160,17 @@ is right where it landed rather than only in whatever I write next:
    324-row corpus (`2e6a3e43`). My § 1 stands only as the narrow claim that a *second* `claude`
    exists at `/Users/nolanmoore/Library/pnpm/claude` (2.1.231), separate from the VS Code
    extension binary (2.1.237) you found.
-3. **We are seeing different PATHs, and that is the actually useful finding.** `command -v claude`
-   resolves for me and does not for you, on the same machine, at roughly the same time. So the
-   `resolveCliPath` analysis in § 1 is not hypothetical — whatever environment n-dx's spawn
-   inherits does not match at least one of our shells. Worth pinning down before anyone concludes
-   the CLI "is not installed".
+3. ~~**We are seeing different PATHs, and that is the actually useful finding.**~~ **WRONG —
+   retracted 2026-08-23, and Jam is right.** I claimed our shells resolved `claude` differently "at
+   roughly the same time". They did not: the pnpm launcher's mtime is `13:53`, Jam's probe ran at
+   `~13:01`, **52 minutes before the file existed.** Same shell, same PATH, different clocks. There
+   is no live discrepancy and **nobody should spend time hunting a `resolveCliPath` bug** on the
+   strength of what I wrote here. The § 1 analysis remains sound as *analysis* — it does hand the
+   spawn a bare `"claude"` — but it describes a latent property, not an observed failure.
+
+   The residue that *is* real and does matter: **two `claude` binaries coexist** — pnpm's
+   **2.1.231**, which is on PATH and is what n-dx actually spawns, and the VS Code extension's
+   **2.1.237**. Any token number must record which one produced it.
 4. **Your § 4 near-miss answers my § 2 better than my own next step would have.** I am taking the
    `sourcevision analyze --full` route on AsterMind-CE first — 3 batches, cheap, exercises
    `accumulateTokenUsage` end to end, and writes `manifest.tokenUsage` if the run completes. Thank

@@ -1,0 +1,75 @@
+{
+  "measurement": "per-spawn token cost of one sourcevision classify call",
+  "producedBy": "scripts/elm-token-baseline.mjs",
+  "implements": "IMPL-2026-08-23-butter-token-measurement-and-path-a-b-seam.md § A4",
+  "contract": "ADR-2026-08-23-butter-savings-measurement-contract.md",
+  "provenance": {
+    "date": "2026-08-24T01:01:06.190Z",
+    "repo": "AsterMind-Community-Edition",
+    "repoCommit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+    "ndxCommit": "4ebdeb1cd481acef697e83c8dc4517b80ff9f753",
+    "claudeBinary": "/Users/nolanmoore/Library/pnpm/claude",
+    "claudeVersion": "2.1.231 (Claude Code)",
+    "batchSize": 30,
+    "seed": 42,
+    "promptSource": "replicated from packages/sourcevision/src/analyzers/classify.ts:486-519"
+  },
+  "caveats": [
+    "Small sample — quote the range, not the mean.",
+    "Overhead varies with cache state; it is not a constant.",
+    "Cost of one classify call. NOT a savings figure.",
+    "Zone-enrichment calls are a separate, larger population an ELM cannot replace."
+  ],
+  "observations": [
+    {
+      "call": 1,
+      "files": 30,
+      "promptChars": 4182,
+      "ms": 111885,
+      "input": 12,
+      "output": 11145,
+      "cacheCreationInput": 59122,
+      "cacheReadInput": 197673,
+      "overheadTokens": 256795,
+      "totalTokens": 267952
+    },
+    {
+      "call": 2,
+      "files": 30,
+      "promptChars": 4088,
+      "ms": 74377,
+      "input": 2,
+      "output": 7326,
+      "cacheCreationInput": 23976,
+      "cacheReadInput": 22249,
+      "overheadTokens": 46225,
+      "totalTokens": 53553
+    },
+    {
+      "call": 3,
+      "files": 30,
+      "promptChars": 3883,
+      "ms": 25630,
+      "input": 4,
+      "output": 2890,
+      "cacheCreationInput": 25112,
+      "cacheReadInput": 68225,
+      "overheadTokens": 93337,
+      "totalTokens": 96231
+    }
+  ],
+  "summary": {
+    "n": 3,
+    "totalTokens": {
+      "min": 53553,
+      "max": 267952,
+      "mean": 139245
+    },
+    "overheadTokens": {
+      "min": 46225,
+      "max": 256795,
+      "mean": 132119
+    },
+    "promptShareOfCall": 0.0512
+  }
+}
