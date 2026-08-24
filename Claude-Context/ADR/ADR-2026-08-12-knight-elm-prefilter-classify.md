@@ -1,10 +1,12 @@
 # ADR — Add an ELM pre-filter stage before classify.ts's LLM fallback (Knight's independent verification)
 
-- **Status:** Proposed — **the ≥95%-precision-at-threshold gate now clears** on held-out data as of
-  the 2026-08-20 measurement (numeric feature representation), with real coverage (42.3%), for the
-  first time in either implementation. Not moved to Accepted: this is one held-out codebase and one
-  measurement, not yet corroborated independently, and no production code has been touched — see
-  Evidence, "Third measurement," for the full caveat.
+- **Status:** **Superseded 2026-08-24 by `ADR-2026-08-24-knight-elm-driven-archetype-taxonomy.md`.**
+  Per the user's explicit hard-pivot instruction: the ELM pre-filter approach documented here (and
+  in `ADR-2026-08-11-jarrett-...`) worked — the gate cleared, twice, independently — but the target
+  changed. The new direction uses the ELM to derive the archetype taxonomy itself, not to classify
+  files into the existing hand-written one this document's gate was measured against. The
+  precision/coverage results below remain true and are cited as reusable evidence in the superseding
+  document; they no longer represent a plan anyone is executing toward.
 - **Date:** 2026-08-12
 - **Author:** Knight (Team Jarrett)
 - **Supersedes:** none. Same architectural decision as

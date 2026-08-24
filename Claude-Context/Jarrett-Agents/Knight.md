@@ -117,40 +117,93 @@ For handoff to Archer — full technical picture of the current classifier befor
 
 ## Current state
 
-`TJ-K1` (branch `elm/jarrett/classify-elm-knight`, worktree `../n-dx-knight`): independent second
-implementation of `ADR-2026-08-11-jarrett-elm-prefilter-classify.md` / own docs
-`ADR-2026-08-12-knight-elm-prefilter-classify.md` / `IMPL-2026-08-12-knight-classify-elm-swap.md`.
-**Big update, 2026-08-20: the ADR's gate clears now.** Realm reviewed both `TJ-A1` and `TJ-K1`
-(`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`) and diagnosed the
-feature representation, not data volume, as the real lever — `classifyFile`'s per-archetype
-evidence scores were being buried inside tokenized text instead of surfaced as direct numeric
-input. Built that fix (`buildEvidenceVector`/`trainArchetypeELMNumeric`/`predictArchetypeNumeric`
-in `classify-elm.ts`) and ran it head-to-head against the original text-hint approach, same data,
-same split, same seed/hiddenUnits — controlled, so the representation is the only changed variable.
-**Result: out-of-domain precision jumped from 7.7%@16.7%cov to 97.0%@42.3%cov at the same
-threshold (0.15) — clears the ADR's ≥95% gate with real coverage, for the first time in either
-implementation.** Still prototype-only — no production code touched, and this is one held-out
-codebase, not independently corroborated yet. Full numbers in session log and the ADR's Evidence
-section.
+**Hard pivot, 2026-08-24 — the pre-filter work (`TJ-K1`) is superseded, not being continued.** The
+user's direct instruction: stop treating the ELM as an optimization inside `classify.ts`'s existing
+two-pass pipeline and instead use it to derive the archetype taxonomy itself, replacing/revising
+`BUILTIN_ARCHETYPES` rather than classifying into it. New work is `TJ-K2` —
+`ADR-2026-08-24-knight-elm-driven-archetype-taxonomy.md` /
+`IMPL-2026-08-24-knight-archetype-taxonomy-discovery.md`. Sent an urgent note to Archer/Realm
+immediately (`Notes/NOTE-knight-to-archer-and-realm-2026-08-24-hard-pivot-away-from-elm-prefilter.md`)
+since Archer's `TJ-A2` was actively wiring the now-abandoned target at the moment the pivot landed.
+
+**What carries forward from `TJ-K1`/`TJ-A1`/`TJ-A2` (not wasted):** the numeric evidence-vector
+construction, the `analyzeClassifications()`-reuse extraction pattern, the confidence-calibration
+findings, the `TextEncoder.ts` tokenizer-breakage finding, and the model-lifecycle design options —
+all directly reusable for a clustering approach. **What doesn't carry forward:** the
+precision/coverage gate (no fixed label set to measure against once labels are being derived) and
+the `runClassificationsPhase` wiring point (different integration shape).
+
+**Checked before proposing an approach, not assumed:** `@astermind/astermind-community` has no
+unsupervised clustering primitive anywhere in it (`ml/` has only `KNN.ts`/`TFIDF.ts`; every ELM
+variant is supervised) — a clustering algorithm has to be hand-built (k-means proposed, simplest
+fit for the data scale). Also checked the real blast radius of changing the taxonomy:
+`callgraph-findings.ts`, the main downstream consumer, is already taxonomy-agnostic by design (it
+filters `BUILTIN_ARCHETYPES` by which archetypes carry a given `analysisHints` field, not by
+hardcoded IDs) — migration risk is lower than it looked at first glance.
 
 ## Next up
 
-- [ ] **The gate clearing raises a real decision, not just a technical one**: is this enough
-      corroboration to move toward IMPL Steps 6-8 (production wiring), or does it need validation
-      against a second, different held-out codebase first before trusting a single-dataset pass?
-      Needs the user's call — this is a bigger step than another eval run.
-- [ ] Realm's item 4 (still open, independent of how the above resolves): the evidence-leakage/
-      evidence-loss schema gap in `classifications.json` (`source: "llm"` entries' `evidence` field
-      isn't independent signal) needs its own ADR — two prototypes have now worked around it two
-      different ways without a real fix ever landing.
-- [ ] Share this result back with Archer/Realm — the numeric-feature fix isn't specific to my
-      implementation's text-hint approach; it very likely applies to `TJ-A1`'s extractor too.
-- [ ] If a future session touches `classify.ts` in scope, apply the "algorithmic evidence is not
-      recoverable from `classifications.json` for LLM-relabeled files" finding logged below —
-      it likely also affects any other consumer that assumes `evidence` reflects the algorithmic
-      pass for `source: "llm"` entries.
+- [ ] Execute `IMPL-2026-08-24-knight-archetype-taxonomy-discovery.md`'s steps 1-5: build the
+      k-means prototype, cluster n-dx's own files under both the evidence-vector and ELM-embedding
+      feature spaces, hand-inspect the results against the existing 17-archetype catalog.
+- [ ] Get Archer's/Realm's read on whether the reusable pieces need rethinking for a
+      taxonomy-discovery target rather than a fixed-catalog classification target (asked directly
+      in the pivot note).
+- [ ] Still open, independent of the pivot: Realm's item 4, the evidence-leakage/evidence-loss
+      schema gap in `classifications.json` — still needs its own ADR, still not written.
+- [ ] Cluster-ID stability across repeated `ndx analyze` runs — flagged as a real open question in
+      the new ADR's Consequences, not solved yet, matters only if the investigation recommends
+      shipping something.
 
 ## Session log
+
+### 2026-08-24 — Hard pivot: taxonomy discovery replaces the pre-filter effort
+
+While actively supporting `TJ-A2` (had just watched Archer's live session settle after a
+worktree-collision near-miss — see the earlier entry below — and was about to pick up a specific
+`TJ-A2` step), the user gave a direct, unambiguous redirect: stop building the ELM pre-filter,
+pivot to using the ELM to derive the archetype taxonomy itself. Asked two clarifying questions
+before touching anything, given the size of what was about to be thrown away: (1) what "changing
+their classification altogether" concretely meant — answer: replace `BUILTIN_ARCHETYPES` itself,
+not just make the ELM more central to classifying into it; (2) whether this redirects Archer's
+in-flight `TJ-A2` too — answer: yes, immediately.
+
+**First action, before any research or writing: sent the pivot note.** Archer was actively wiring
+toward the now-abandoned target minutes earlier; every minute of delay in telling her was wasted
+engineering time on her end. Note went to both her and Realm
+(`Notes/NOTE-knight-to-archer-and-realm-2026-08-24-hard-pivot-away-from-elm-prefilter.md`),
+explicit that `TJ-A2` step 6 (wiring into `runClassificationsPhase`) specifically targets the
+pipeline being abandoned, and that the *research* (numeric evidence vectors, confidence
+calibration, the tokenizer finding) isn't wasted even though the *target* is.
+
+**Then researched before proposing an approach, rather than assuming ELM alone could do this.**
+Surveyed `@astermind/astermind-community` end to end for clustering primitives — found none;
+every ELM variant across `core/`, `elm/`, `pro/`, `synth/` is supervised, and `ml/` has only
+`KNN.ts`/`TFIDF.ts`. Deriving a taxonomy from unlabeled structure needs a clustering algorithm this
+library doesn't ship, which has to be hand-built (k-means proposed as the starting point — simplest
+fit for the data scale, escalate only if it proves insufficient, same discipline as every
+model-complexity decision in this whole initiative so far).
+
+**Also checked blast radius before scoping the migration, rather than assuming it'd be large.**
+Grepped every consumer of `BUILTIN_ARCHETYPES`/`.archetype`/`analysisHints` across the monorepo.
+Real finding: `callgraph-findings.ts` (the main behavioral consumer — hub/hotspot/god-function
+threshold logic) is already taxonomy-agnostic by design, filtering archetypes by which ones carry a
+given `analysisHints` field rather than hardcoding IDs. Migration risk is schema-shaped, not a
+rewrite of downstream logic — genuinely better news than expected going in.
+
+**Wrote `ADR-2026-08-24-knight-elm-driven-archetype-taxonomy.md` and
+`IMPL-2026-08-24-knight-archetype-taxonomy-discovery.md`**, superseding
+`ADR-2026-08-12-knight-elm-prefilter-classify.md` (marked accordingly) and transitively
+`IMPL-2026-08-23-knight-classify-elm-production-wiring.md` (already once-superseded by `TJ-A2`, now
+superseded a second time by the target itself changing). Key design choice carried into the new
+ADR: evaluation for a *discovered* taxonomy can't reuse the precision/coverage gate (no ground
+truth for "is this a good new label") — proposed qualitative hand-inspection as the real verdict,
+with cluster-quality metrics (silhouette, inertia) as context only, a deliberate departure from
+every prior measurement's discipline in this initiative, justified explicitly rather than silently
+swapped in.
+
+**Not yet done:** any actual clustering code — this session stopped at the plan, per the same
+"write the plan, then execute" discipline established for `TJ-A2`'s production-hardening IMPL.
 
 ### 2026-08-20 — Read Realm's review, built the feature-representation fix, gate clears
 
