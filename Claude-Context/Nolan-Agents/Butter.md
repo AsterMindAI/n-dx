@@ -140,6 +140,77 @@ new entry, and if a past entry is wrong, say so explicitly in the new one.
 
 ---
 
+### 2026-08-23 (e) — Synced with Jam; retracted two of my own claims; A4 measured
+
+**Did:**
+
+- Read Jam's three notes. **Lane B accepted in full**, B1/B2 delivered. Jam fixed the
+  architecture-test failure I reported (`TN-J13`) and independently confirmed my `TN-J3` root cause.
+- **Retracted two things I had published**, in place in the original notes rather than only in the
+  newest one.
+- Built `scripts/elm-token-baseline.mjs` (announced in `IN-FLIGHT` before creating) and ran A4 on
+  real classify calls. Filed `TN-B2`. Claimed `tests/e2e/**` before adding the `ALLOWED` entry.
+
+**Learned:** (gotchas, API surprises, measured numbers — always with seed + baseline)
+
+- **A4, AsterMind-CE @ `7a2d763`, seed 42, batch 30, n=3, pnpm claude 2.1.231:**
+  **53,553 / 96,231 / 267,952 tokens per classify call — a 5.0x spread.** This **supersedes** the
+  22k–46k range I gave Jam; a real classify call is **1.2x–12.1x** a trivial prompt. Jam was right
+  to insist on measuring the real thing.
+- **Prompt + completion is 5.12% of a classify call.** A ~1,000-token prompt is counted as
+  `input_tokens` **2/4/12**; `cache_creation` is 24k–59k; `output` is 2,890–11,145 for ~30 small
+  JSON objects; calls take 25–112s. Hypothesis (`TN-B2`, **not** a claim): we spawn the full Claude
+  Code agent CLI per call and pay for its harness each time. Would need `num_turns` and an API-key
+  comparison to settle; no key on this machine.
+- **`total_cost_usd` is in every envelope and `llm-client` never reads it.** `CompletionResult`
+  (`types.ts:82-87`) carries only `text` and `tokenUsage`.
+- **`pnpm test` stops at the first failing package** (`ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`), so while
+  rex's timing test flakes it never reaches `tests/e2e/` at all. That is why my earlier run said
+  1991 tests and Jam's said 1996 — **different suites, not different results.** Use
+  `npx vitest run tests/` at the root. Jam's finding.
+- **Two `claude` binaries coexist and are not interchangeable for reproducibility:** pnpm **2.1.231**
+  (on PATH, what n-dx spawns) and VS Code **2.1.237**. Every token number must record which.
+
+**Corrections to my own published claims — both applied in place:**
+
+1. **"We are seeing different PATHs" was wrong.** The pnpm launcher's mtime is `13:53`; Jam's probe
+   ran `~13:01` — **52 minutes before the file existed.** Same shell, same PATH, different clocks.
+   There is no `resolveCliPath` discrepancy to hunt, and I told people there was.
+2. **"Substantially stronger" overstated Path B in Jam's favour.** The 9 calls are **3 classify +
+   6 zone enrichment**, and enrichment generates prose an ELM cannot replace. Ceiling on
+   AsterMind-CE is **3 of 9 at a hypothetical 100% hit rate**; 1 of 9 at the kill criterion. Jam's
+   phrasing — *stronger per call, on a smaller share of calls* — is the honest one, and A4
+   reinforces it: per-call price rose, addressable share did not.
+
+**Broke / still broken:**
+
+- **I re-broke the architecture test I had reported to Jam** — my new script imports
+  `child_process`, exactly as theirs did. Caught it **before merging** rather than handing it to
+  them. Fixed by extending their `ALLOWED` entry, claimed first because `tests/e2e/**` is shared.
+- Root suite verified clean after: **1996 passed | 1 skipped, exit 0.**
+
+**Left undone and why:**
+
+- **A2, the hench path — still unverified.** Same shared parser so probably fixed, but probably is
+  not verified. **No hench token numbers.**
+- **`TN-B2` not investigated** — filed unclaimed. Prioritising it against Path B is a lead call, and
+  it may be a larger lever than either lane.
+- **`TN-B1`/A5 still blocked** on the ADR weighting question and notes to the rex/web owners.
+- **n-dx's own analyze total unmeasured** (Jam's point; every run here has been `--fast`).
+
+**Notes sent / received:**
+
+- **Received:** Lane B accepted; `TN-J13` fixed; the classify-vs-analyze denominator correction.
+- **Sent:** `NOTE-nolan-internal-2026-08-23-a4-classify-call-cost.md` — the range, the supersession
+  of my earlier number, and `TN-B2`.
+
+**Handoff:**
+
+- **A2** is the last open piece of `TN-J3`: one hench run, read `.hench/runs/*.json`. Everything
+  else on my board is blocked on a lead decision.
+
+---
+
 ### 2026-08-23 (d) — `TN-J3` root-caused and fixed. The counter was genuinely broken.
 
 **Did:**
