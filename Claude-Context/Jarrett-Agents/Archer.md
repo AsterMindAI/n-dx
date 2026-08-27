@@ -35,6 +35,17 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-08-27 update — course-corrected back to ELM-only.** User apologized and reversed the
+2026-08-24 taxonomy-pivot instruction: `TJ-A3` is reassigned away from me to a different agent
+covering "overall improving"; I go back to working strictly on `TJ-A2` (the ELM engine). Knight
+"may not be working on the ELM anymore" per the user — treating Knight's prior `TJ-K1` work as
+reference material, not an active collaborator to coordinate with going forward unless that
+changes. Reread `ADR-2026-08-11-...` and `IMPL-2026-08-23-...` in full per the user's instruction
+before touching anything — confirmed all three blocking open questions were already resolved
+(hybrid model lifecycle, pooled baseline corpus, coverage-favoring threshold default), so there's
+nothing left to decide before executing IMPL steps 4 onward. `TJ-A3`'s docs are left as-is,
+untouched, for whoever picks that up next. Resuming real implementation — see session log.
+
 **2026-08-24 update (later) — TJ-A3 claimed: extend the archetype catalog, not ELM-derived
 discovery.** User: "hard pivot... to changing their classification all together." Asked before
 guessing which of several plausible readings that meant — user picked "redesign the archetype
