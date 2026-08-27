@@ -23,6 +23,7 @@ export type {
   CallGraph,
   Classifications,
   Components,
+  FileClassification,
   ImportEdge,
   Imports,
   Inventory,
@@ -40,6 +41,8 @@ export { analyzeInventory } from "../analyzers/inventory.js";
 export type { InventoryResult } from "../analyzers/inventory.js";
 export { analyzeImports } from "../analyzers/imports.js";
 export { analyzeClassifications, enrichClassificationsWithLLM, mergeClassificationResults } from "../analyzers/classify.js";
+export { getArchetypeELM, classifyWithELM, predictArchetypeNumeric, DEFAULT_ELM_CONFIDENCE_THRESHOLD } from "../analyzers/classify-elm.js";
+export type { TrainedArchetypeELMNumeric, ELMPrediction } from "../analyzers/classify-elm.js";
 export { analyzeZones } from "../analyzers/zones.js";
 export type { ZoneAnchor, ZonePinSkip } from "../analyzers/zones.js";
 export { analyzeComponents } from "../analyzers/components.js";

@@ -33,6 +33,19 @@ import type {
 
 const HIDDEN_UNITS = 128;
 
+/**
+ * Default confidence threshold for production wiring. Resolved 2026-08-24
+ * (`ADR-2026-08-24-realm-elm-primary-classifier-pivot.md`, independently reproduced from
+ * both `TJ-A1`'s and `TJ-K1`'s actual committed eval scripts): the coverage-favoring end of
+ * the verified 0.11-0.15 range, where this repo's own held-out curve shows 100% precision
+ * at 59.0% coverage — identical across that whole range, so the lower (more permissive)
+ * end is used. Provisional pending re-verification once `TJ-A3`'s archetype-catalog work
+ * lands (see `Notes/NOTE-realm-to-archer-2026-08-27-tjr1-stays-provisional.md`) — overridable
+ * via `.n-dx.json`'s `sourcevision.classification.elmPrefilter.confidenceThreshold` in the
+ * meantime, which is exactly what that override exists for.
+ */
+export const DEFAULT_ELM_CONFIDENCE_THRESHOLD = 0.11;
+
 export interface ELMPrediction {
   archetype: string;
   confidence: number;
@@ -177,13 +190,28 @@ export function predictArchetypeNumeric(trained: TrainedArchetypeELMNumeric, vec
 
 const COLD_START_MIN_EXAMPLES = 30;
 const COLD_START_MIN_CATEGORIES = 3;
+// Found empirically 2026-08-27, not assumed: trained a fresh model on this repo's own
+// 423 purely-algorithmic examples (11 categories — clears the two thresholds above easily)
+// and found its confidence on the actual unclassified population sits right at a cliff
+// (0% resolved at t=0.10, ~all-or-nothing at 0.11) that the validated 0.11-0.15 default
+// was never calibrated against — that default came from a training set that included 94
+// source: "llm" examples (see ADR Evidence, "Numeric feature representation"). A model
+// trained on algorithmic-only data generalizes to genuinely novel files differently than
+// one that's also seen some of the "hard" (LLM-resolved) population during training — the
+// confidence threshold isn't just data-*volume*-sensitive, it's sensitive to whether the
+// training set includes examples of the population it's meant to generalize to. Requiring
+// a minimum of LLM-sourced examples specifically, not just any-source volume, keeps fresh
+// training gated on the kind of data the validated threshold actually applies to; below
+// that, the bundled baseline (trained on a corpus that does include LLM-sourced examples)
+// is the safer choice even if the project's own algorithmic-only history is large.
+const COLD_START_MIN_LLM_EXAMPLES = 20;
 
 /**
  * Whether a project's own classification history is large/diverse enough to train a fresh
  * ELM on, rather than falling back to the bundled baseline. Thresholds are deliberately
- * conservative (IMPL-2026-08-23's Design decision) — training on too few examples or too
- * few categories risks a confidently-wrong model, which has no safety net once wired in
- * ahead of the LLM fallback.
+ * conservative (IMPL-2026-08-23's Design decision) — training on too few examples, too few
+ * categories, or without enough LLM-sourced ("hard case") examples specifically risks a
+ * confidently-wrong model, which has no safety net once wired in ahead of the LLM fallback.
  */
 export function hasEnoughHistoryForFreshTraining(classifications: Classifications): boolean {
   const labeled = classifications.files.filter(
@@ -191,7 +219,12 @@ export function hasEnoughHistoryForFreshTraining(classifications: Classification
       !!fc.archetype && (fc.source === "algorithmic" || fc.source === "llm"),
   );
   const categories = new Set(labeled.map((fc) => fc.archetype));
-  return labeled.length >= COLD_START_MIN_EXAMPLES && categories.size >= COLD_START_MIN_CATEGORIES;
+  const llmSourcedCount = labeled.filter((fc) => fc.source === "llm").length;
+  return (
+    labeled.length >= COLD_START_MIN_EXAMPLES &&
+    categories.size >= COLD_START_MIN_CATEGORIES &&
+    llmSourcedCount >= COLD_START_MIN_LLM_EXAMPLES
+  );
 }
 
 /**
@@ -273,4 +306,50 @@ export function getArchetypeELM(
     return loadBaselineArchetypeELM();
   }
   return undefined;
+}
+
+export interface ELMClassifyResult {
+  updatedFiles: FileClassification[];
+}
+
+/**
+ * Classify the currently-unclassified population with a trained ELM. Mirrors
+ * `enrichClassificationsWithLLM`'s `{ updatedFiles }` return shape so `runClassificationsPhase`
+ * can merge the result via `mergeClassificationResults` exactly the same way it already merges
+ * LLM results. Targets the same population `enrichClassificationsWithLLM` does
+ * (`archetype === null && source === "algorithmic"`) — files this resolves never reach the
+ * LLM; everything below `confidenceThreshold` (or predicting a category outside what the
+ * model was trained on) is left untouched for the LLM fallback to handle as it does today.
+ */
+export function classifyWithELM(
+  classifications: Classifications,
+  inventory: Inventory,
+  imports: Imports,
+  trained: TrainedArchetypeELMNumeric,
+  confidenceThreshold: number,
+): ELMClassifyResult {
+  const builtinIds = new Set(BUILTIN_ARCHETYPES.map((a) => a.id));
+  const customArchetypes = classifications.archetypes.filter((a) => !builtinIds.has(a.id));
+  const freshPass = analyzeClassifications(inventory, imports, {
+    customArchetypes: customArchetypes.length > 0 ? customArchetypes : undefined,
+  });
+  const evidenceByPath = new Map(freshPass.files.map((f) => [f.path, f.evidence]));
+  const archetypeIndex = new Map(classifications.archetypes.map((a, i) => [a.id, i]));
+  const trainedCategorySet = new Set(trained.categories);
+
+  const updatedFiles: FileClassification[] = [];
+  for (const fc of classifications.files) {
+    if (fc.archetype !== null || fc.source !== "algorithmic") continue;
+    const vector = evidenceToVector(evidenceByPath.get(fc.path), archetypeIndex);
+    const prediction = predictArchetypeNumeric(trained, vector);
+    if (prediction.confidence < confidenceThreshold) continue;
+    if (!trainedCategorySet.has(prediction.archetype)) continue; // defensive — shouldn't happen
+    updatedFiles.push({
+      path: fc.path,
+      archetype: prediction.archetype,
+      confidence: prediction.confidence,
+      source: "elm",
+    });
+  }
+  return { updatedFiles };
 }
