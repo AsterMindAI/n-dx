@@ -7,14 +7,17 @@
 - **Branch:** `elm/jarrett/classify-elm-prefilter` (continuing the existing worktree —
   `../n-dx-jarrett` — rather than cutting a new one; this is the same effort, now unblocked)
 - **Worktree:** `../n-dx-jarrett`
-- **Status:** Steps 1-7 done, wired and real, but shipped **opt-in, not opt-out** — Step 4's
+- **Status:** Steps 1-9 done, wired and real, but shipped **opt-in, not opt-out** — Step 4's
   smoke test (2026-08-27, not another eval-script run — the actual `runClassificationsPhase` code
   path against this repo's real `ndx analyze`) found that 100% of unclassified files across every
   gathered corpus have zero evidence signal, meaning the numeric feature vector is identically
   all-zero for the exact population this stage exists to help, and the ELM cannot discriminate
-  between them regardless of threshold. See ADR Evidence, "Zero-evidence population." Steps 8-10
-  (test coverage, full validation, ADR→Accepted) continue, but Accepted no longer means "ship
-  enabled by default" until a representation fix is validated — see Open questions.
+  between them regardless of threshold. See ADR Evidence, "Zero-evidence population." Step 8 also
+  turned that empirical-only property into a structural one — `classifyWithELM` now skips
+  all-zero vectors unconditionally, not just by calibration accident (see step 8 note). Steps
+  10-13 (regression fixture, whole-repo build check, ADR→Accepted, PR) remain, but Accepted no
+  longer means "ship enabled by default" until a representation fix is validated — see Open
+  questions.
 
 ## Why now, and what changed since `TJ-A1` stopped at the gate
 
@@ -158,18 +161,35 @@ below.
    was meant to provide turned out to be necessary immediately, not just as a hedge: see ADR
    Evidence, "Zero-evidence population," found via real smoke-testing at this exact step, not a
    separate eval run.
-8. Write unit tests: score-vector computation against known archetype patterns, threshold gating
-   (never resolves below the configured threshold), cold-start behavior including the new
-   LLM-example-count gate, schema validation for the new `"elm"` source value, **and a fixture
-   covering the zero-evidence case specifically** (a file with no matched signals must never
-   resolve, regardless of threshold — this is now a required regression guard, not an edge case).
-9. Write an integration test: run `runClassificationsPhase` end-to-end with the ELM stage active on
-   a fixture project; assert files it resolves never reach `callClaude`; assert everything below
-   threshold still does, byte-identical to today's behavior for that population; **assert the
-   stage no-ops entirely when `elmPrefilter.enabled` is unset (the new default)**.
+8. **Done, 2026-08-27.** Wrote `tests/unit/analyzers/classify-elm.test.ts` (22 tests): covers
+   `extractNumericExamples`' filtering rules (role, source, null-archetype), `trainArchetypeELMNumeric`
+   error paths and successful training, `predictArchetypeNumeric` on separable synthetic data, all
+   three `hasEnoughHistoryForFreshTraining` gates individually (volume, categories, LLM-sourced
+   count), `canUseBaselineModel`'s exact-catalog-match check, `loadBaselineArchetypeELM` against the
+   real bundled artifact, and `getArchetypeELM`'s fresh/baseline/undefined fallback chain.
+   **Extended beyond the original plan**: rather than only testing that the zero-evidence case
+   *happens* not to resolve at the currently-calibrated default threshold, added an explicit
+   structural guard to `classifyWithELM` itself (skip before prediction when the evidence vector
+   is all-zero, independent of `confidenceThreshold`) and tested that guard directly at threshold
+   0 — closes a real gap where a future low/zero threshold override could otherwise have resolved
+   a no-signal file on nothing but the trained model's class prior.
+9. **Done, 2026-08-27.** Wrote `tests/integration/elm-prefilter-wiring.test.ts` (6 tests): runs
+   `runClassificationsPhase` end-to-end against a real temp project dir, with `getArchetypeELM`/
+   `classifyWithELM` mocked (their own logic is covered by step 8's unit tests) to isolate the
+   wiring itself — confirms the opt-in default (stage never runs when `elmPrefilter.enabled` is
+   unset in `.n-dx.json`), the `confidenceThreshold` override, the fast-mode and
+   no-unclassified-files skips, the undefined-model fallthrough to the LLM, and that ELM-resolved
+   files never reach `callClaude`.
 10. Regression check: classification correctness on a fixed corpus (this repo's own `.sourcevision/`
     data is a reasonable fixture) must not regress relative to algorithmic+LLM-only.
 11. `pnpm build && pnpm typecheck && pnpm test` clean across the whole repo, not just sourcevision.
+    **Partially done, 2026-08-27**: clean for `@n-dx/sourcevision` itself (1716/1719 tests passing;
+    the 3 failures are pre-existing `@n-dx/web`-serve infra gaps in this worktree — `@n-dx/web`'s
+    `dist/` was never built here — unrelated to this branch, predate all `TJ-A2` commits). Grepped
+    the rest of the monorepo for exhaustive matches on `FileClassification.source`'s literal
+    values (the type widened by step 5) — confined entirely to `sourcevision`, so no other package
+    needs a corresponding update. Full monorepo-wide `pnpm build/typecheck/test` still not run as
+    of this note.
 12. Update the ADR's Status once a representation fix for the zero-evidence population is validated
     — not before. Reply to Knight/Realm with the finding, since it likely affects `TJ-K1`'s
     composition-vs-extraction open question directly (see Open questions).
@@ -246,4 +266,9 @@ Two levels, because this is now real production code, not a side script:
 - [ ] **`elmPrefilter.enabled` defaults to `false` now — when, if ever, does that flip?** Not
       before a fix from the question above is validated against the zero-evidence population
       specifically. Flagging so a future session doesn't flip the default back to `true` on the
-      strength of the pre-2026-08-27 numbers alone.
+      strength of the pre-2026-08-27 numbers alone. Note (2026-08-27, step 8): the zero-evidence
+      guard is now structural (`classifyWithELM` skips all-zero vectors unconditionally, not just
+      by threshold-calibration accident), so flipping `enabled` back to `true` alone still
+      wouldn't resolve any zero-evidence file even accidentally — the guard and the config default
+      are two independent layers of the same "don't ship this half-validated" decision, not
+      redundant with each other.

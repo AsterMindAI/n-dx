@@ -35,6 +35,20 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-08-27 update (latest) — test coverage for the wired-but-opt-in ELM pre-filter, plus a real
+gap closed along the way.** Wrote the test coverage `IMPL-2026-08-23` steps 8-9 called for:
+`tests/unit/analyzers/classify-elm.test.ts` (22 tests — extraction filtering, training/prediction,
+all three cold-start gates, baseline-model loading, the fresh/baseline/undefined fallback chain)
+and `tests/integration/elm-prefilter-wiring.test.ts` (6 tests — the opt-in default, threshold
+override, fast-mode and no-unclassified-files skips, LLM fallthrough, ELM-resolved files never
+reaching `callClaude`), all against `runClassificationsPhase`'s real wiring with only
+`getArchetypeELM`/`classifyWithELM` mocked. While writing the zero-evidence fixture, found the
+guard against it was calibration-accident-only, not structural — added an explicit all-zero-vector
+skip to `classifyWithELM` itself so a future threshold override can't accidentally resolve a
+no-signal file on nothing but the model's training prior. `pnpm build`/`typecheck`/`test` clean for
+`@n-dx/sourcevision` (1716/1719 — the 3 failures are pre-existing `@n-dx/web`-serve infra gaps in
+this worktree, unrelated to this branch). Full detail in today's session log.
+
 **2026-08-27 update (later) — wired the ELM into production, then found why it shouldn't run
 yet.** Executed `IMPL-2026-08-23`'s steps 4-7 for real: retired the text-mode functions, built the
 hybrid model lifecycle (cold-start gate + bundled baseline model, actually trained — real 130KB
@@ -150,23 +164,79 @@ Status can move to Accepted.
 
 ## Next up
 
-- [x] Read `packages/sourcevision/src/analyzers/classify.ts` in full — confirm
-      `enrichClassificationsWithLLM`'s call shape, batching (30/call), and whether it's a fused
-      call. **Done (2026-08-11)** — see session log.
-- [x] Write up the ELM pre-filter proposal as an ADR + IMPL. **Done (2026-08-11)** — see session
-      log; both docs currently `Proposed`/`Not started`.
-- [x] Resolve the IMPL's open questions. **Done (2026-08-12)** — dependency, held-out codebase,
-      worktree, and acceptance-gate framing all resolved with verified evidence; see IMPL.
-- [x] Build the training-data extraction + committed eval script (IMPL steps 3-4). **Done
-      (2026-08-12)**, code-complete and typechecks clean, but not yet runnable — see below.
-- [ ] Run `ndx analyze` on this repo and on `AsterMind-Community-Edition` (IMPL Step 2b) to produce
-      real `classifications.json` for both. Not started — this is a real, LLM-calling, potentially
-      slow operation, flagged to the user rather than run silently.
-- [ ] Run the eval script against real data, evaluate against the Step 5 precision gate, report
-      back before touching `classify.ts`/`analyze-phases.ts` at all (Steps 6-8 are explicitly
-      gated on this).
+(`TJ-A2` steps 1-9 are done — see IMPL and session log below. Superseded entries from the
+`TJ-A1` prototype phase removed rather than left stale.)
+
+- [ ] IMPL step 10: regression check — classification correctness on a fixed corpus (this repo's
+      own `.sourcevision/` data is a reasonable fixture) must not regress relative to
+      algorithmic+LLM-only.
+- [ ] IMPL step 11: `pnpm build && pnpm typecheck && pnpm test` clean across the *whole* repo, not
+      just `@n-dx/sourcevision` (already clean there — see session log).
+- [ ] The actual open problem: a feature representation that doesn't degenerate to an all-zero
+      vector for the zero-evidence population — needed before `elmPrefilter.enabled` can default to
+      `true`. See IMPL Open questions for the candidate directions, none measured yet.
+- [ ] IMPL steps 12-13: update ADR status once a representation fix is validated (not before), open
+      a PR.
 
 ## Session log
+
+### 2026-08-27 (latest) — IMPL steps 8-9: test coverage, plus turning a calibration accident into a real guard
+
+Picked up right after committing the zero-evidence-population documentation. Steps 1-7 were code
+and real, so the tests needed to exercise the real thing, not a simplified restatement of it.
+
+- **Unit tests (`tests/unit/analyzers/classify-elm.test.ts`, 22 tests):** `extractNumericExamples`'
+  three filtering rules (role ≠ source, archetype null, source outside algorithmic/llm) each get
+  their own case, built by force-overriding a real `analyzeClassifications()` result rather than
+  hand-rolling fake evidence — keeps the test honest about what the function actually reads.
+  `trainArchetypeELMNumeric`/`predictArchetypeNumeric` against small synthetic separable vectors
+  (fast, deterministic, no dependency on real archetype signal weights). `hasEnoughHistoryForFreshTraining`'s
+  three gates (volume, category count, LLM-sourced count) tested individually so a future change to
+  any one threshold can't silently break another. `canUseBaselineModel` true/false against a real
+  custom-archetype catalog extension. `loadBaselineArchetypeELM` loads the actual bundled 130KB
+  artifact (not a mock) and predicts without throwing. `getArchetypeELM`'s three-way fallback
+  (fresh/baseline/undefined) each constructed from real inventory/classification data satisfying or
+  violating the actual gate conditions.
+- **Integration test (`tests/integration/elm-prefilter-wiring.test.ts`, 6 tests):** runs the real
+  `runClassificationsPhase` against a real temp project directory (inventory.json/imports.json/
+  .n-dx.json written to disk, following the same `mkdtemp`/`afterEach rm` pattern as
+  `analyze-model-resolution.test.ts`), with only `getArchetypeELM`/`classifyWithELM` mocked via a
+  partial `vi.mock` of `sourcevision-core.ts` (keeping every other real export, same pattern
+  `classify.test.ts` uses for `claude-client.js`) — their own correctness is the unit tests' job;
+  this file's job is the wiring. Confirms: no `.n-dx.json` entry means the ELM stage never runs at
+  all (the opt-in default, not just "resolves nothing"); `classifyWithELM` receives
+  `DEFAULT_ELM_CONFIDENCE_THRESHOLD` by default and the configured override when set; fast mode and
+  "nothing unclassified" both skip the stage before it's ever invoked; an `undefined` model (no
+  usable lifecycle branch) falls through to the LLM exactly as if the stage didn't exist; and once
+  the ELM resolves everything, `callClaude` is never called.
+- **Real gap found while building the zero-evidence fixture, not assumed:** the guard against
+  zero-evidence files resolving was, as shipped in the last session, an accident of calibration —
+  `classifyWithELM` had no explicit check, it just happened that the validated default threshold
+  (0.11) didn't clear on an all-zero vector's prediction in practice. That's not a real invariant —
+  a `.n-dx.json` override setting `confidenceThreshold` low (or to 0) would have let a zero-evidence
+  file resolve on nothing but the trained model's class prior, which is exactly the false-confidence
+  failure mode this whole finding is about. Added an explicit `vector.some((v) => v > 0)` check to
+  `classifyWithELM`, before prediction, unconditional on `confidenceThreshold`. Tested directly: the
+  zero-evidence fixture never resolves at threshold 0 (the most permissive setting possible), while
+  a weak-but-genuinely-nonzero-evidence fixture does resolve once its actual confidence clears the
+  threshold, and stops resolving once the threshold is pushed above its observed confidence. This
+  doesn't change the `enabled: false` decision — the representation gap (no signal to discriminate
+  on) is still unsolved — but it means that decision no longer needs to also carry "and don't touch
+  the threshold override" as an unstated, unenforced assumption.
+- **Validation:** `pnpm build`, `pnpm typecheck`, and the full `vitest run` are clean for
+  `@n-dx/sourcevision` — 1716/1719 tests passing. The 3 failures (`cli-serve.test.ts` timing out,
+  two `unit/cli/serve.test.ts` cases erroring on "Could not locate @n-dx/web CLI") are pre-existing:
+  `@n-dx/web`'s `dist/` was never built in this worktree, and the failing tests' last edit
+  (`b9570fd2`) predates every `TJ-A2` commit on this branch — unrelated infra gap, not a regression
+  from this work. Grepped the monorepo for other exhaustive consumers of
+  `FileClassification.source`'s literal values (the union step 5 widened) — confined to
+  `sourcevision` itself, so no cross-package fallout from the schema change. Did not run the
+  whole-monorepo `pnpm build/typecheck/test` (IMPL step 11) — flagged as still open in the IMPL
+  rather than claimed as done.
+- Updated the IMPL (steps 8-9 marked done with detail, step 11 marked partially done, a note added
+  to the "when does `enabled` flip back" open question clarifying the guard and the config default
+  are two independent safety layers now, not one). Committed docs here; code + tests committed to
+  the worktree (`elm/jarrett/classify-elm-prefilter`, commit `78f295ae`).
 
 ### 2026-08-27 (later) — production wiring done, shipped opt-in after finding a real gap
 
