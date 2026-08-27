@@ -35,7 +35,23 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
-**2026-08-27 update — course-corrected back to ELM-only.** User apologized and reversed the
+**2026-08-27 update (later) — wired the ELM into production, then found why it shouldn't run
+yet.** Executed `IMPL-2026-08-23`'s steps 4-7 for real: retired the text-mode functions, built the
+hybrid model lifecycle (cold-start gate + bundled baseline model, actually trained — real 130KB
+artifact, not a stub), widened the schema, wired `getArchetypeELM`/`classifyWithELM` into
+`runClassificationsPhase` via `sourcevision-core.ts`, added the `.n-dx.json` kill switch. Then
+smoke-tested against this repo's *actual* `ndx analyze --phase=3` run instead of stopping at
+`pnpm typecheck` — and found the wiring resolves **zero** files, every time, regardless of
+threshold. Traced it to something no prior eval (mine, Knight's, Realm's) caught: **100% of
+unclassified files in every one of the 5 gathered corpora have zero evidence signal** — an
+identically all-zero input vector, indistinguishable to the ELM, no threshold can fix that. Every
+validated 100%@59.0%-style result measured performance on files that already had *some* signal;
+none measured the true target population. Set `elmPrefilter.enabled` to default `false` rather than
+ship a feature that provides no benefit on exactly the population it exists for. Full detail in
+today's session log and the ADR's new "Zero-evidence population" section — this is a real,
+rigorously-caught limitation, not a setback to downplay.
+
+**2026-08-27 update (earlier) — course-corrected back to ELM-only.** User apologized and reversed the
 2026-08-24 taxonomy-pivot instruction: `TJ-A3` is reassigned away from me to a different agent
 covering "overall improving"; I go back to working strictly on `TJ-A2` (the ELM engine). Knight
 "may not be working on the ELM anymore" per the user — treating Knight's prior `TJ-K1` work as
@@ -151,6 +167,79 @@ Status can move to Accepted.
       gated on this).
 
 ## Session log
+
+### 2026-08-27 (later) — production wiring done, shipped opt-in after finding a real gap
+
+Reread the plan (Step 4 onward all blocking questions already resolved), then executed for real
+rather than re-describing it:
+
+- **Model lifecycle (Step 4):** retired `fileToText`/`extractExamples`/`trainArchetypeELM`/
+  `predictArchetype` (text-mode). Added `hasEnoughHistoryForFreshTraining` (cold-start gate),
+  `canUseBaselineModel` (guards against catalog mismatches from custom archetypes),
+  `loadBaselineArchetypeELM`, `getArchetypeELM` (single entry point — trains fresh, loads baseline,
+  or returns `undefined`). Wrote `train-baseline-elm.ts` and **actually ran it** — real trained
+  artifact, `classify-elm-baseline-model.json`, 686 examples pooled across all 5 `TJ-A1` corpora, 16
+  categories, 130KB. `copy-assets.mjs` + a `package.json` build-script edit get it into `dist/`,
+  since plain `tsc` doesn't copy non-`.ts` assets. Verified both lifecycle branches end-to-end with
+  a fabricated tiny-history case before moving on.
+- **Schema (Step 5):** `"elm"` added to `FileClassification.source` in `schema/v1.ts` and the zod
+  enum in `validate.ts`. Checked for other exhaustive consumers of the 3-value union first — none
+  found.
+- **Wiring + kill switch (Steps 6-7, done together since they're coupled):** added
+  `classifyWithELM` (mirrors `enrichClassificationsWithLLM`'s `{updatedFiles}` shape so
+  `runClassificationsPhase` merges it identically) and `DEFAULT_ELM_CONFIDENCE_THRESHOLD` (0.11,
+  the coverage-favoring end of the range Realm's `TJ-R1` confirmed). Discovered `analyze-phases.ts`
+  imports everything through `sourcevision-core.ts` (an internal re-export gateway, same pattern as
+  the cross-package ones in `CLAUDE.md`) rather than reaching into `classify-elm.ts` directly —
+  followed that convention rather than adding a new import path. Wired the actual call into
+  `runClassificationsPhase` between `analyzeClassifications` and `enrichClassificationsWithLLM`.
+  Added `sourcevision.classification.elmPrefilter.{enabled,confidenceThreshold}` to `.n-dx.json`.
+
+**Then smoke-tested against a real `ndx analyze --phase=3 --full .` run on this repo — not another
+eval-script invocation, the actual wired code path — and it resolved zero files.** Didn't accept
+that as "must be fine, typecheck passed" and move on. Debugged in order:
+
+1. Checked the confidence distribution directly: training-data confidence clusters ~0.21, but the
+   genuinely novel unclassified population clusters at a cliff right at 0.10/0.11 — 0% resolved at
+   0.10, all-or-nothing at 0.11. Traced this to training on purely-algorithmic data (423 examples,
+   0 `source: "llm"`) — a real, plausible state, not a contrived edge case. Fixed by requiring a
+   minimum count of `source: "llm"` examples specifically in `hasEnoughHistoryForFreshTraining`,
+   not just any-source volume.
+2. Re-tested — the fix correctly redirected to the bundled baseline model. **Still zero resolved.**
+   Didn't stop at "the fix didn't work," kept debugging.
+3. Checked the baseline model's confidence on the same population directly: same cliff shape, just
+   shifted. This ruled out "which training data" as the variable and pointed at something about
+   the *files themselves*.
+4. Checked whether the unclassified files even have distinguishable input vectors at all: **100% of
+   them have zero evidence signal** — confirmed across all 5 corpora (n-dx, AsterMind, express,
+   indie-stack, zustand), zero exceptions. `classifyFile`'s signal weights (0.4-0.9 per match) mean
+   one matched signal usually already clears `PRIMARY_THRESHOLD` (0.4) alone — there's essentially
+   no "partial signal, still unresolved" middle ground in this catalog, so the files reaching this
+   stage are, without exception, the ones with *no* signal at all. An all-zero vector is
+   indistinguishable from every other all-zero vector to the ELM — same prediction, same
+   confidence, for every one of them, regardless of what the file is or what threshold is set.
+
+**This means every validated result in this whole investigation — 100%@59.0%, Knight's
+97.0%@42.3%, Realm's independent reproduction, all of it — measured the ELM's ability to
+discriminate among files that already had *some* algorithmic signal, never the true target
+population `enrichClassificationsWithLLM` actually gets called for.** Not a wrong result, an
+incomplete one — nobody, across three independent implementations and three rounds of review,
+constructed a held-out set from genuinely zero-signal files, because every held-out set was drawn
+from files with a resolvable label by construction.
+
+**Action, not just documentation:** set `elmPrefilter.enabled`'s default to `false` (opt-in). The
+wiring, schema, model lifecycle, and config surface are real and correct — what's not validated is
+a representation that works on this specific population. Shipping enabled-by-default on that basis
+would be shipping a feature that does nothing useful while looking like it works. Flagged Knight's
+`TJ-K1` composition (evidence + path-encoded vector, never all-zero since path text always exists)
+as the likely direction for a real fix — not implemented here, since it deserves its own
+measurement against the zero-evidence population specifically, not an assumption that it'll work
+because it didn't degenerate the same way.
+
+Updated the ADR (new "Zero-evidence population" section), the IMPL's Steps/Status/Open questions,
+this entry. Did not update `BACKLOG.md`'s Knight-facing framing yet since the user said Knight may
+not be on this anymore — noted the finding is relevant to `TJ-K1` regardless, for whenever/whoever
+picks it up.
 
 ### 2026-08-24 (later) — TJ-A3: archetype taxonomy redesign, and a three-way documentation tangle
 

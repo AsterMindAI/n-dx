@@ -7,13 +7,14 @@
 - **Branch:** `elm/jarrett/classify-elm-prefilter` (continuing the existing worktree —
   `../n-dx-jarrett` — rather than cutting a new one; this is the same effort, now unblocked)
 - **Worktree:** `../n-dx-jarrett`
-- **Status:** In progress. User confirmed the hybrid model-lifecycle design (option C, 2026-08-24)
-  and the division of labor: Archer leads, Knight supports within this IMPL rather than running a
-  separate production plan. Since then: reworked `classify-elm.ts`'s extraction to reuse the real
-  `analyzeClassifications()` instead of reimplementing signal matching (Knight's `TJ-K1` critique —
-  result unchanged, 100%@59.0%, confirming the reimplementation had been faithful); Knight
-  contributed a pooling-retest capability directly in this worktree, used to resolve open question
-  2 below (pooling is neutral under the numeric representation, not harmful — see ADR Evidence).
+- **Status:** Steps 1-7 done, wired and real, but shipped **opt-in, not opt-out** — Step 4's
+  smoke test (2026-08-27, not another eval-script run — the actual `runClassificationsPhase` code
+  path against this repo's real `ndx analyze`) found that 100% of unclassified files across every
+  gathered corpus have zero evidence signal, meaning the numeric feature vector is identically
+  all-zero for the exact population this stage exists to help, and the ELM cannot discriminate
+  between them regardless of threshold. See ADR Evidence, "Zero-evidence population." Steps 8-10
+  (test coverage, full validation, ADR→Accepted) continue, but Accepted no longer means "ship
+  enabled by default" until a representation fix is validated — see Open questions.
 
 ## Why now, and what changed since `TJ-A1` stopped at the gate
 
@@ -135,40 +136,45 @@ below.
 
 ## Steps
 
-1. Claim `TJ-A2` in `BACKLOG.md`; note the scope split from `TJ-A1` there.
-2. **Get the user's confirmation on the model-lifecycle design** (hybrid C vs. simpler A) before
-   writing code that depends on the answer — this changes the Files-touched table (whether a
-   bundled-model file and training script exist at all).
-3. If C is chosen: retest the 2026-08-13 multi-codebase pooling **under the numeric
-   representation** before finalizing what the baseline model trains on — that pooling result was
-   only ever measured under the since-discredited text representation (Knight's tokenizer finding),
-   so it needs re-checking, not reuse, before it backs a shipped artifact.
-4. Retire `classify-elm.ts`'s text-mode functions; keep the numeric path as the only production
-   code path. Add the cold-start check (and baseline-model loading, if C).
-5. Widen `FileClassification.source` in `schema/v1.ts` and `validate.ts` to include `"elm"`.
-6. Wire into `runClassificationsPhase`: run the ELM stage on `analyzeClassifications`'s
-   `archetype: null` output; anything at-or-above the confidence threshold is resolved
-   (`source: "elm"`); shrink the set passed to `enrichClassificationsWithLLM` to the remainder,
-   exactly as today for everything below threshold.
-7. Add the `.n-dx.json` config surface (enable/disable, threshold override) and read it in step 6's
-   wiring — this is the kill switch the residual-risk acceptance above depends on.
+1. **Done.** Claimed `TJ-A2` in `BACKLOG.md`.
+2. **Done, 2026-08-24.** User confirmed hybrid model lifecycle (option C).
+3. **Done, 2026-08-24/27.** Retested pooling under the numeric representation — neutral, not
+   harmful (see ADR Evidence). Baseline model trained on the pooled 5-codebase corpus, real
+   artifact generated (`classify-elm-baseline-model.json`, 686 examples, 16 categories).
+4. **Done, 2026-08-27.** Retired text-mode functions; added `hasEnoughHistoryForFreshTraining`
+   (cold-start gate) and `loadBaselineArchetypeELM`/`getArchetypeELM` (baseline loading + unified
+   entry point). **Extended beyond the original plan**: found via smoke-testing that the cold-start
+   gate needed a minimum count of `source: "llm"` examples specifically, not just any-source
+   volume — a purely-algorithmic training set calibrates confidence differently (see ADR Evidence,
+   "Zero-evidence population").
+5. **Done, 2026-08-27.** Widened `FileClassification.source` to include `"elm"` in `schema/v1.ts`
+   and `validate.ts`.
+6. **Done, 2026-08-27.** Wired `getArchetypeELM`/`classifyWithELM` into `runClassificationsPhase`,
+   between `analyzeClassifications` and `enrichClassificationsWithLLM`, via `sourcevision-core.ts`
+   (this package's internal gateway pattern) — `classify.ts` itself untouched.
+7. **Done, 2026-08-27, but with a change from the original plan.** Added
+   `sourcevision.classification.elmPrefilter.{enabled,confidenceThreshold}` to `.n-dx.json`.
+   **`enabled` defaults to `false` (opt-in), not `true`** — the residual-risk kill switch this step
+   was meant to provide turned out to be necessary immediately, not just as a hedge: see ADR
+   Evidence, "Zero-evidence population," found via real smoke-testing at this exact step, not a
+   separate eval run.
 8. Write unit tests: score-vector computation against known archetype patterns, threshold gating
-   (never resolves below the configured threshold), cold-start behavior (no-ops correctly with
-   insufficient history when option A / baseline-model path when option C), schema validation for
-   the new `"elm"` source value.
+   (never resolves below the configured threshold), cold-start behavior including the new
+   LLM-example-count gate, schema validation for the new `"elm"` source value, **and a fixture
+   covering the zero-evidence case specifically** (a file with no matched signals must never
+   resolve, regardless of threshold — this is now a required regression guard, not an edge case).
 9. Write an integration test: run `runClassificationsPhase` end-to-end with the ELM stage active on
    a fixture project; assert files it resolves never reach `callClaude`; assert everything below
-   threshold still does, byte-identical to today's behavior for that population.
+   threshold still does, byte-identical to today's behavior for that population; **assert the
+   stage no-ops entirely when `elmPrefilter.enabled` is unset (the new default)**.
 10. Regression check: classification correctness on a fixed corpus (this repo's own `.sourcevision/`
-    data is a reasonable fixture) must not regress relative to algorithmic+LLM-only — this is the
-    test that would catch a silently-wrong high-confidence ELM resolution, the actual failure mode
-    the residual-risk acceptance is exposed to.
+    data is a reasonable fixture) must not regress relative to algorithmic+LLM-only.
 11. `pnpm build && pnpm typecheck && pnpm test` clean across the whole repo, not just sourcevision.
-12. Update the ADR's Status to Accepted, referencing this IMPL. Reply to Knight/Realm acknowledging
-    the cross-verification (Knight's `TJ-K1` confirmation is what unblocks this IMPL existing at
-    all) and pointing at this document.
-13. Open a PR per the org ADR's branch+PR rule — this is real production code, not the docs-only
-    exception used earlier.
+12. Update the ADR's Status once a representation fix for the zero-evidence population is validated
+    — not before. Reply to Knight/Realm with the finding, since it likely affects `TJ-K1`'s
+    composition-vs-extraction open question directly (see Open questions).
+13. Open a PR per the org ADR's branch+PR rule once the above lands — this is real production code,
+    landing opt-in, not the docs-only exception used earlier.
 
 ## Test strategy
 
@@ -210,13 +216,34 @@ Two levels, because this is now real production code, not a side script:
       nothing on the measured metric and buys broader archetype coverage for projects whose first
       run needs the baseline. See ADR Evidence, "Reconciling `TJ-A1`/`TJ-K1`'s divergent extraction
       methods."
-- [ ] **Confidence threshold default:** both `TJ-A1` (t≈0.11-0.17) and `TJ-K1` (t=0.15) cleared the
-      gate in a similar range on the same held-out set, but this was tuned by eyeballing a
-      precision/coverage curve on one dataset, not a principled default. Ship a conservative
-      (higher) default than the eval-optimal point, given the residual generalization risk?
-- [ ] **Per-archetype vs. global threshold** — flagged in both prototypes' IMPLs, still unmeasured;
-      the held-out sets are too small (47-78 examples across 6 archetypes) to break down reliably.
-      Worth revisiting once real production usage accumulates a larger sample.
+- [x] **Confidence threshold default — resolved 2026-08-24 by
+      `ADR-2026-08-24-realm-elm-primary-classifier-pivot.md`.** Ship the coverage-favoring end of
+      the verified range (t≈0.11–0.15), not the conservative/high end this question was leaning
+      toward — the ELM is now the primary resolver for the hard-case population, not a narrow
+      pre-filter, and Realm's independent reproduction of both `TJ-A1` and `TJ-K1`'s actual
+      committed eval scripts (2026-08-24, third independent confirmation) is treated as sufficient
+      to lean on the result rather than hedge against it further. The `.n-dx.json` kill switch
+      (step 7) is what the residual single-held-out-codebase risk now depends on operationally —
+      see that ADR's Consequences section. Step 7 should wire this default in when implemented.
+- [ ] **Per-archetype vs. global threshold** — now secondary to the zero-evidence finding below; no
+      threshold, global or per-archetype, helps a population with no per-file signal to threshold
+      on. Revisit only after a representation fix is validated.
 - [ ] **The evidence-leakage schema-gap ADR** (Realm's review, still unwritten) — independent of
       this IMPL, but touches the same `classifications.json` shape. Should it land before or after
       this ships?
+- [ ] **New, 2026-08-27 — the actual blocker now: what feature representation works on
+      zero-evidence files?** See ADR Evidence, "Zero-evidence population" — 100% of the real target
+      population has an all-zero numeric vector under the current representation. Candidates, none
+      measured yet: (a) Knight's `TJ-K1` composition (evidence vector concatenated with a
+      path-only encoded vector) — path text is never empty, worth trying first since it already
+      exists in a validated form, just not validated *for this specific population*; (b) some other
+      numeric encoding of the path/filename itself, avoiding a return to the measurably-worse
+      tokenized-text approach wholesale; (c) accept that this population is fundamentally
+      LLM-only territory and scope the ELM pre-filter to a narrower, honestly-described role
+      (resolving files with *weak-but-nonzero* signal, not all algorithmic-pass failures). Needs a
+      real measurement against zero-evidence files specifically before any of these gets chosen —
+      not another measurement against the same easier held-out population every prior eval used.
+- [ ] **`elmPrefilter.enabled` defaults to `false` now — when, if ever, does that flip?** Not
+      before a fix from the question above is validated against the zero-evidence population
+      specifically. Flagging so a future session doesn't flip the default back to `true` on the
+      strength of the pre-2026-08-27 numbers alone.

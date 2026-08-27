@@ -377,3 +377,68 @@ categories the 2-codebase baseline has zero examples for, which matters for what
 cold-start model would need to cover even though it doesn't move this specific metric. This
 directly informs `IMPL-2026-08-23-jarrett-classify-elm-production-hardening.md`'s open question
 about what the bundled baseline model (if the hybrid lifecycle design is adopted) should train on.
+
+### Zero-evidence population (2026-08-27) — every prior validation measured the wrong population
+
+Production wiring landed (`IMPL-2026-08-23`'s steps 4-7: model lifecycle, schema, wiring, config
+kill switch) and was smoke-tested against this repo's actual `ndx analyze --phase=3` run — not
+another eval-script invocation, the real `runClassificationsPhase` code path. Two things surfaced
+that no prior eval caught, because every prior eval measured the wrong population.
+
+**First (real, but not the main finding): the coverage-favoring 0.11 threshold cliffs to zero on a
+purely-algorithmic training set.** Training fresh on this repo's own 423 algorithmic-only examples
+(no `source: "llm"` yet — a real, plausible state for a project that hasn't had a non-`--fast` run
+finish LLM enrichment yet) produces a confidence distribution that clusters around ~0.21 on
+training data but ~0.10-0.11 on the genuinely novel unclassified population — a cliff, not a curve:
+0% resolved at t=0.10, effectively all-or-nothing at t=0.11. The validated 0.11-0.15 default was
+calibrated against a training set that included 94 `source: "llm"` examples; it doesn't transfer to
+algorithmic-only training. Fixed by requiring a minimum count of `source: "llm"` examples
+specifically (not just any-source volume) before attempting fresh training —
+`hasEnoughHistoryForFreshTraining` — falling back to the bundled baseline otherwise.
+
+**Second, and decisive: the bundled baseline model showed the identical cliff pattern on this
+repo's unclassified population — which led to checking why, and finding a feature-representation
+gap, not a calibration one.** Direct inspection: **100% of unclassified files, in every one of the
+5 gathered corpora with zero exception, have no evidence signal at all** —
+`classifyFile`'s algorithmic pass matched literally nothing for them, meaning their per-archetype
+score vector is identically all-zero. An all-zero input vector is indistinguishable from every
+other all-zero input vector to the ELM — it produces the exact same prediction and confidence for
+every one of these files, regardless of what the file actually is, and no confidence threshold can
+fix that because the model has no per-file signal to threshold on in the first place.
+
+| Codebase | Unclassified | Zero-evidence |
+|---|---|---|
+| n-dx (this repo) | 260 | 260 (100%) |
+| `AsterMind-Community-Edition` | 83 | 83 (100%) |
+| `express` | 17 | 17 (100%) |
+| `indie-stack` | 12 | 12 (100%) |
+| `zustand` | 10 | 10 (100%) |
+
+**Why every prior measurement in this document missed this:** every held-out set used so far —
+this repo's own internal split, `AsterMind-Community-Edition`'s held-out examples, the pooled
+corpora — was drawn from files that already carried a resolvable label (algorithmic ≥
+`PRIMARY_THRESHOLD` or LLM-resolved), which by construction excludes the true zero-signal
+population. The 100%@59.0% coverage result is real, but it measures "can the ELM predict labels for
+files that have *some* archetype signal," not "can it help with the files
+`enrichClassificationsWithLLM` is actually called for" — those are, by definition, the files the
+algorithmic pass found zero signal for at all. `classifyFile`'s signal weights (0.4-0.9 per match)
+mean a single matched signal usually already clears `PRIMARY_THRESHOLD` (0.4) on its own — there's
+essentially no real "partial signal, still unresolved" middle ground in this archetype catalog's
+current design, which is exactly why the zero-evidence rate is 100% and not, say, 60%.
+
+**This does not mean the pure-numeric-evidence representation was a wrong choice for what it was
+tested on** — it's still the right choice for disambiguating between files that have competing
+partial signals. It means the representation is *incomplete* for the specific population this
+pre-filter exists to help. Knight's `TJ-K1` composition (evidence vector concatenated with a
+path-only encoded vector, not pure evidence) would not degenerate to an all-zero vector for these
+files, since path text is never empty — worth revisiting as the likely direction for a real fix,
+rather than reopening the pure-vs-concatenated composition question that was previously left
+unresolved as "not yet isolated" (see 2026-08-24 entry above).
+
+**Action taken:** `sourcevision.classification.elmPrefilter.enabled` defaults to `false` (opt-in)
+as of this commit — shipping this stage enabled by default, when it provides no benefit
+whatsoever on the exact population it's meant to serve, would be shipping a false sense of safety.
+The wiring, schema, model lifecycle, and config surface are real and correct; what's not yet
+validated is a feature representation that works on zero-evidence files specifically. Per this
+project's own doctrine, a negative/limiting result gets the same rigor as a positive one — this is
+that report, not a footnote.
