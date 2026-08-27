@@ -341,6 +341,13 @@ export function classifyWithELM(
   for (const fc of classifications.files) {
     if (fc.archetype !== null || fc.source !== "algorithmic") continue;
     const vector = evidenceToVector(evidenceByPath.get(fc.path), archetypeIndex);
+    // Zero-evidence guard (found 2026-08-27, see ADR "Zero-evidence population"): a file
+    // with no matched algorithmic signal at all has an all-zero vector, which the ELM can't
+    // discriminate on — any prediction it makes reflects the training set's class prior, not
+    // this file's content. Skip unconditionally, independent of confidenceThreshold, so a
+    // future low/zero threshold override can't turn "no signal" into a false-confidence
+    // resolution.
+    if (!vector.some((v) => v > 0)) continue;
     const prediction = predictArchetypeNumeric(trained, vector);
     if (prediction.confidence < confidenceThreshold) continue;
     if (!trainedCategorySet.has(prediction.archetype)) continue; // defensive — shouldn't happen
