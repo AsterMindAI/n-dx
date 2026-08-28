@@ -16,8 +16,13 @@
  *      Flattening hard. The last 48 rows bought 0.8 pp. More corpus alone will
  *      not close an 18 pp gap to the LLM.
  *
- *   3. CLASS MERGE   see below — service+utility are 74% of mass and mutually
- *      confusable; merging them bounds how much of the error is that boundary.
+ *   3. CLASS MERGE   13 classes 53.8%  ->  merged 80.6%  (+26.8 pp)
+ *      Almost all remaining error is the service/utility boundary.
+ *
+ *   4. CAPACITY      256 52.1% -> 512 56.4% -> 1024 64.1% -> 2048 63.7% -> 4096 64.1%
+ *      PLATEAUS AT 1024. Worth +12 pp over the arbitrary 256 the K2 model used,
+ *      and nothing beyond. Use 1024; do not sweep capacity again.
+ *      Merged + capacity: 256 80.3% -> 1024 83.0% -> 2048 83.6%.
  *
  * Usage: node scripts/elm-diagnostics.mjs
  */

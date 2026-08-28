@@ -40,9 +40,10 @@ The single biggest risk to this work is not the model; it is producing a number 
 The K2 model used `hiddenUnits: 256`, arbitrary and never tuned. Capacity is worth **+12 pp** from
 256→1024 and had not plateaued.
 
-- [ ] **Capacity sweep to plateau** — 256 / 512 / 1024 / 2048 / 4096. Note the ELM solve is roughly
-      cubic in hidden units; 4096 is minutes, not seconds. Record wall time, because a tier that
-      takes longer than the LLM call it replaces has no purpose.
+- [x] **Capacity sweep — DONE 2026-08-28. It plateaus at 1024.**
+      `256 → 52.1% · 512 → 56.4% · 1024 → 64.1% · 2048 → 63.7% · 4096 → 64.1%`
+      **Use `hiddenUnits: 1024`.** Worth **+12 pp** over the arbitrary 256 the K2 model used, and
+      nothing beyond it — 4096 costs minutes of CPU for zero gain. **Do not sweep capacity again.**
 - [ ] **Architecture sweep** — the library ships ~40 variants. Test at minimum `KernelELM`
       (with `KELMMode: 'nystrom'` and seeded landmarks, so cost stays sub-quadratic),
       `ConfidenceClassifierELM` (native confidence + `evaluate`), and `VotingClassifierELM`.
@@ -55,6 +56,35 @@ The K2 model used `hiddenUnits: 256`, arbitrary and never tuned. Capacity is wor
 
 **Gate:** if CV plateaus below the LLM's level with nothing left to tune, stop and report. That is
 the "nothing further to tune" abandon condition from the ADR.
+
+### ⚠️ The structural ceiling nobody has named yet
+
+**The ELM is trained on the LLM's labels, and the LLM is 72.3% correct.** A model that perfectly
+imitated its teacher would score exactly 72.3% against truth — so **S1 ("beat the LLM") asks the
+model to be better than the only thing it has ever been shown.**
+
+That is not impossible: the human path-ceiling is **85.4%**, so there is real signal the LLM is
+failing to capture, and a regularised model *can* exceed a noisy teacher by averaging out **random**
+label noise. But it cannot beat **systematic** teacher error — if the LLM consistently mislabels a
+pattern, the ELM learns that mislabelling as the truth.
+
+**Are the LLM's errors random or systematic? — ANSWERED 2026-08-28, and the answer is favourable.**
+Against the dev gold set the LLM makes **23/83 errors (27.7%)**, and on the boundary that matters
+they are **almost perfectly symmetric**:
+
+```
+truth utility -> LLM said service    5
+truth service -> LLM said utility    6      (the rest are scattered singletons)
+```
+
+**No directional bias.** That is the signature of *random* label noise rather than a systematic
+mislabelling rule — and random noise is exactly what a regularised model can average out. **So S1
+is reachable in principle**: the ELM can exceed a noisy teacher when the teacher's errors do not
+point one way, and the 85.4% human ceiling says there is real signal left to capture.
+
+This is the main reason I now think the tier is worth building rather than merely worth trying.
+**It is also fragile evidence — n=11 on the boundary** — so treat it as encouraging, not settled,
+and re-check it on gold set #2.
 
 ## Phase 2 — Evaluate on the dev gold set
 
