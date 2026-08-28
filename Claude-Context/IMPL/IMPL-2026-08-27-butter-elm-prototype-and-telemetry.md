@@ -75,12 +75,33 @@ rejected the registered-vendor route.
 
 ### 1.4 `train-eval.mjs` — the harness, which reports and decides nothing
 
-Reads Jam's committed corpus (`train` 241 / `heldOut`), trains, predicts, and prints. Uses the
-library's **`Evaluation` module rather than hand-rolled accuracy** — it returns `confusionMatrix`,
-per-class precision/recall/F1/support, macro/micro/weighted averages, `logLoss` and `topKAccuracy`.
+Reads Jam's committed corpus (`train` 241 / `heldOut` 83), trains, predicts, and prints.
 
-It **must print the 38.0% majority-class baseline next to any accuracy it prints**, and label the
-figure **agreement-with-teacher**, never *accuracy* — the teacher is what `TN-J10` is about.
+> **Corrected 2026-08-27 before writing any code — there is no `Evaluation` module.** Both this IMPL
+> and [`IMPL-2026-08-13-jam-elm-classification-build.md`](IMPL-2026-08-13-jam-elm-classification-build.md)
+> § Step 3 told the reader to *"use the library's `Evaluation` module"*. **That export does not
+> exist.** Verified against the installed `@astermind/astermind-community@3.0.0` (160 exports):
+>
+> | Actually exported | Signature |
+> |---|---|
+> | `evaluateClassification` | `(yTrue, yPred, opts?) → report` — builds the confusion matrix, per-class P/R/F1, accuracy and averages |
+> | `formatClassificationReport` | `(report) → string` |
+> | `confusionMatrixFromIndices` | `(yTrueIdx, yPredIdx, C)` |
+> | `topKAccuracy` | `(…)` |
+>
+> **The capability claim was right; only the shape was wrong.** The library genuinely does the
+> confusion matrix and per-class metrics, so "do not hand-roll accuracy" still stands — call
+> `evaluateClassification` and `formatClassificationReport`.
+
+Use `evaluateClassification` + `formatClassificationReport`. **Do not hand-roll accuracy.**
+
+It **must compute and print the majority-class baseline next to any accuracy it prints.** Note the
+baseline is **not stored in the corpus** — `stats.distribution` holds counts, and the majority share
+is derived: `service` 123 / 324 = **38.0%**. Compute it from the corpus actually loaded rather than
+hardcoding 38.0%, so it stays correct when the corpus changes.
+
+Label the figure **agreement-with-teacher**, never *accuracy* — the teacher is what `TN-J10` is
+about.
 
 **It prints no verdict.** No pass/fail, no "clears the bar". Jam sets the bar and reads the matrix.
 

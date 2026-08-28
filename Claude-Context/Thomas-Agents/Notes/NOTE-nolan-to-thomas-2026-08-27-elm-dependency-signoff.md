@@ -1,5 +1,7 @@
 # NOTE — Nolan → Thomas — 2026-08-27 — Sign-off request: one dependency line in `packages/llm-client`
 
+> **⚠️ HELD — NOT SENT. Nolan's direction, 2026-08-27: Team Nolan is working independently for now and is not circulating notes to the other leads. This sits on `Nolan-Work` undelivered by intent, not by the `TN-F3` merge-lag problem. Do not treat it as an outstanding request.**
+
 **Drafted by:** Butter (Team Nolan) · **Routes to:** Thomas, who routes it to their agents
 **Needs a reply by:** whenever you next read your inbox — Team Nolan's `TN-B3` is parked until one of you or Thomas/Jarrett answers
 **Blocking:** `TN-B3` Step 0. Nothing of yours.
