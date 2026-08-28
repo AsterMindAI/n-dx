@@ -35,6 +35,101 @@ The single biggest risk to this work is not the model; it is producing a number 
 - **`assertHarnessCanLearn()` runs before any number is reported.** It exists because string labels
   silently trained nothing and produced `VERDICT: NOT VIABLE` at 2.4%.
 
+## Phase 1 pre-registration — fixed 2026-08-28 by K2, BEFORE any sweep ran
+
+> Handbook § 6.1: *write the threshold, commit it, then run.* This section was committed in its
+> own commit before `scripts/elm-architecture-sweep.mjs` existed. **It is a record, not a knob** —
+> the same status as the `f3205143` bar in `elm-feasibility-screen.mjs`. If a number below is
+> edited after a run, the run is void.
+
+**Incumbent (the thing to beat).** `ELM { hiddenUnits: 1024, activation: "relu", ridgeLambda: 1e-2 }`
+over bag-of-path-token TF-IDF, vocabulary cap **4000**, explicit one-hot `Y`.
+
+> ⚠️ **Vocabulary cap is an uncontrolled difference in the existing scripts and is being pinned
+> here.** `elm-diagnostics.mjs` fits TF-IDF at **4000** and is the source of the 64.1% capacity
+> figure; `elm-feasibility-screen.mjs` and `elm-k2-analysis.mjs` fit at **2000**. Nothing recorded
+> that they differ. The incumbent is pinned to **4000** so it reproduces the number it inherits,
+> and the cap is swept as a declared configuration rather than left to drift.
+
+**Metric.** 5-fold CV accuracy against **LLM labels on the 241-row TRAIN split only**. The 83-row
+held-out split and gold set #1 are **not inputs to selection** and are not read by the sweep.
+
+**Sampling.** 9 paired runs per configuration: 3 fold-seeds `{7, 13, 29}` × 3 model seeds
+`{101, 202, 303}`. Every configuration sees the **identical** 9 pairs and identical fold
+assignments, so comparisons are paired rather than independent. `seed` is passed explicitly on
+every model (it defaults to `1337`, which is how "7 independent models" once turned out to be one
+model seven times).
+
+> This also fixes a real defect in `elm-diagnostics.mjs`: its `seed` argument shuffles the **folds**
+> but the ELM is constructed with a hard-coded `seed: 42` on every call, so the weight draw was
+> never varied at all. Every capacity number in that script is a 1-sample estimate of model
+> randomness. That does not invalidate the capacity conclusion — a 12 pp effect survives it — but
+> it is why the margin below is set where it is.
+
+**Adoption rule.** A challenger replaces the incumbent only if **both** hold:
+
+- **(a)** mean CV ≥ incumbent mean **+ 1.5 pp**, and
+- **(b)** the challenger wins on **≥ 7 of the 9** paired runs.
+
+Ties, near-misses and one-legged wins keep the incumbent. Rationale for the margin: the incumbent is
+already characterised, seed-to-seed spread on held-out is ~16 pp, and at n=9 a sub-1.5 pp mean
+difference is not distinguishable from noise. **(b) is a sign test** — it exists so a single lucky
+fold cannot carry a mean.
+
+**Configuration set — fixed now, and closed.** Nothing may be added to this list after the first
+run; a config that occurs to me later goes in a follow-up with its own pre-registration.
+
+1. **Incumbent** — `ELM` 1024 / relu / `ridgeLambda` 1e-2 / vocab 4000.
+2. **`ridgeLambda`** ∈ `{1e-4, 1e-3, 1e-2, 1e-1, 1e0}` at 1024 units. *(Never swept. 1688 features
+   on 241 rows is heavily over-parameterised, so this is the sweep with the best prior.)*
+3. **Activation** ∈ `{relu, tanh, gelu}` at 1024 units. *(Declared here rather than added later.)*
+4. **Vocabulary cap** ∈ `{1000, 2000, 4000}`. *(Pinning the drift noted above.)*
+5. **`KernelELM`** — `kernel` ∈ `{rbf, linear}`, `mode: "nystrom"` with seeded landmarks
+   (`strategy: "kmeans++"`, `m` ∈ `{64, 128}`), `ridgeLambda` ∈ `{1e-3, 1e-2, 1e-1}`.
+   Also one `mode: "exact"` rbf run — N=193 per fold makes the exact solve affordable, and it
+   bounds what the Nyström approximation costs.
+6. **`VotingClassifierELM`** over 5 seeded `ELM` 1024 base models.
+
+**`ConfidenceClassifierELM` is deliberately NOT in this list, and that is a finding, not an
+omission.** It is not an archetype classifier — it is a binary `low`/`high` head over
+`(embedding, meta)` that predicts *whether an upstream model's prediction is trustworthy*
+(`ConfidenceClassifierELM.d.ts`). Sweeping it here would measure a 2-class problem and compare it
+to a 13-class one. It belongs in Phase 2 as a **learned gate** on top of whatever wins here, and it
+is carried forward there rather than dropped.
+
+**Phase-1 close condition.** If no challenger clears (a)+(b), Phase 1 closes with the finding
+*"architecture and regularisation are not levers either"* — joining features and corpus size — and
+the incumbent is frozen for Phase 2. That is a result and gets published as one.
+
+## Phase 2 pre-registration — operating point (DEV only)
+
+Fixed at the same commit, for the same reason: the operating-point search is where a bar gets
+rationalised if it is chosen after seeing the table.
+
+**Everything in Phase 2 is DEV.** Gold set #1's labels are known. No figure from it is a result.
+
+**Candidate designs — fixed now, and closed:**
+
+| | Design |
+|---|---|
+| **B** | **Abstention, as adopted.** Answer only when the predicted class ∉ {`service`, `utility`}. |
+| **B+g** | Abstention **and** a percentile confidence gate on top of it. |
+| **B+su** | Abstention **plus** the top-`q` most confident `service`/`utility` predictions. *(The handbook's own suggestion for closing the gap — it is the only candidate that can raise coverage.)* |
+| **g** | Percentile confidence gate alone, no abstention. *(The `TN-J19` design, re-measured against truth rather than against the teacher.)* |
+
+**Reporting rule.** Every cell reports multi-seed **mean and full range**. A cell whose range
+straddles the LLM-vs-truth bar is reported as **straddling** and is never called a pass — that is
+the error the adopted design's own 68.2–81.3% range already contains.
+
+**Selection rule.** A candidate operating point must satisfy both:
+
+- precision-vs-truth **mean** ≥ LLM-vs-truth on the same files, and
+- coverage at or above the smallest coverage that **crosses a batch boundary** on n-dx
+  (`ceil(n/30)`, 255 files, 9 batches — so the first boundary above the adopted design's 22.9% is
+  **29.41%**, which is what "3 of 9" actually costs).
+
+Anything meeting the first and missing the second is exactly the K1 problem and goes to `TN-J25`.
+
 ## Phase 1 — Find the model (train-CV only, no gold)
 
 The K2 model used `hiddenUnits: 256`, arbitrary and never tuned. Capacity is worth **+12 pp** from
