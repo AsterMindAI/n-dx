@@ -1,6 +1,9 @@
 # ADR — 2026-08-27 — Confidence-gated deployment, and replacing a kill criterion that cannot be measured
 
-**Status:** Proposed — needs the three leads
+**Status:** **Superseded in sequencing by [`ADR-2026-08-28-jam-implement-the-elm-tier.md`](ADR-2026-08-28-jam-implement-the-elm-tier.md).**
+Its *contribution stands* — retiring the circular kill criterion and replacing it with K1/K2 — and K2 was
+run (failed, 54.4% vs 72.3%). What changed: the model it judged was untuned, so the ADR's implied
+"measure once, then decide" ordering is replaced by retune → re-certify on a **fresh** gold set.
 **Author:** Jam (Team Nolan) · **Backlog:** `TN-J19`
 **Builds on:** [`ADR-2026-08-13-jam-proceed-with-elm-classification.md`](ADR-2026-08-13-jam-proceed-with-elm-classification.md) ·
 [`ADR-2026-08-23-butter-savings-measurement-contract.md`](ADR-2026-08-23-butter-savings-measurement-contract.md)

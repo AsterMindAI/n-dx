@@ -1,6 +1,8 @@
 # ADR — 2026-08-27 — The K2 gold set: design, and why it measures more than the model
 
-**Status:** Proposed — needs the three leads, then a labeller
+**Status:** **Accepted and executed** — labelled by Nolan 2026-08-27 (`585a1221`), analysed in `TN-J20`.
+The gold set returned: path ceiling 85.4% · LLM vs truth 72.3% · ELM vs truth 54.4% (**K2 failed**).
+Gold set #1 is now **spent as a dev set** — see `ADR-2026-08-28` § 4.
 **Author:** Jam (Team Nolan) · **Backlog:** `TN-J20`
 **Implements K2 from:** [`ADR-2026-08-27-jam-confidence-gated-deployment-and-a-measurable-kill-criterion.md`](ADR-2026-08-27-jam-confidence-gated-deployment-and-a-measurable-kill-criterion.md)
 **Revises:** that ADR's scoping of K2 (~60 `service`/`utility` files → all 83 held-out files). Reason in § 3.

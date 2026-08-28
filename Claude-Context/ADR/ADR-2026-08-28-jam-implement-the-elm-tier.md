@@ -30,7 +30,7 @@ training split against LLM labels, **gold set untouched**):
 
 | Lever | Result | Read |
 |---|---|---|
-| **Capacity** | 64 → **46.7%** · 256 → **52.1%** · 512 → **56.4%** · 1024 → **64.1%** | **+12 pp from 256→1024, still climbing.** The single parameter nobody tuned. |
+| **Capacity** | 64 → **46.7%** · 256 → **52.1%** · 512 → **56.4%** · 1024 → **64.1%** · 2048 → 63.7% · 4096 → **64.1%** | **+12 pp from 256→1024, then a hard plateau.** *(Corrected 2026-08-28: an earlier revision said "still climbing" — that was true only because 1024 was the largest value tested at the time. **Use 1024; capacity is settled.**)* |
 | **Merging `service`/`utility`** | 13 classes **53.8%** → merged **80.6%** | **+26.8 pp.** Almost all remaining error is that one boundary. |
 | Feature engineering | bag-of-tokens **53.8%** → structure-aware **33.7%** | **−20.1 pp.** Naive positional/bigram encoding fragments a small signal. Not the lever. |
 | More data | 48 → 46.7%, 97 → 50.6%, 145 → 53.0%, 193 → **53.8%** | Flattening; last 48 rows bought **<1 pp**. Not the lever either. |
@@ -56,10 +56,41 @@ ceiling), and the LLM leaves 13.1 pp of that on the table.
 4. **Ship dark first** — compute ELM predictions and log agreement without acting on them, so the
    first production data costs nothing and risks nothing.
 
-**Explicitly deferred, not rejected:** merging `service`/`utility`. It is worth 26.8 pp and is the
-single largest lever, but it changes the *product's* taxonomy for every consumer of
-`classifications.json`, not just this tier. That is a lead decision (`TN-J24`), and the tier must
-work without it.
+**~~Explicitly deferred~~ — `TN-J24` was taken up on the lead's instruction 2026-08-28 and is now
+measured. See § 3a.** Two claims in the sentence that stood here were wrong: it does **not** change
+the taxonomy "for every consumer of `classifications.json`" (**no production code anywhere branches
+on `"service"` or `"utility"`** — the only definition site is `archetypes.ts`, and all 44 other
+references are test assertions), and the 26.8 pp is **not** collectable the way I implied.
+
+## 3a. `TN-J24` resolved — merge the *decision*, not the taxonomy
+
+Taken up on the lead's instruction. Three designs measured; the merge itself is **not** adopted.
+
+**Blast radius, first — I had overstated it.** I wrote that merging "changes the taxonomy for every
+consumer of `classifications.json`". **No production code anywhere branches on `"service"` or
+`"utility"`.** The only definition site is `archetypes.ts`; all 44 other references are test
+assertions, and every downstream surface (MCP, dashboard, `CONTEXT.md`) is data-driven. The merge
+was *cheaper* than I claimed — it just turns out not to be the right move.
+
+| Option | Result | Verdict |
+|---|---|---|
+| **A — merge in the product taxonomy** | +26.8 pp (53.8% → 80.6% CV) | **Rejected.** The gain is real but the resulting class holds **74% of all files**, and a category covering three-quarters of a codebase carries almost no information. It also erases precisely the distinction a user is most likely to want. We would be buying accuracy by deleting the question. |
+| **C — hierarchical: 12-class stage 1, then a `service`-vs-`utility` specialist** | stage 1 83.6% × specialist **67.8%** ⇒ **≈63.7% end-to-end** | **Rejected — measured, gains nothing** against the flat 13-class model at 64.1%. The specialist gets only 67.8% against a 51.4% baseline on 179 rows: the boundary is genuinely hard, not merely under-modelled. |
+| **B — abstention: the ELM answers only when it predicts a NON-`service`/`utility` class** | claims **22.9%** of files at **75.5%** precision vs truth (range 68.2–81.3%), against the LLM's **72.3%** | **ADOPTED.** |
+
+**Why B is the right shape.** The model does not have to answer every question. It is worst exactly
+where the taxonomy is weakest, the teacher is noisiest, and the human rater was least confident — so
+it declines those and routes them to the LLM unchanged. **The 26.8 pp from merging is real but
+uncollectable as accuracy; its actual use is as a *routing signal*.**
+
+**⚠️ Two honest caveats, both binding:**
+
+1. **B satisfies S1 but FAILS S2.** It avoids **2 of 9** calls; S2 requires ≥3. The design works and
+   does not clear its own value bar. Either the operating point improves in Phase 1, or S2 gets
+   revisited by the leads with this number in hand — it is not mine to relax.
+2. **These are DEV numbers** from gold set #1, whose labels I have read, and the precision range
+   (68.2–81.3%) **straddles the 72.3% bar**. On ~19 files per seed. It is a promising signal, not a
+   certification, and Phase 3 on a fresh gold set is what would make it real.
 
 ## 4. The methodology constraint that costs money
 
@@ -102,7 +133,8 @@ tune), or S1 fails on gold set #2, or the leads decline the second gold set.
 ## 7. Open questions for the leads
 
 1. **Fund a second gold set?** Without it, § 4 says we cannot certify and should not ship.
-2. **May `service`/`utility` be merged in the product taxonomy?** Worth 26.8 pp, affects every
-   consumer of `classifications.json`. Deferred as `TN-J24`.
+2. ~~May `service`/`utility` be merged?~~ **Answered in § 3a — no, and it is not needed.** The
+   replacement question is narrower: **is S2 (≥3 of 9 calls) still the right value?** The adopted
+   design delivers 2. That is a lead call, not mine to relax.
 3. **Is a dark run acceptable before a gated run?** It costs nothing and de-risks S3, but it does
    mean shipping code that computes and discards a prediction.

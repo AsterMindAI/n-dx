@@ -1,6 +1,10 @@
 # ADR — 2026-08-23 — Constrain the agent harness on classification calls, before building the ELM
 
-**Status:** Proposed — needs the three leads
+**Status:** **Closed — not pursued.** Butter measured `num_turns = 1` on a real classify call, so
+there is no agent loop to remove; the overhead is the CLI loading its own harness per invocation,
+inherent to using the CLI as a completion backend. Rescoped as a **provisioning** question (use an
+API key), not engineering. The one consequence that survives and still binds every published figure:
+**an avoided call is worth ~53k–268k tokens on the CLI but only ~2.7k–13.7k on the API — ~20x.**
 **Author:** Jam (Team Nolan) · **Backlog:** `TN-J17` (Path B side of Butter's `TN-B2`)
 **Supersedes:** nothing. **Amends:** the sequencing assumed by
 [`ADR-2026-08-13-jam-proceed-with-elm-classification.md`](ADR-2026-08-13-jam-proceed-with-elm-classification.md).
