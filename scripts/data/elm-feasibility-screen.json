@@ -1,0 +1,697 @@
+{
+  "schema": "elm-feasibility-screen/v1",
+  "generatedAt": "2026-08-28T01:14:40.175Z",
+  "preRegisteredBar": {
+    "proceed": 0.55,
+    "notViable": 0.45,
+    "committedAt": "f3205143",
+    "note": "Fixed before any model was run."
+  },
+  "corpusProvenance": {
+    "sources": [
+      "llm"
+    ],
+    "seed": 42,
+    "holdout": 0.25,
+    "repos": [
+      {
+        "repo": "n-dx-1",
+        "path": "/Users/nolanmoore/n-dx-1",
+        "git": {
+          "commit": "b8770042cb333334d864cca116c1c5e4189248ad",
+          "branch": "nolan-work",
+          "remote": "https://github.com/AsterMindAI/n-dx.git",
+          "dirty": true
+        },
+        "totalFiles": 683,
+        "classified": 683,
+        "unclassified": 0,
+        "harvested": 255
+      },
+      {
+        "repo": "AsterMind-Community-Edition",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/AsterMind-Community-Edition",
+        "git": {
+          "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+          "branch": "main",
+          "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git",
+          "dirty": true
+        },
+        "totalFiles": 114,
+        "classified": 114,
+        "unclassified": 0,
+        "harvested": 69
+      }
+    ]
+  },
+  "method": {
+    "feature": "path string only; library tokenize() + TF-IDF fitted on TRAIN ONLY",
+    "metric": "agreement-with-teacher — NOT accuracy; teacher is known inconsistent (TN-J10)",
+    "repeats": 7,
+    "hiddenUnits": 256,
+    "featureDim": 1688
+  },
+  "baselines": {
+    "heldOutMajority": 0.37349397590361444
+  },
+  "result": {
+    "meanAgreement": 0.5989672977624786,
+    "range": [
+      0.5180722891566265,
+      0.6746987951807228
+    ],
+    "verdict": "PROCEED — mapping is learnable; TN-J10 now binds"
+  },
+  "runs": [
+    {
+      "agreement": 0.6024096385542169,
+      "perClass": {
+        "cli-command": {
+          "support": 2,
+          "precision": 1,
+          "recall": 0.5,
+          "f1": 0.6666666666666666
+        },
+        "config": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "entrypoint": {
+          "support": 7,
+          "precision": 1,
+          "recall": 0.7142857142857143,
+          "f1": 0.8333333333333333
+        },
+        "gateway": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "hook": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "middleware": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "route-handler": {
+          "support": 2,
+          "precision": 0.6666666666666666,
+          "recall": 1,
+          "f1": 0.8
+        },
+        "schema": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "service": {
+          "support": 31,
+          "precision": 0.625,
+          "recall": 0.6451612903225806,
+          "f1": 0.634920634920635
+        },
+        "store": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "test-helper": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "types": {
+          "support": 6,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        },
+        "utility": {
+          "support": 29,
+          "precision": 0.5,
+          "recall": 0.6896551724137931,
+          "f1": 0.5797101449275363
+        }
+      },
+      "serviceUtility": {
+        "su": 11,
+        "us": 8,
+        "ss": 20,
+        "uu": 20
+      },
+      "meanConfidence": 0.1273231191678587
+    },
+    {
+      "agreement": 0.5180722891566265,
+      "perClass": {
+        "cli-command": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "config": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "entrypoint": {
+          "support": 7,
+          "precision": 0.75,
+          "recall": 0.42857142857142855,
+          "f1": 0.5454545454545454
+        },
+        "gateway": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "hook": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "middleware": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "route-handler": {
+          "support": 2,
+          "precision": 0.6666666666666666,
+          "recall": 1,
+          "f1": 0.8
+        },
+        "schema": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "service": {
+          "support": 31,
+          "precision": 0.5833333333333334,
+          "recall": 0.6774193548387096,
+          "f1": 0.626865671641791
+        },
+        "store": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "test-helper": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "types": {
+          "support": 6,
+          "precision": 0.25,
+          "recall": 0.16666666666666666,
+          "f1": 0.2
+        },
+        "utility": {
+          "support": 29,
+          "precision": 0.4444444444444444,
+          "recall": 0.5517241379310345,
+          "f1": 0.4923076923076923
+        }
+      },
+      "serviceUtility": {
+        "su": 9,
+        "us": 12,
+        "ss": 21,
+        "uu": 16
+      },
+      "meanConfidence": 0.12847860482095144
+    },
+    {
+      "agreement": 0.6385542168674698,
+      "perClass": {
+        "cli-command": {
+          "support": 2,
+          "precision": 1,
+          "recall": 0.5,
+          "f1": 0.6666666666666666
+        },
+        "config": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "entrypoint": {
+          "support": 7,
+          "precision": 1,
+          "recall": 0.7142857142857143,
+          "f1": 0.8333333333333333
+        },
+        "gateway": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "hook": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "middleware": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "route-handler": {
+          "support": 2,
+          "precision": 0.6666666666666666,
+          "recall": 1,
+          "f1": 0.8
+        },
+        "schema": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "service": {
+          "support": 31,
+          "precision": 0.5897435897435898,
+          "recall": 0.7419354838709677,
+          "f1": 0.6571428571428573
+        },
+        "store": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "test-helper": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "types": {
+          "support": 6,
+          "precision": 1,
+          "recall": 0.5,
+          "f1": 0.6666666666666666
+        },
+        "utility": {
+          "support": 29,
+          "precision": 0.6129032258064516,
+          "recall": 0.6551724137931034,
+          "f1": 0.6333333333333333
+        }
+      },
+      "serviceUtility": {
+        "su": 7,
+        "us": 9,
+        "ss": 23,
+        "uu": 19
+      },
+      "meanConfidence": 0.12404234516065565
+    },
+    {
+      "agreement": 0.5542168674698795,
+      "perClass": {
+        "cli-command": {
+          "support": 2,
+          "precision": 0.5,
+          "recall": 0.5,
+          "f1": 0.5
+        },
+        "config": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "entrypoint": {
+          "support": 7,
+          "precision": 1,
+          "recall": 0.5714285714285714,
+          "f1": 0.7272727272727273
+        },
+        "gateway": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "hook": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "middleware": {
+          "support": 2,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "route-handler": {
+          "support": 2,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "schema": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "service": {
+          "support": 31,
+          "precision": 0.6190476190476191,
+          "recall": 0.41935483870967744,
+          "f1": 0.5
+        },
+        "store": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "test-helper": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "types": {
+          "support": 6,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        },
+        "utility": {
+          "support": 29,
+          "precision": 0.44,
+          "recall": 0.7586206896551724,
+          "f1": 0.5569620253164557
+        }
+      },
+      "serviceUtility": {
+        "su": 18,
+        "us": 6,
+        "ss": 13,
+        "uu": 22
+      },
+      "meanConfidence": 0.13073623884830093
+    },
+    {
+      "agreement": 0.6144578313253012,
+      "perClass": {
+        "cli-command": {
+          "support": 2,
+          "precision": 0.5,
+          "recall": 0.5,
+          "f1": 0.5
+        },
+        "config": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "entrypoint": {
+          "support": 7,
+          "precision": 1,
+          "recall": 0.8571428571428571,
+          "f1": 0.923076923076923
+        },
+        "gateway": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "hook": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "middleware": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "route-handler": {
+          "support": 2,
+          "precision": 0.6666666666666666,
+          "recall": 1,
+          "f1": 0.8
+        },
+        "schema": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "service": {
+          "support": 31,
+          "precision": 0.6451612903225806,
+          "recall": 0.6451612903225806,
+          "f1": 0.6451612903225806
+        },
+        "store": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "test-helper": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "types": {
+          "support": 6,
+          "precision": 0.75,
+          "recall": 0.5,
+          "f1": 0.6
+        },
+        "utility": {
+          "support": 29,
+          "precision": 0.5135135135135135,
+          "recall": 0.6551724137931034,
+          "f1": 0.5757575757575758
+        }
+      },
+      "serviceUtility": {
+        "su": 11,
+        "us": 8,
+        "ss": 20,
+        "uu": 19
+      },
+      "meanConfidence": 0.13475157012298017
+    },
+    {
+      "agreement": 0.5903614457831325,
+      "perClass": {
+        "cli-command": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "config": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "entrypoint": {
+          "support": 7,
+          "precision": 1,
+          "recall": 0.7142857142857143,
+          "f1": 0.8333333333333333
+        },
+        "gateway": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "hook": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "middleware": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "route-handler": {
+          "support": 2,
+          "precision": 0.6666666666666666,
+          "recall": 1,
+          "f1": 0.8
+        },
+        "schema": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "service": {
+          "support": 31,
+          "precision": 0.5681818181818182,
+          "recall": 0.8064516129032258,
+          "f1": 0.6666666666666667
+        },
+        "store": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "test-helper": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "types": {
+          "support": 6,
+          "precision": 1,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        },
+        "utility": {
+          "support": 29,
+          "precision": 0.5357142857142857,
+          "recall": 0.5172413793103449,
+          "f1": 0.5263157894736843
+        }
+      },
+      "serviceUtility": {
+        "su": 5,
+        "us": 13,
+        "ss": 25,
+        "uu": 15
+      },
+      "meanConfidence": 0.1380524613358536
+    },
+    {
+      "agreement": 0.6746987951807228,
+      "perClass": {
+        "cli-command": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "config": {
+          "support": 2,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "entrypoint": {
+          "support": 7,
+          "precision": 0.875,
+          "recall": 1,
+          "f1": 0.9333333333333333
+        },
+        "gateway": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "hook": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "middleware": {
+          "support": 2,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "route-handler": {
+          "support": 2,
+          "precision": 0.6666666666666666,
+          "recall": 1,
+          "f1": 0.8
+        },
+        "schema": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "service": {
+          "support": 31,
+          "precision": 0.6410256410256411,
+          "recall": 0.8064516129032258,
+          "f1": 0.7142857142857142
+        },
+        "store": {
+          "support": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "test-helper": {
+          "support": 0,
+          "precision": 0,
+          "recall": 0,
+          "f1": 0
+        },
+        "types": {
+          "support": 6,
+          "precision": 1,
+          "recall": 0.5,
+          "f1": 0.6666666666666666
+        },
+        "utility": {
+          "support": 29,
+          "precision": 0.6071428571428571,
+          "recall": 0.5862068965517241,
+          "f1": 0.5964912280701754
+        }
+      },
+      "serviceUtility": {
+        "su": 5,
+        "us": 11,
+        "ss": 25,
+        "uu": 17
+      },
+      "meanConfidence": 0.12527763740239428
+    }
+  ]
+}
