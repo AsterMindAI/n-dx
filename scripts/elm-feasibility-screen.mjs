@@ -149,7 +149,8 @@ function main() {
     elm.trainFromData(Xtr, Ytr); // one-hot, NOT strings — see the trap note above
     const pred = Xho.map((v) => elm.predictFromVector([v], 1)[0][0].label);
     const conf = Xho.map((v) => elm.predictFromVector([v], 1)[0][0].prob);
-    runs.push({ ...score(truth, pred, labels), meanConfidence: conf.reduce((a, b) => a + b, 0) / conf.length });
+    const pairs = pred.map((p, j) => ({ conf: conf[j], correct: p === truth[j] }));
+    runs.push({ ...score(truth, pred, labels), meanConfidence: conf.reduce((a, b) => a + b, 0) / conf.length, pairs });
     process.stdout.write(`    run ${i + 1}: ${(runs[i].agreement * 100).toFixed(1)}%\n`);
   }
 
@@ -176,6 +177,36 @@ function main() {
     console.log(`    ${L.padEnd(14)} n=${String(p.support).padStart(2)}  P ${p.precision.toFixed(2)}  R ${p.recall.toFixed(2)}  F1 ${p.f1.toFixed(2)}`);
   }
 
+  // ── POST-HOC, NOT PRE-REGISTERED ─────────────────────────────────────────
+  // Added after seeing the agreement result. It is exploratory reporting, not a
+  // second bar, and no model was tuned against it. Labelled so nobody later
+  // mistakes it for a pre-registered criterion.
+  // ── POST-HOC, NOT PRE-REGISTERED ─────────────────────────────────────────
+  // Added after seeing the agreement result. Exploratory reporting, not a second
+  // bar; no model was tuned against it. Labelled so nobody mistakes it later.
+  //
+  // Thresholds are PERCENTILE, not absolute. Softmax over 13 classes caps the
+  // top probability near 0.25 (observed range 0.087-0.245), so an absolute gate
+  // like ">= 0.5" selects nothing. The first version of this table did exactly
+  // that and reported "(none)" for every row.
+  console.log("\n  ── confidence gate (POST-HOC exploratory, NOT pre-registered) ──");
+  console.log("  Does gating on confidence buy precision, and does the confident subset");
+  console.log("  cross a multiple of LLM_BATCH_SIZE=30 on the real n-dx residue (255 files, 9 batches)?\n");
+  const allPairs = runs.flatMap((r) => r.pairs).sort((a, b) => b.conf - a.conf);
+  const NDX_RESIDUE = 255, NDX_BATCHES = Math.ceil(NDX_RESIDUE / 30);
+  console.log("    coverage  precision   n-dx files gated   batches 9 ->   calls avoided");
+  const gate = [];
+  for (const q of [0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0]) {
+    const k = Math.max(1, Math.round(allPairs.length * q));
+    const sub = allPairs.slice(0, k);
+    const prec = sub.filter((x) => x.correct).length / sub.length;
+    const gated = Math.round(NDX_RESIDUE * q);
+    const left = Math.ceil((NDX_RESIDUE - gated) / 30);
+    gate.push({ coverage: q, precision: prec, ndxFilesGated: gated, batchesAfter: left, callsAvoided: NDX_BATCHES - left });
+    console.log(`    ${(q * 100).toFixed(0).padStart(4)}%     ${(prec * 100).toFixed(1).padStart(5)}%        ${String(gated).padStart(4)}            ${String(left).padStart(2)}            ${NDX_BATCHES - left}`);
+  }
+  console.log(`\n  observed confidence range: ${allPairs[allPairs.length - 1].conf.toFixed(3)} - ${allPairs[0].conf.toFixed(3)} (13-class softmax)`);
+
   writeFileSync(OUT, JSON.stringify({
     schema: "elm-feasibility-screen/v1",
     generatedAt: new Date().toISOString(),
@@ -189,6 +220,7 @@ function main() {
     baselines: { heldOutMajority: majority },
     result: { meanAgreement: mean, range: [lo, hi], verdict },
     runs,
+    confidenceGatePostHoc: gate,
   }, null, 2) + "\n");
   console.log(`\n  wrote ${OUT}`);
 }

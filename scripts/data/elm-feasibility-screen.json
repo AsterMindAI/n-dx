@@ -1,6 +1,6 @@
 {
   "schema": "elm-feasibility-screen/v1",
-  "generatedAt": "2026-08-28T01:14:40.175Z",
+  "generatedAt": "2026-08-28T01:43:53.739Z",
   "preRegisteredBar": {
     "proceed": 0.55,
     "notViable": 0.45,
@@ -151,7 +151,341 @@
         "ss": 20,
         "uu": 20
       },
-      "meanConfidence": 0.1273231191678587
+      "meanConfidence": 0.1273231191678587,
+      "pairs": [
+        {
+          "conf": 0.11589930691004825,
+          "correct": false
+        },
+        {
+          "conf": 0.09844217819362605,
+          "correct": true
+        },
+        {
+          "conf": 0.11737300852936292,
+          "correct": false
+        },
+        {
+          "conf": 0.12360876268273475,
+          "correct": false
+        },
+        {
+          "conf": 0.11291013074523529,
+          "correct": false
+        },
+        {
+          "conf": 0.17872598702822023,
+          "correct": true
+        },
+        {
+          "conf": 0.16109288972533772,
+          "correct": true
+        },
+        {
+          "conf": 0.11709166870266029,
+          "correct": false
+        },
+        {
+          "conf": 0.11796101704464863,
+          "correct": true
+        },
+        {
+          "conf": 0.15254357348486175,
+          "correct": true
+        },
+        {
+          "conf": 0.13175457246961525,
+          "correct": true
+        },
+        {
+          "conf": 0.1068748493762742,
+          "correct": false
+        },
+        {
+          "conf": 0.11526312003039985,
+          "correct": false
+        },
+        {
+          "conf": 0.11935711492991811,
+          "correct": false
+        },
+        {
+          "conf": 0.13317520665719765,
+          "correct": true
+        },
+        {
+          "conf": 0.13317520665719765,
+          "correct": true
+        },
+        {
+          "conf": 0.1558854267717002,
+          "correct": false
+        },
+        {
+          "conf": 0.17523160137409244,
+          "correct": true
+        },
+        {
+          "conf": 0.12584179757027208,
+          "correct": true
+        },
+        {
+          "conf": 0.10396586056696187,
+          "correct": false
+        },
+        {
+          "conf": 0.12584179757027208,
+          "correct": true
+        },
+        {
+          "conf": 0.13541712656587915,
+          "correct": true
+        },
+        {
+          "conf": 0.10824637661309681,
+          "correct": true
+        },
+        {
+          "conf": 0.11007208824500138,
+          "correct": false
+        },
+        {
+          "conf": 0.10198996951276365,
+          "correct": true
+        },
+        {
+          "conf": 0.1331517489564998,
+          "correct": true
+        },
+        {
+          "conf": 0.10479741955191213,
+          "correct": true
+        },
+        {
+          "conf": 0.10769867611011004,
+          "correct": true
+        },
+        {
+          "conf": 0.12779460037794374,
+          "correct": false
+        },
+        {
+          "conf": 0.10879501807671164,
+          "correct": true
+        },
+        {
+          "conf": 0.14004492931163864,
+          "correct": true
+        },
+        {
+          "conf": 0.14004492931163864,
+          "correct": true
+        },
+        {
+          "conf": 0.0981214267540466,
+          "correct": true
+        },
+        {
+          "conf": 0.13630918681527882,
+          "correct": false
+        },
+        {
+          "conf": 0.11045180104954991,
+          "correct": false
+        },
+        {
+          "conf": 0.1331517489564998,
+          "correct": true
+        },
+        {
+          "conf": 0.1331517489564998,
+          "correct": true
+        },
+        {
+          "conf": 0.1024483048287907,
+          "correct": false
+        },
+        {
+          "conf": 0.10720579274878107,
+          "correct": true
+        },
+        {
+          "conf": 0.11972326872948107,
+          "correct": false
+        },
+        {
+          "conf": 0.11635484156639711,
+          "correct": false
+        },
+        {
+          "conf": 0.21039066023697606,
+          "correct": false
+        },
+        {
+          "conf": 0.13578682178793802,
+          "correct": true
+        },
+        {
+          "conf": 0.14235016605298917,
+          "correct": true
+        },
+        {
+          "conf": 0.11351830980064674,
+          "correct": false
+        },
+        {
+          "conf": 0.11464748069949487,
+          "correct": true
+        },
+        {
+          "conf": 0.1331517489564998,
+          "correct": true
+        },
+        {
+          "conf": 0.15042286976866567,
+          "correct": false
+        },
+        {
+          "conf": 0.15820444818371204,
+          "correct": false
+        },
+        {
+          "conf": 0.11286457221840442,
+          "correct": false
+        },
+        {
+          "conf": 0.09866010962390774,
+          "correct": true
+        },
+        {
+          "conf": 0.14536709709905682,
+          "correct": false
+        },
+        {
+          "conf": 0.11731826672861055,
+          "correct": true
+        },
+        {
+          "conf": 0.11793813663162586,
+          "correct": false
+        },
+        {
+          "conf": 0.12954517643304742,
+          "correct": true
+        },
+        {
+          "conf": 0.17007442868374947,
+          "correct": true
+        },
+        {
+          "conf": 0.11701295471673011,
+          "correct": true
+        },
+        {
+          "conf": 0.11227599338349009,
+          "correct": true
+        },
+        {
+          "conf": 0.12101909831830988,
+          "correct": false
+        },
+        {
+          "conf": 0.15129563285097497,
+          "correct": true
+        },
+        {
+          "conf": 0.15129563285097497,
+          "correct": true
+        },
+        {
+          "conf": 0.11599968996945777,
+          "correct": false
+        },
+        {
+          "conf": 0.10699456578548361,
+          "correct": true
+        },
+        {
+          "conf": 0.11617368397818291,
+          "correct": false
+        },
+        {
+          "conf": 0.095043476054408,
+          "correct": true
+        },
+        {
+          "conf": 0.11294831095937825,
+          "correct": false
+        },
+        {
+          "conf": 0.10679824192459318,
+          "correct": false
+        },
+        {
+          "conf": 0.10339908824609337,
+          "correct": false
+        },
+        {
+          "conf": 0.11699005851120822,
+          "correct": false
+        },
+        {
+          "conf": 0.17007442868374947,
+          "correct": true
+        },
+        {
+          "conf": 0.1282796390025495,
+          "correct": true
+        },
+        {
+          "conf": 0.1249569553359619,
+          "correct": true
+        },
+        {
+          "conf": 0.11476531745614266,
+          "correct": true
+        },
+        {
+          "conf": 0.12602296898577536,
+          "correct": true
+        },
+        {
+          "conf": 0.1131533991034245,
+          "correct": false
+        },
+        {
+          "conf": 0.17287881390957796,
+          "correct": true
+        },
+        {
+          "conf": 0.12864547605820656,
+          "correct": true
+        },
+        {
+          "conf": 0.09513964743281768,
+          "correct": true
+        },
+        {
+          "conf": 0.11284987852068505,
+          "correct": false
+        },
+        {
+          "conf": 0.1311281285876431,
+          "correct": true
+        },
+        {
+          "conf": 0.1382185369733265,
+          "correct": true
+        },
+        {
+          "conf": 0.21039066023697606,
+          "correct": true
+        },
+        {
+          "conf": 0.1268422401316641,
+          "correct": true
+        }
+      ]
     },
     {
       "agreement": 0.5180722891566265,
@@ -241,7 +575,341 @@
         "ss": 21,
         "uu": 16
       },
-      "meanConfidence": 0.12847860482095144
+      "meanConfidence": 0.12847860482095144,
+      "pairs": [
+        {
+          "conf": 0.14123863580951695,
+          "correct": false
+        },
+        {
+          "conf": 0.16150386781807607,
+          "correct": false
+        },
+        {
+          "conf": 0.10155794699147146,
+          "correct": false
+        },
+        {
+          "conf": 0.09455060599378437,
+          "correct": false
+        },
+        {
+          "conf": 0.1287887619569395,
+          "correct": false
+        },
+        {
+          "conf": 0.14823320474840188,
+          "correct": true
+        },
+        {
+          "conf": 0.16578843266333293,
+          "correct": true
+        },
+        {
+          "conf": 0.1071303136166219,
+          "correct": false
+        },
+        {
+          "conf": 0.10109139397934154,
+          "correct": false
+        },
+        {
+          "conf": 0.12273397345218182,
+          "correct": true
+        },
+        {
+          "conf": 0.09313406425634847,
+          "correct": false
+        },
+        {
+          "conf": 0.09713869019574133,
+          "correct": false
+        },
+        {
+          "conf": 0.12104446862104329,
+          "correct": false
+        },
+        {
+          "conf": 0.1382207901975481,
+          "correct": false
+        },
+        {
+          "conf": 0.14166238397317077,
+          "correct": true
+        },
+        {
+          "conf": 0.14166238397317077,
+          "correct": true
+        },
+        {
+          "conf": 0.11376876445593345,
+          "correct": true
+        },
+        {
+          "conf": 0.14206517911398,
+          "correct": true
+        },
+        {
+          "conf": 0.1370428947114636,
+          "correct": true
+        },
+        {
+          "conf": 0.12035531652994921,
+          "correct": false
+        },
+        {
+          "conf": 0.1370428947114636,
+          "correct": true
+        },
+        {
+          "conf": 0.1099792124790077,
+          "correct": true
+        },
+        {
+          "conf": 0.12317474576571527,
+          "correct": false
+        },
+        {
+          "conf": 0.10453541438389602,
+          "correct": true
+        },
+        {
+          "conf": 0.14033876834935077,
+          "correct": true
+        },
+        {
+          "conf": 0.1736482615560755,
+          "correct": true
+        },
+        {
+          "conf": 0.10705330297304279,
+          "correct": true
+        },
+        {
+          "conf": 0.10583110590846476,
+          "correct": true
+        },
+        {
+          "conf": 0.1338527510742344,
+          "correct": false
+        },
+        {
+          "conf": 0.11538805001564086,
+          "correct": true
+        },
+        {
+          "conf": 0.13500416674449559,
+          "correct": false
+        },
+        {
+          "conf": 0.13500416674449559,
+          "correct": false
+        },
+        {
+          "conf": 0.10884122591025584,
+          "correct": true
+        },
+        {
+          "conf": 0.12003021447940289,
+          "correct": true
+        },
+        {
+          "conf": 0.0991910199341355,
+          "correct": false
+        },
+        {
+          "conf": 0.1736482615560755,
+          "correct": true
+        },
+        {
+          "conf": 0.1736482615560755,
+          "correct": true
+        },
+        {
+          "conf": 0.14732309237189622,
+          "correct": true
+        },
+        {
+          "conf": 0.16951972655624872,
+          "correct": true
+        },
+        {
+          "conf": 0.10482908282963617,
+          "correct": false
+        },
+        {
+          "conf": 0.1294625029638299,
+          "correct": true
+        },
+        {
+          "conf": 0.1411660903918687,
+          "correct": false
+        },
+        {
+          "conf": 0.14624260365596714,
+          "correct": true
+        },
+        {
+          "conf": 0.08739781456112597,
+          "correct": false
+        },
+        {
+          "conf": 0.16213513502681687,
+          "correct": false
+        },
+        {
+          "conf": 0.10351841157316584,
+          "correct": true
+        },
+        {
+          "conf": 0.1736482615560755,
+          "correct": true
+        },
+        {
+          "conf": 0.10377548299382286,
+          "correct": false
+        },
+        {
+          "conf": 0.13900677862828364,
+          "correct": false
+        },
+        {
+          "conf": 0.10081488824882281,
+          "correct": false
+        },
+        {
+          "conf": 0.12441648559849001,
+          "correct": false
+        },
+        {
+          "conf": 0.15565092521745585,
+          "correct": false
+        },
+        {
+          "conf": 0.12037178515747134,
+          "correct": false
+        },
+        {
+          "conf": 0.1656922045437311,
+          "correct": true
+        },
+        {
+          "conf": 0.14035122637172073,
+          "correct": true
+        },
+        {
+          "conf": 0.11213726701060073,
+          "correct": true
+        },
+        {
+          "conf": 0.1284807079735793,
+          "correct": true
+        },
+        {
+          "conf": 0.10432436790796124,
+          "correct": false
+        },
+        {
+          "conf": 0.1258135020594071,
+          "correct": false
+        },
+        {
+          "conf": 0.11237177396988172,
+          "correct": false
+        },
+        {
+          "conf": 0.11237177396988172,
+          "correct": false
+        },
+        {
+          "conf": 0.1362244122276511,
+          "correct": false
+        },
+        {
+          "conf": 0.1244700960494466,
+          "correct": true
+        },
+        {
+          "conf": 0.12695868192259638,
+          "correct": true
+        },
+        {
+          "conf": 0.10655223979795422,
+          "correct": true
+        },
+        {
+          "conf": 0.12275789354637205,
+          "correct": true
+        },
+        {
+          "conf": 0.12578330175285957,
+          "correct": false
+        },
+        {
+          "conf": 0.15273177941089022,
+          "correct": true
+        },
+        {
+          "conf": 0.16491104087610653,
+          "correct": false
+        },
+        {
+          "conf": 0.11213726701060073,
+          "correct": true
+        },
+        {
+          "conf": 0.11748355482828853,
+          "correct": false
+        },
+        {
+          "conf": 0.11069058896607309,
+          "correct": false
+        },
+        {
+          "conf": 0.17678861163446077,
+          "correct": true
+        },
+        {
+          "conf": 0.12123629558282502,
+          "correct": false
+        },
+        {
+          "conf": 0.14098441839630166,
+          "correct": true
+        },
+        {
+          "conf": 0.13364494282887124,
+          "correct": true
+        },
+        {
+          "conf": 0.1208615279593103,
+          "correct": false
+        },
+        {
+          "conf": 0.09564329086413732,
+          "correct": false
+        },
+        {
+          "conf": 0.11871952969634891,
+          "correct": true
+        },
+        {
+          "conf": 0.12189120383949806,
+          "correct": false
+        },
+        {
+          "conf": 0.12497901311657102,
+          "correct": true
+        },
+        {
+          "conf": 0.1411660903918687,
+          "correct": true
+        },
+        {
+          "conf": 0.14136263110235173,
+          "correct": true
+        }
+      ]
     },
     {
       "agreement": 0.6385542168674698,
@@ -331,7 +999,341 @@
         "ss": 23,
         "uu": 19
       },
-      "meanConfidence": 0.12404234516065565
+      "meanConfidence": 0.12404234516065565,
+      "pairs": [
+        {
+          "conf": 0.10492794307769941,
+          "correct": false
+        },
+        {
+          "conf": 0.10486310178154178,
+          "correct": true
+        },
+        {
+          "conf": 0.10623347594594647,
+          "correct": false
+        },
+        {
+          "conf": 0.12115523627082266,
+          "correct": false
+        },
+        {
+          "conf": 0.15186986689449625,
+          "correct": false
+        },
+        {
+          "conf": 0.1633438297418346,
+          "correct": true
+        },
+        {
+          "conf": 0.12264681422534648,
+          "correct": true
+        },
+        {
+          "conf": 0.13852581382716667,
+          "correct": true
+        },
+        {
+          "conf": 0.1322322699440889,
+          "correct": true
+        },
+        {
+          "conf": 0.10318219898040736,
+          "correct": true
+        },
+        {
+          "conf": 0.15907071214040125,
+          "correct": false
+        },
+        {
+          "conf": 0.1023205821743696,
+          "correct": false
+        },
+        {
+          "conf": 0.1059965198332617,
+          "correct": false
+        },
+        {
+          "conf": 0.10930082800815928,
+          "correct": false
+        },
+        {
+          "conf": 0.14660522154916936,
+          "correct": true
+        },
+        {
+          "conf": 0.14660522154916936,
+          "correct": true
+        },
+        {
+          "conf": 0.10117737911177009,
+          "correct": false
+        },
+        {
+          "conf": 0.10713008745359788,
+          "correct": true
+        },
+        {
+          "conf": 0.13431594304803732,
+          "correct": true
+        },
+        {
+          "conf": 0.10513121481411924,
+          "correct": false
+        },
+        {
+          "conf": 0.13431594304803732,
+          "correct": true
+        },
+        {
+          "conf": 0.1264827588916568,
+          "correct": true
+        },
+        {
+          "conf": 0.1231030219023573,
+          "correct": false
+        },
+        {
+          "conf": 0.10148773009489223,
+          "correct": false
+        },
+        {
+          "conf": 0.1254429666061344,
+          "correct": true
+        },
+        {
+          "conf": 0.13340759875196864,
+          "correct": true
+        },
+        {
+          "conf": 0.12082784974357957,
+          "correct": true
+        },
+        {
+          "conf": 0.11878848836245415,
+          "correct": false
+        },
+        {
+          "conf": 0.12184207463584354,
+          "correct": true
+        },
+        {
+          "conf": 0.13552385640610756,
+          "correct": true
+        },
+        {
+          "conf": 0.12677944313599998,
+          "correct": true
+        },
+        {
+          "conf": 0.12677944313599998,
+          "correct": true
+        },
+        {
+          "conf": 0.09486296265394042,
+          "correct": false
+        },
+        {
+          "conf": 0.11102758459114782,
+          "correct": true
+        },
+        {
+          "conf": 0.10861700824860454,
+          "correct": true
+        },
+        {
+          "conf": 0.13340759875196864,
+          "correct": true
+        },
+        {
+          "conf": 0.13340759875196864,
+          "correct": true
+        },
+        {
+          "conf": 0.1434643177581233,
+          "correct": true
+        },
+        {
+          "conf": 0.16514088806906896,
+          "correct": true
+        },
+        {
+          "conf": 0.11303996291856319,
+          "correct": true
+        },
+        {
+          "conf": 0.12559271619354592,
+          "correct": true
+        },
+        {
+          "conf": 0.10625220370281502,
+          "correct": false
+        },
+        {
+          "conf": 0.13920643221137716,
+          "correct": true
+        },
+        {
+          "conf": 0.11900858972347997,
+          "correct": true
+        },
+        {
+          "conf": 0.10334721136661792,
+          "correct": true
+        },
+        {
+          "conf": 0.12011139482336448,
+          "correct": false
+        },
+        {
+          "conf": 0.13340759875196864,
+          "correct": true
+        },
+        {
+          "conf": 0.10479862430489872,
+          "correct": false
+        },
+        {
+          "conf": 0.11271375016994255,
+          "correct": false
+        },
+        {
+          "conf": 0.14644927848212352,
+          "correct": false
+        },
+        {
+          "conf": 0.10852571447088044,
+          "correct": true
+        },
+        {
+          "conf": 0.1257732898201197,
+          "correct": false
+        },
+        {
+          "conf": 0.14244748195555743,
+          "correct": true
+        },
+        {
+          "conf": 0.13990953151308286,
+          "correct": true
+        },
+        {
+          "conf": 0.13470749078394592,
+          "correct": true
+        },
+        {
+          "conf": 0.11956423507517351,
+          "correct": true
+        },
+        {
+          "conf": 0.13632094830133173,
+          "correct": false
+        },
+        {
+          "conf": 0.10003930718870613,
+          "correct": true
+        },
+        {
+          "conf": 0.12236864809247386,
+          "correct": false
+        },
+        {
+          "conf": 0.1004079860535249,
+          "correct": true
+        },
+        {
+          "conf": 0.1004079860535249,
+          "correct": true
+        },
+        {
+          "conf": 0.1360990470372516,
+          "correct": true
+        },
+        {
+          "conf": 0.11479985933770098,
+          "correct": false
+        },
+        {
+          "conf": 0.17031405747491327,
+          "correct": false
+        },
+        {
+          "conf": 0.10487178559877579,
+          "correct": false
+        },
+        {
+          "conf": 0.11061420862690109,
+          "correct": true
+        },
+        {
+          "conf": 0.11048993793329387,
+          "correct": true
+        },
+        {
+          "conf": 0.13006573126548157,
+          "correct": false
+        },
+        {
+          "conf": 0.1321566918290196,
+          "correct": true
+        },
+        {
+          "conf": 0.11956423507517351,
+          "correct": true
+        },
+        {
+          "conf": 0.15057418879105175,
+          "correct": false
+        },
+        {
+          "conf": 0.1367701668983305,
+          "correct": true
+        },
+        {
+          "conf": 0.11527854522431524,
+          "correct": true
+        },
+        {
+          "conf": 0.17235905878253285,
+          "correct": true
+        },
+        {
+          "conf": 0.10695195523566119,
+          "correct": true
+        },
+        {
+          "conf": 0.11882802806035178,
+          "correct": true
+        },
+        {
+          "conf": 0.1402292612923031,
+          "correct": false
+        },
+        {
+          "conf": 0.099251185985678,
+          "correct": true
+        },
+        {
+          "conf": 0.13257338172826427,
+          "correct": false
+        },
+        {
+          "conf": 0.14331702524732132,
+          "correct": true
+        },
+        {
+          "conf": 0.11819318201222154,
+          "correct": false
+        },
+        {
+          "conf": 0.10625220370281502,
+          "correct": true
+        },
+        {
+          "conf": 0.12021713532678688,
+          "correct": true
+        }
+      ]
     },
     {
       "agreement": 0.5542168674698795,
@@ -421,7 +1423,341 @@
         "ss": 13,
         "uu": 22
       },
-      "meanConfidence": 0.13073623884830093
+      "meanConfidence": 0.13073623884830093,
+      "pairs": [
+        {
+          "conf": 0.11419605592575999,
+          "correct": false
+        },
+        {
+          "conf": 0.1104592926460119,
+          "correct": true
+        },
+        {
+          "conf": 0.11478587980933444,
+          "correct": false
+        },
+        {
+          "conf": 0.09917444372088735,
+          "correct": false
+        },
+        {
+          "conf": 0.09478918752957659,
+          "correct": false
+        },
+        {
+          "conf": 0.14008154328126232,
+          "correct": true
+        },
+        {
+          "conf": 0.13352224697724677,
+          "correct": true
+        },
+        {
+          "conf": 0.11936584527578659,
+          "correct": true
+        },
+        {
+          "conf": 0.12275808961525482,
+          "correct": true
+        },
+        {
+          "conf": 0.12382788823944614,
+          "correct": false
+        },
+        {
+          "conf": 0.15973324168595537,
+          "correct": false
+        },
+        {
+          "conf": 0.11849041249803963,
+          "correct": false
+        },
+        {
+          "conf": 0.09917707285217284,
+          "correct": true
+        },
+        {
+          "conf": 0.10012709061994665,
+          "correct": true
+        },
+        {
+          "conf": 0.13784099643559797,
+          "correct": true
+        },
+        {
+          "conf": 0.13784099643559797,
+          "correct": true
+        },
+        {
+          "conf": 0.12710353193815854,
+          "correct": false
+        },
+        {
+          "conf": 0.1024317068648625,
+          "correct": true
+        },
+        {
+          "conf": 0.11593896045121689,
+          "correct": true
+        },
+        {
+          "conf": 0.14796272595458257,
+          "correct": false
+        },
+        {
+          "conf": 0.11593896045121689,
+          "correct": true
+        },
+        {
+          "conf": 0.1295225334280236,
+          "correct": false
+        },
+        {
+          "conf": 0.14458773560075044,
+          "correct": false
+        },
+        {
+          "conf": 0.10869520812038065,
+          "correct": false
+        },
+        {
+          "conf": 0.11594228162490339,
+          "correct": false
+        },
+        {
+          "conf": 0.1266411982312439,
+          "correct": false
+        },
+        {
+          "conf": 0.10730376385699489,
+          "correct": true
+        },
+        {
+          "conf": 0.09659133406762203,
+          "correct": false
+        },
+        {
+          "conf": 0.1694179483585621,
+          "correct": true
+        },
+        {
+          "conf": 0.1415474272116027,
+          "correct": true
+        },
+        {
+          "conf": 0.1348471541920365,
+          "correct": true
+        },
+        {
+          "conf": 0.1348471541920365,
+          "correct": true
+        },
+        {
+          "conf": 0.09704995299484905,
+          "correct": true
+        },
+        {
+          "conf": 0.13571826069602896,
+          "correct": false
+        },
+        {
+          "conf": 0.11057295815821408,
+          "correct": false
+        },
+        {
+          "conf": 0.1266411982312439,
+          "correct": false
+        },
+        {
+          "conf": 0.1266411982312439,
+          "correct": false
+        },
+        {
+          "conf": 0.09760676220616182,
+          "correct": true
+        },
+        {
+          "conf": 0.10698871608174834,
+          "correct": true
+        },
+        {
+          "conf": 0.14434063897977803,
+          "correct": false
+        },
+        {
+          "conf": 0.10982427613670781,
+          "correct": false
+        },
+        {
+          "conf": 0.13613866486460294,
+          "correct": false
+        },
+        {
+          "conf": 0.13440470403838178,
+          "correct": false
+        },
+        {
+          "conf": 0.12653110645063412,
+          "correct": true
+        },
+        {
+          "conf": 0.10151287169298547,
+          "correct": true
+        },
+        {
+          "conf": 0.16803960339584711,
+          "correct": false
+        },
+        {
+          "conf": 0.1266411982312439,
+          "correct": false
+        },
+        {
+          "conf": 0.11339697189229651,
+          "correct": false
+        },
+        {
+          "conf": 0.1253933622357257,
+          "correct": false
+        },
+        {
+          "conf": 0.1214177595397289,
+          "correct": false
+        },
+        {
+          "conf": 0.11329637599710907,
+          "correct": false
+        },
+        {
+          "conf": 0.13776456088213498,
+          "correct": false
+        },
+        {
+          "conf": 0.1408643551586455,
+          "correct": true
+        },
+        {
+          "conf": 0.15713627691434653,
+          "correct": true
+        },
+        {
+          "conf": 0.1287264514060811,
+          "correct": true
+        },
+        {
+          "conf": 0.10461538913154372,
+          "correct": false
+        },
+        {
+          "conf": 0.1268319985113897,
+          "correct": true
+        },
+        {
+          "conf": 0.12312802774621563,
+          "correct": true
+        },
+        {
+          "conf": 0.12481305382020969,
+          "correct": true
+        },
+        {
+          "conf": 0.12733819361986196,
+          "correct": true
+        },
+        {
+          "conf": 0.12733819361986196,
+          "correct": true
+        },
+        {
+          "conf": 0.14752580668201817,
+          "correct": true
+        },
+        {
+          "conf": 0.1564085366421737,
+          "correct": true
+        },
+        {
+          "conf": 0.20586491398640996,
+          "correct": true
+        },
+        {
+          "conf": 0.15715420969262817,
+          "correct": true
+        },
+        {
+          "conf": 0.14672671492236128,
+          "correct": true
+        },
+        {
+          "conf": 0.10273854798791339,
+          "correct": true
+        },
+        {
+          "conf": 0.21394610477954945,
+          "correct": true
+        },
+        {
+          "conf": 0.13698582811084173,
+          "correct": false
+        },
+        {
+          "conf": 0.10461538913154372,
+          "correct": false
+        },
+        {
+          "conf": 0.12068651969712242,
+          "correct": false
+        },
+        {
+          "conf": 0.13370066482139,
+          "correct": true
+        },
+        {
+          "conf": 0.18757536037541414,
+          "correct": true
+        },
+        {
+          "conf": 0.12374026252860912,
+          "correct": false
+        },
+        {
+          "conf": 0.10943095860944128,
+          "correct": false
+        },
+        {
+          "conf": 0.20857955654021623,
+          "correct": true
+        },
+        {
+          "conf": 0.11528831836155005,
+          "correct": true
+        },
+        {
+          "conf": 0.1800368746743384,
+          "correct": true
+        },
+        {
+          "conf": 0.12767582068756714,
+          "correct": true
+        },
+        {
+          "conf": 0.2002161132097855,
+          "correct": true
+        },
+        {
+          "conf": 0.1340220393428427,
+          "correct": false
+        },
+        {
+          "conf": 0.13613866486460294,
+          "correct": true
+        },
+        {
+          "conf": 0.13584762980376225,
+          "correct": true
+        }
+      ]
     },
     {
       "agreement": 0.6144578313253012,
@@ -511,7 +1847,341 @@
         "ss": 20,
         "uu": 19
       },
-      "meanConfidence": 0.13475157012298017
+      "meanConfidence": 0.13475157012298017,
+      "pairs": [
+        {
+          "conf": 0.15920271188324975,
+          "correct": false
+        },
+        {
+          "conf": 0.1072532156029592,
+          "correct": true
+        },
+        {
+          "conf": 0.1242660529556933,
+          "correct": false
+        },
+        {
+          "conf": 0.1447722813358857,
+          "correct": false
+        },
+        {
+          "conf": 0.11219173014715032,
+          "correct": true
+        },
+        {
+          "conf": 0.18390920881693903,
+          "correct": true
+        },
+        {
+          "conf": 0.18642784907825138,
+          "correct": true
+        },
+        {
+          "conf": 0.1421328763198431,
+          "correct": true
+        },
+        {
+          "conf": 0.16463772414192382,
+          "correct": true
+        },
+        {
+          "conf": 0.14080879307404554,
+          "correct": true
+        },
+        {
+          "conf": 0.14966442115971282,
+          "correct": false
+        },
+        {
+          "conf": 0.1198227508913588,
+          "correct": false
+        },
+        {
+          "conf": 0.1282642763836795,
+          "correct": false
+        },
+        {
+          "conf": 0.09967098356273076,
+          "correct": false
+        },
+        {
+          "conf": 0.131939569380321,
+          "correct": true
+        },
+        {
+          "conf": 0.131939569380321,
+          "correct": true
+        },
+        {
+          "conf": 0.12163504211516322,
+          "correct": false
+        },
+        {
+          "conf": 0.13108952919595143,
+          "correct": true
+        },
+        {
+          "conf": 0.1379944325577732,
+          "correct": true
+        },
+        {
+          "conf": 0.13880263448371072,
+          "correct": true
+        },
+        {
+          "conf": 0.1379944325577732,
+          "correct": true
+        },
+        {
+          "conf": 0.11393723918819872,
+          "correct": true
+        },
+        {
+          "conf": 0.0977795103861015,
+          "correct": false
+        },
+        {
+          "conf": 0.12924823829678472,
+          "correct": false
+        },
+        {
+          "conf": 0.14581520900178077,
+          "correct": true
+        },
+        {
+          "conf": 0.13741297709868536,
+          "correct": true
+        },
+        {
+          "conf": 0.14287880557145566,
+          "correct": true
+        },
+        {
+          "conf": 0.11629643167664233,
+          "correct": false
+        },
+        {
+          "conf": 0.13494152875412058,
+          "correct": true
+        },
+        {
+          "conf": 0.2110586584688801,
+          "correct": true
+        },
+        {
+          "conf": 0.12110234498953977,
+          "correct": false
+        },
+        {
+          "conf": 0.12110234498953977,
+          "correct": false
+        },
+        {
+          "conf": 0.1007677567185858,
+          "correct": true
+        },
+        {
+          "conf": 0.10322881075673913,
+          "correct": false
+        },
+        {
+          "conf": 0.1106869185225366,
+          "correct": false
+        },
+        {
+          "conf": 0.13741297709868536,
+          "correct": true
+        },
+        {
+          "conf": 0.13741297709868536,
+          "correct": true
+        },
+        {
+          "conf": 0.1343234005085354,
+          "correct": true
+        },
+        {
+          "conf": 0.12869084304338332,
+          "correct": true
+        },
+        {
+          "conf": 0.15356646716212416,
+          "correct": true
+        },
+        {
+          "conf": 0.10940213358226374,
+          "correct": false
+        },
+        {
+          "conf": 0.22515116917632358,
+          "correct": false
+        },
+        {
+          "conf": 0.14220888730155354,
+          "correct": true
+        },
+        {
+          "conf": 0.11106265240405709,
+          "correct": true
+        },
+        {
+          "conf": 0.14111581625090955,
+          "correct": true
+        },
+        {
+          "conf": 0.11919717048864568,
+          "correct": false
+        },
+        {
+          "conf": 0.13741297709868536,
+          "correct": true
+        },
+        {
+          "conf": 0.10452099984222542,
+          "correct": false
+        },
+        {
+          "conf": 0.15618343654242456,
+          "correct": false
+        },
+        {
+          "conf": 0.09932119865491619,
+          "correct": true
+        },
+        {
+          "conf": 0.13927549203461712,
+          "correct": false
+        },
+        {
+          "conf": 0.1504383080628109,
+          "correct": false
+        },
+        {
+          "conf": 0.11749477700948836,
+          "correct": true
+        },
+        {
+          "conf": 0.16786483653623624,
+          "correct": true
+        },
+        {
+          "conf": 0.11408737125847496,
+          "correct": true
+        },
+        {
+          "conf": 0.14595731440099607,
+          "correct": true
+        },
+        {
+          "conf": 0.12467116710744396,
+          "correct": false
+        },
+        {
+          "conf": 0.11759958344074524,
+          "correct": true
+        },
+        {
+          "conf": 0.11528311295856403,
+          "correct": false
+        },
+        {
+          "conf": 0.12048142363788428,
+          "correct": true
+        },
+        {
+          "conf": 0.12048142363788428,
+          "correct": true
+        },
+        {
+          "conf": 0.12498750286942487,
+          "correct": true
+        },
+        {
+          "conf": 0.1871151319394426,
+          "correct": true
+        },
+        {
+          "conf": 0.10538640459280013,
+          "correct": true
+        },
+        {
+          "conf": 0.1613598305897437,
+          "correct": true
+        },
+        {
+          "conf": 0.12174255524432734,
+          "correct": true
+        },
+        {
+          "conf": 0.13577798636764,
+          "correct": true
+        },
+        {
+          "conf": 0.10903063008853779,
+          "correct": false
+        },
+        {
+          "conf": 0.1309194508849716,
+          "correct": false
+        },
+        {
+          "conf": 0.14595731440099607,
+          "correct": true
+        },
+        {
+          "conf": 0.12951063150230763,
+          "correct": false
+        },
+        {
+          "conf": 0.12494330523859304,
+          "correct": true
+        },
+        {
+          "conf": 0.1371224476840645,
+          "correct": false
+        },
+        {
+          "conf": 0.1560892580208069,
+          "correct": true
+        },
+        {
+          "conf": 0.10723638203064995,
+          "correct": false
+        },
+        {
+          "conf": 0.11289833354717599,
+          "correct": false
+        },
+        {
+          "conf": 0.12199000961075993,
+          "correct": false
+        },
+        {
+          "conf": 0.15949500489763072,
+          "correct": true
+        },
+        {
+          "conf": 0.11055264777214845,
+          "correct": false
+        },
+        {
+          "conf": 0.13873658254592278,
+          "correct": true
+        },
+        {
+          "conf": 0.14928393875703166,
+          "correct": true
+        },
+        {
+          "conf": 0.22515116917632358,
+          "correct": true
+        },
+        {
+          "conf": 0.1377990266634662,
+          "correct": true
+        }
+      ]
     },
     {
       "agreement": 0.5903614457831325,
@@ -601,7 +2271,341 @@
         "ss": 25,
         "uu": 15
       },
-      "meanConfidence": 0.1380524613358536
+      "meanConfidence": 0.1380524613358536,
+      "pairs": [
+        {
+          "conf": 0.14885458342297997,
+          "correct": false
+        },
+        {
+          "conf": 0.13530576077278414,
+          "correct": false
+        },
+        {
+          "conf": 0.12347809584619043,
+          "correct": false
+        },
+        {
+          "conf": 0.10224324286968031,
+          "correct": false
+        },
+        {
+          "conf": 0.11845025944757763,
+          "correct": false
+        },
+        {
+          "conf": 0.18025189702784974,
+          "correct": true
+        },
+        {
+          "conf": 0.20665843459616853,
+          "correct": true
+        },
+        {
+          "conf": 0.12274292182709955,
+          "correct": true
+        },
+        {
+          "conf": 0.14822695110972642,
+          "correct": true
+        },
+        {
+          "conf": 0.15175104790287539,
+          "correct": true
+        },
+        {
+          "conf": 0.11840039201361795,
+          "correct": false
+        },
+        {
+          "conf": 0.12186584673280343,
+          "correct": false
+        },
+        {
+          "conf": 0.10098284431473324,
+          "correct": false
+        },
+        {
+          "conf": 0.11238638030995733,
+          "correct": false
+        },
+        {
+          "conf": 0.13408522593325634,
+          "correct": true
+        },
+        {
+          "conf": 0.13408522593325634,
+          "correct": true
+        },
+        {
+          "conf": 0.1092864153839049,
+          "correct": false
+        },
+        {
+          "conf": 0.1789761415000036,
+          "correct": true
+        },
+        {
+          "conf": 0.16407870304043917,
+          "correct": true
+        },
+        {
+          "conf": 0.1506064855168798,
+          "correct": true
+        },
+        {
+          "conf": 0.16407870304043917,
+          "correct": true
+        },
+        {
+          "conf": 0.15326586201705472,
+          "correct": true
+        },
+        {
+          "conf": 0.13936229526751417,
+          "correct": true
+        },
+        {
+          "conf": 0.15087423674273326,
+          "correct": false
+        },
+        {
+          "conf": 0.12327017719227604,
+          "correct": true
+        },
+        {
+          "conf": 0.15170439166878888,
+          "correct": true
+        },
+        {
+          "conf": 0.15831625721630696,
+          "correct": true
+        },
+        {
+          "conf": 0.12497319816410118,
+          "correct": true
+        },
+        {
+          "conf": 0.12267672287292261,
+          "correct": false
+        },
+        {
+          "conf": 0.16179931290276048,
+          "correct": true
+        },
+        {
+          "conf": 0.12035201801528383,
+          "correct": true
+        },
+        {
+          "conf": 0.12035201801528383,
+          "correct": true
+        },
+        {
+          "conf": 0.09503591684915334,
+          "correct": false
+        },
+        {
+          "conf": 0.11985239409944203,
+          "correct": true
+        },
+        {
+          "conf": 0.11039431346213895,
+          "correct": true
+        },
+        {
+          "conf": 0.15170439166878888,
+          "correct": true
+        },
+        {
+          "conf": 0.15170439166878888,
+          "correct": true
+        },
+        {
+          "conf": 0.19077878306042156,
+          "correct": true
+        },
+        {
+          "conf": 0.1709446925907233,
+          "correct": true
+        },
+        {
+          "conf": 0.1224178079913131,
+          "correct": true
+        },
+        {
+          "conf": 0.21506435184442543,
+          "correct": true
+        },
+        {
+          "conf": 0.17878924650797912,
+          "correct": false
+        },
+        {
+          "conf": 0.12436701075157344,
+          "correct": true
+        },
+        {
+          "conf": 0.12570122482932972,
+          "correct": true
+        },
+        {
+          "conf": 0.14482138958401528,
+          "correct": false
+        },
+        {
+          "conf": 0.1198478275006055,
+          "correct": true
+        },
+        {
+          "conf": 0.15170439166878888,
+          "correct": true
+        },
+        {
+          "conf": 0.1260383586156006,
+          "correct": false
+        },
+        {
+          "conf": 0.14037944936800706,
+          "correct": false
+        },
+        {
+          "conf": 0.13335346896681075,
+          "correct": false
+        },
+        {
+          "conf": 0.09900252026788078,
+          "correct": false
+        },
+        {
+          "conf": 0.11758473529967021,
+          "correct": false
+        },
+        {
+          "conf": 0.11946656465937684,
+          "correct": true
+        },
+        {
+          "conf": 0.17045912465429208,
+          "correct": true
+        },
+        {
+          "conf": 0.12785162553781695,
+          "correct": true
+        },
+        {
+          "conf": 0.13381987940780704,
+          "correct": false
+        },
+        {
+          "conf": 0.1448793398741546,
+          "correct": false
+        },
+        {
+          "conf": 0.11199671601186582,
+          "correct": false
+        },
+        {
+          "conf": 0.1173476105420832,
+          "correct": false
+        },
+        {
+          "conf": 0.1062522624811604,
+          "correct": true
+        },
+        {
+          "conf": 0.1062522624811604,
+          "correct": true
+        },
+        {
+          "conf": 0.15919054371867322,
+          "correct": true
+        },
+        {
+          "conf": 0.13631681397528864,
+          "correct": false
+        },
+        {
+          "conf": 0.1882870536997773,
+          "correct": false
+        },
+        {
+          "conf": 0.11798202195736479,
+          "correct": true
+        },
+        {
+          "conf": 0.11803358630347191,
+          "correct": false
+        },
+        {
+          "conf": 0.09454620514402948,
+          "correct": true
+        },
+        {
+          "conf": 0.16758744523911645,
+          "correct": false
+        },
+        {
+          "conf": 0.10993268385910804,
+          "correct": true
+        },
+        {
+          "conf": 0.13381987940780704,
+          "correct": false
+        },
+        {
+          "conf": 0.16841771903026573,
+          "correct": false
+        },
+        {
+          "conf": 0.11825261816445909,
+          "correct": true
+        },
+        {
+          "conf": 0.15952384759304936,
+          "correct": true
+        },
+        {
+          "conf": 0.12944581325180587,
+          "correct": true
+        },
+        {
+          "conf": 0.1255680111823528,
+          "correct": true
+        },
+        {
+          "conf": 0.12209713661069742,
+          "correct": false
+        },
+        {
+          "conf": 0.15864268185227698,
+          "correct": false
+        },
+        {
+          "conf": 0.12043637844855813,
+          "correct": false
+        },
+        {
+          "conf": 0.1713232942527684,
+          "correct": true
+        },
+        {
+          "conf": 0.12510464982619,
+          "correct": true
+        },
+        {
+          "conf": 0.14530444705705736,
+          "correct": false
+        },
+        {
+          "conf": 0.17878924650797912,
+          "correct": true
+        },
+        {
+          "conf": 0.12819811293132874,
+          "correct": true
+        }
+      ]
     },
     {
       "agreement": 0.6746987951807228,
@@ -691,7 +2695,392 @@
         "ss": 25,
         "uu": 17
       },
-      "meanConfidence": 0.12527763740239428
+      "meanConfidence": 0.12527763740239428,
+      "pairs": [
+        {
+          "conf": 0.1213408038564618,
+          "correct": false
+        },
+        {
+          "conf": 0.12245401830821484,
+          "correct": false
+        },
+        {
+          "conf": 0.11143078949606261,
+          "correct": false
+        },
+        {
+          "conf": 0.10504793932080224,
+          "correct": false
+        },
+        {
+          "conf": 0.12019928821593591,
+          "correct": true
+        },
+        {
+          "conf": 0.2042144841029325,
+          "correct": true
+        },
+        {
+          "conf": 0.1716502481916424,
+          "correct": true
+        },
+        {
+          "conf": 0.11729648078071137,
+          "correct": true
+        },
+        {
+          "conf": 0.13654099345341814,
+          "correct": true
+        },
+        {
+          "conf": 0.1433814943041248,
+          "correct": true
+        },
+        {
+          "conf": 0.1101511449755134,
+          "correct": true
+        },
+        {
+          "conf": 0.08903146442784979,
+          "correct": false
+        },
+        {
+          "conf": 0.101628717541993,
+          "correct": true
+        },
+        {
+          "conf": 0.10457803454111184,
+          "correct": true
+        },
+        {
+          "conf": 0.14633499964133403,
+          "correct": true
+        },
+        {
+          "conf": 0.14633499964133403,
+          "correct": true
+        },
+        {
+          "conf": 0.10605696308174677,
+          "correct": false
+        },
+        {
+          "conf": 0.1365535979361072,
+          "correct": true
+        },
+        {
+          "conf": 0.16098113969767708,
+          "correct": true
+        },
+        {
+          "conf": 0.11631897447069485,
+          "correct": true
+        },
+        {
+          "conf": 0.16098113969767708,
+          "correct": true
+        },
+        {
+          "conf": 0.18139577794978454,
+          "correct": true
+        },
+        {
+          "conf": 0.11748533131472734,
+          "correct": true
+        },
+        {
+          "conf": 0.10235674250536922,
+          "correct": false
+        },
+        {
+          "conf": 0.12734498314596446,
+          "correct": true
+        },
+        {
+          "conf": 0.10719417571707077,
+          "correct": true
+        },
+        {
+          "conf": 0.1401061984550361,
+          "correct": true
+        },
+        {
+          "conf": 0.1318141266712943,
+          "correct": true
+        },
+        {
+          "conf": 0.12177181638634857,
+          "correct": true
+        },
+        {
+          "conf": 0.14332968476444655,
+          "correct": true
+        },
+        {
+          "conf": 0.11614148491175609,
+          "correct": true
+        },
+        {
+          "conf": 0.11614148491175609,
+          "correct": true
+        },
+        {
+          "conf": 0.11454708022960397,
+          "correct": true
+        },
+        {
+          "conf": 0.1634660841341505,
+          "correct": true
+        },
+        {
+          "conf": 0.10138253943663707,
+          "correct": true
+        },
+        {
+          "conf": 0.10719417571707077,
+          "correct": true
+        },
+        {
+          "conf": 0.10719417571707077,
+          "correct": true
+        },
+        {
+          "conf": 0.12597218968579535,
+          "correct": true
+        },
+        {
+          "conf": 0.14581958682684795,
+          "correct": true
+        },
+        {
+          "conf": 0.1452492149749952,
+          "correct": true
+        },
+        {
+          "conf": 0.12006494506937491,
+          "correct": false
+        },
+        {
+          "conf": 0.10869365629774302,
+          "correct": false
+        },
+        {
+          "conf": 0.1641343926070699,
+          "correct": true
+        },
+        {
+          "conf": 0.0976079346255641,
+          "correct": false
+        },
+        {
+          "conf": 0.10857158676945586,
+          "correct": false
+        },
+        {
+          "conf": 0.11049576770798344,
+          "correct": true
+        },
+        {
+          "conf": 0.10719417571707077,
+          "correct": true
+        },
+        {
+          "conf": 0.09456019488173124,
+          "correct": false
+        },
+        {
+          "conf": 0.12331343067648717,
+          "correct": false
+        },
+        {
+          "conf": 0.11771516596122336,
+          "correct": true
+        },
+        {
+          "conf": 0.10865996701114189,
+          "correct": false
+        },
+        {
+          "conf": 0.12805605368794867,
+          "correct": false
+        },
+        {
+          "conf": 0.12637184000067453,
+          "correct": true
+        },
+        {
+          "conf": 0.15483996877743314,
+          "correct": true
+        },
+        {
+          "conf": 0.11269017668857899,
+          "correct": false
+        },
+        {
+          "conf": 0.24523797439002504,
+          "correct": true
+        },
+        {
+          "conf": 0.12773208406766498,
+          "correct": false
+        },
+        {
+          "conf": 0.10450904027956807,
+          "correct": false
+        },
+        {
+          "conf": 0.12790466770116576,
+          "correct": false
+        },
+        {
+          "conf": 0.09831024668898501,
+          "correct": true
+        },
+        {
+          "conf": 0.09831024668898501,
+          "correct": true
+        },
+        {
+          "conf": 0.14009184447974063,
+          "correct": true
+        },
+        {
+          "conf": 0.12471118309078845,
+          "correct": true
+        },
+        {
+          "conf": 0.12302915534542999,
+          "correct": false
+        },
+        {
+          "conf": 0.1101189569342307,
+          "correct": true
+        },
+        {
+          "conf": 0.09763623828589726,
+          "correct": false
+        },
+        {
+          "conf": 0.1029046698448473,
+          "correct": true
+        },
+        {
+          "conf": 0.11445042444173499,
+          "correct": false
+        },
+        {
+          "conf": 0.11586524392889302,
+          "correct": false
+        },
+        {
+          "conf": 0.24523797439002504,
+          "correct": true
+        },
+        {
+          "conf": 0.12612218155839888,
+          "correct": false
+        },
+        {
+          "conf": 0.11410667932065584,
+          "correct": false
+        },
+        {
+          "conf": 0.10193962626671825,
+          "correct": true
+        },
+        {
+          "conf": 0.11522577677057436,
+          "correct": true
+        },
+        {
+          "conf": 0.12257729025065839,
+          "correct": false
+        },
+        {
+          "conf": 0.13674027808340403,
+          "correct": true
+        },
+        {
+          "conf": 0.12140234806435385,
+          "correct": false
+        },
+        {
+          "conf": 0.11140366034198868,
+          "correct": true
+        },
+        {
+          "conf": 0.09855950687104677,
+          "correct": true
+        },
+        {
+          "conf": 0.11992233735494913,
+          "correct": true
+        },
+        {
+          "conf": 0.10663700414284723,
+          "correct": true
+        },
+        {
+          "conf": 0.10869365629774302,
+          "correct": true
+        },
+        {
+          "conf": 0.10727978289885333,
+          "correct": true
+        }
+      ]
+    }
+  ],
+  "confidenceGatePostHoc": [
+    {
+      "coverage": 0.1,
+      "precision": 0.8448275862068966,
+      "ndxFilesGated": 26,
+      "batchesAfter": 8,
+      "callsAvoided": 1
+    },
+    {
+      "coverage": 0.2,
+      "precision": 0.7586206896551724,
+      "ndxFilesGated": 51,
+      "batchesAfter": 7,
+      "callsAvoided": 2
+    },
+    {
+      "coverage": 0.3,
+      "precision": 0.7528735632183908,
+      "ndxFilesGated": 77,
+      "batchesAfter": 6,
+      "callsAvoided": 3
+    },
+    {
+      "coverage": 0.4,
+      "precision": 0.7370689655172413,
+      "ndxFilesGated": 102,
+      "batchesAfter": 6,
+      "callsAvoided": 3
+    },
+    {
+      "coverage": 0.5,
+      "precision": 0.7147766323024055,
+      "ndxFilesGated": 128,
+      "batchesAfter": 5,
+      "callsAvoided": 4
+    },
+    {
+      "coverage": 0.75,
+      "precision": 0.6238532110091743,
+      "ndxFilesGated": 191,
+      "batchesAfter": 3,
+      "callsAvoided": 6
+    },
+    {
+      "coverage": 1,
+      "precision": 0.5989672977624785,
+      "ndxFilesGated": 255,
+      "batchesAfter": 0,
+      "callsAvoided": 9
     }
   ]
 }
