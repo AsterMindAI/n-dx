@@ -3,6 +3,7 @@ import {
   parseApiTokenUsage,
   parseApiTokenUsageWithDiagnostic,
   parseCliTokenUsage,
+  parseCliCallMetadata,
   parseCliTokenUsageWithDiagnostic,
   parseStreamTokenUsage,
   parseStreamTokenUsageWithDiagnostic,
@@ -517,5 +518,40 @@ describe("parseCliTokenUsage — real CLI envelope (nested usage)", () => {
     const usage = parseCliTokenUsage({ input_tokens: 10, output_tokens: 20, usage: { input_tokens: 1, output_tokens: 2 } });
     expect(usage?.input).toBe(10);
     expect(usage?.output).toBe(20);
+  });
+});
+
+/**
+ * TN-B6 — the CLI envelope carries `total_cost_usd` and `num_turns` on every call,
+ * and CompletionResult had nowhere to put them. Jam's framing: a schema gap, not a
+ * missing read. These assert the fields survive parsing and stay optional.
+ */
+describe("CompletionResult carries per-call cost and turn count (TN-B6)", () => {
+  const envelope = {
+    type: "result",
+    result: "OK",
+    total_cost_usd: 0.367548,
+    num_turns: 1,
+    usage: { input_tokens: 2, output_tokens: 4, cache_creation_input_tokens: 45967 },
+  };
+
+  it("surfaces total_cost_usd as costUsd", () => {
+    expect(parseCliCallMetadata(envelope).costUsd).toBe(0.367548);
+  });
+
+  it("surfaces num_turns as turns", () => {
+    expect(parseCliCallMetadata(envelope).turns).toBe(1);
+  });
+
+  it("leaves both undefined when the envelope omits them, rather than inventing zeros", () => {
+    const meta = parseCliCallMetadata({ type: "result", result: "OK" });
+    expect(meta.costUsd).toBeUndefined();
+    expect(meta.turns).toBeUndefined();
+  });
+
+  it("ignores non-numeric values rather than passing them through", () => {
+    const meta = parseCliCallMetadata({ total_cost_usd: "0.37", num_turns: null });
+    expect(meta.costUsd).toBeUndefined();
+    expect(meta.turns).toBeUndefined();
   });
 });
