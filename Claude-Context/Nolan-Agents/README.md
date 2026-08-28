@@ -72,6 +72,13 @@ Fill in as scopes and dependencies become clear.
 | **Token numbers** — Path A produces the measurement Path B must quote to claim a saving | Jam (Path B, `TN-J4`) | Butter publishes the number with its method; Path B quotes it rather than deriving its own. Butter does not edit `sourcevision/src/analyzers/**`. Within-team note (`NOTE-nolan-internal-…`) if either side's number moves. |
 | **`packages/llm-client/`** — Butter works `token-usage.ts`, `cli-provider.ts`, `api-provider.ts`; the four shared files in that package are on the monorepo "nobody edits unilaterally" list | All three teams | Butter claims its three files in `../IN-FLIGHT.md`. If a fix reaches `provider-registry.ts`, `provider-interface.ts`, `llm-types.ts`, or `llm-config.ts`, it is claimed and announced **before** the edit, not after. |
 
+## Handbooks
+
+- [`K2-HANDBOOK.md`](K2-HANDBOOK.md) — **onboarding for whoever builds the ELM classification tier.**
+  Self-contained: the five numbers that define the problem, what is already settled (capacity,
+  features, corpus size, the `TN-J24` merge), the adopted abstention design, the contamination rule
+  on the spent gold set, and the ten traps that have each produced a believed-but-wrong number.
+
 ## Communication
 
 - **Inbox:** [`Notes/`](Notes/) — read at the start of every session.
