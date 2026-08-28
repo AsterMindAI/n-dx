@@ -3,3 +3,33 @@ Date Of Creation: 08/16/26
 Created By: Thomas Addison
 Purpose: To document the documented setions with Nala my claude agent
 
+### 2026-08-20 — install blocker resolved, ELM integration verified
+
+Thomas asked how to resolve the trust-downgrade block and the shadow-mode validation gap; approved proceeding.
+
+**Root cause was bigger than the one package.** `package.json`'s `"pnpm": { "overrides": {...} }` block (14 entries — picomatch, postcss, hono, ajv, vite, esbuild, rollup, etc.) was being silently ignored — pnpm 10.33 warns on every install that the `pnpm` field in `package.json` is no longer read, and reads `overrides` from `pnpm-workspace.yaml` instead. All 14 pins had been inert, not just the missing `undici-types` one.
+
+**Fix:** migrated all 14 overrides into `pnpm-workspace.yaml`, added `undici-types: ^6.28.0` (newest version with valid SLSA provenance — confirmed via `npm view undici-types@6.28.0 dist.attestations` before landing it; `@types/node@22.19.8`'s own `~6.21.0` range only resolves to a version with no provenance, so this deliberately overrides past what the parent package declares — safe since `undici-types` is types-only, no runtime code). Removed the now-dead block from `package.json`.
+
+**Verified four ways, not just "install succeeded":**
+1. `pnpm install` — clean, no trust-downgrade error.
+2. Found and ran `scripts/elm-hello-world.mjs` — a pre-existing smoke test from commit `43d6db51` (present since before this whole ELM investigation started, missed at the time) that had never successfully run in this environment (`node_modules/@astermind` didn't exist until now). Passes: 83% accuracy on held-out paths. Note: it exercises **text mode** (`useTokenizer: true`, `.train()`/`.predict()`), a different code path than `classify-elm.ts`'s **numeric mode** (`.trainFromData()`/`.predictProbaFromVector()`) — doesn't validate numeric mode specifically, but does confirm the library loads and works under Node in this exact environment.
+3. `tsc --noEmit` on sourcevision (after building `@n-dx/llm-client` first, a workspace-dependency build-order requirement, not a bug): **zero errors**, including `classify-elm.ts` and the restructured `classify.ts`.
+4. All 66 pre-existing `classify.ts` unit tests still pass — no regression.
+
+**Structural issue found, separate from both above, not yet fixed:** every `pnpm run <script>` that shells to a `node_modules/.bin` binary (`tsc`, `vitest`, build scripts) fails with "command not found" in this checkout, because `AsterMind:n-dx`'s directory name contains a literal `:` — the Unix `PATH` separator — which breaks `PATH`-based bin resolution entirely. Worked around by invoking `tsc`/`vitest` directly via their resolved path in `.pnpm/`. The standard `pnpm build`/`pnpm typecheck`/`pnpm test` commands documented throughout this repo do not work from this location as-is. Real fix is renaming the directory to drop the colon — flagged to Thomas, not done (outside this charter's scope to rename the project's own folder unprompted).
+
+**Also discovered:** root `package.json` has had its own separate `@astermind/astermind-community` dependency + `elm:hello` script since commit `43d6db51`, predating this session's classify.ts work entirely — unrelated prior experimentation, not a conflict with the sourcevision-scoped dependency added on 2026-08-13.
+
+Shadow-mode validation (the 2026-08-13 plan: run across multiple repos, persist agreement stats, define a numeric acceptance bar before flipping `ELM_GATE_ENABLED`) is now unblocked but not yet executed — checked in with Thomas before taking that on rather than assuming it was in scope.
+
+### 2026-08-20 — real-data validation found the evidence-vector design doesn't work
+
+Thomas approved running the shadow-mode `ndx analyze` pass. Hit a wall immediately: the `claude` CLI isn't installed in this environment (config says vendor `claude`/`claude-sonnet-4-6`, but the binary itself is absent) — confirmed empirically by actually running `sourcevision analyze .` against n-dx, which logged `[classify] LLM CLI not found` on the very first batch. No live LLM calls possible here, so "ELM vs. Claude agreement" data cannot be collected in this environment regardless of what gets built.
+
+Pivoted to what was actually checkable without a live LLM: built sourcevision (`tsc -p packages/sourcevision/tsconfig.json`), ran a real (non-lite) `analyze` against n-dx itself — 423 files classified algorithmically, 260 left unclassified — and wrote a standalone diagnostic script (scratchpad, not committed) that loads `.sourcevision/classifications.json` and calls `trainClassifyELM`/`predictWithClassifyELM` directly against the real evidence vectors, bypassing the need for the LLM.
+
+**Result: the ELM resolved 0/260 unclassified files, and the reason isn't the confidence threshold.** All 260 unclassified files carry a completely empty `evidence` array — confirmed against raw `classifications.json` entries, not a bug in the diagnostic. This falsifies the design assumption logged on 2026-08-06 and repeated since: that unclassified files have *weak-but-present* evidence just under `PRIMARY_THRESHOLD` that an ELM could learn to interpret. On n-dx's real data, the unclassified population isn't "near-misses" — it's files where the algorithmic pass's path/directory/filename/export signals matched *nothing at all* (e.g. `packages/hench/src/agent/analysis/adaptive.ts`). An all-zero input vector gives any classifier nothing to discriminate on (margins ~0.002 across the board, indistinguishable from noise) — not fixable by tuning the margin threshold down.
+
+**Path forward, not yet built:** the pre-existing `elm-hello-world.mjs` smoke test is the working counter-example — it feeds raw path text (character-tokenized, `useTokenizer: true`) and gets 83% held-out accuracy, signal the evidence vector doesn't capture at all. Proposed to Thomas: switch `classify-elm.ts` to use path text as input (via `FeatureCombinerELM`, already flagged on 2026-08-13 as "the natural v2 path," or text mode directly) instead of, or combined with, the evidence vector. This is a real implementation pivot, not a threshold tweak — did not start it without confirmation. Did not yet run the AsterMind-Community-Edition side of the validation plan — this finding was significant enough to check in before continuing the original two-repo plan mechanically.
+

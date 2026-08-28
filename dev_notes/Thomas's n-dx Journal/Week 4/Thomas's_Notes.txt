@@ -1,5 +1,5 @@
 File Name: Thomas's Notes
-Date Of Creation: 08/16/26
+Date Of Creation: 08/30/26
 Created By: Thomas Addison
 Purpose: To document my personal notes I have taken while working
 
@@ -19,6 +19,7 @@ agreement data before flipping ELM_GATE_ENABLED to true.)
 
 ___TUESDAY___
 
+t
 
 Issue 1 — the trust-downgrade block
 
@@ -134,3 +135,14 @@ Issue 2 — validating shadow mode before flipping the gate
 
         relax it based on continued monitoring once it's actually skipping calls.
 
+
+
+
+__WEDNESDAY___
+
+t
+
+
+___THURSDAY___
+
+t

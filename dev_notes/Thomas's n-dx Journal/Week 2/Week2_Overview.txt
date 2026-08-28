@@ -5,68 +5,26 @@ Purpose: To document the work I've done on the n-dx repository in a readable
     human friendly format.
 
 
-___SUNDAY___
-
-
-WORK DONE THROUGH-OUT THE DAY:
-
-    t
-
-
-___MONDAY___
-
-
-WORK DONE THROUGH-OUT THE DAY:
-
-    t
-
-
-___TUESDAY___
-
-
-INTERNSHIP STAND-UP MEETING:
-
-    t
-
-
-WORK DONE THROUGH-OUT THE DAY:
-
-    t
-
-
-___WENESDAY___
-
-
-WORK DONE THROUGH-OUT THE DAY:
-
-    t
-
-
 ___THURSDAY___
 
 
 INTERNSHIP STAND-UP MEETING:
 
-    t
+    The purpose of this meeting was to primarily arrange our schedules so
+    
+    that they would line up so that we no longer have any more meeting
+
+    conflicts. After a bit of back and forth we decided to move the meetings
+
+    from Tuesdays and Thursdays to Monday and Fridays, which worked out better
+
+    for everyone. Besides that we decided to update each other on the work we
+
+    got done and that was about it. 
 
 
 WORK DONE THROUGH-OUT THE DAY:
 
-    t
+    Most of the rest of the work I did that day was on updating documentation. 
 
-
-___FRIDAY___
-
-
-WORK DONE THROUGH-OUT THE DAY:
-
-    t
-
-
-___SATURDAY___
-
-
-WORK DONE THROUGH-OUT THE DAY:
-
-    t
 
