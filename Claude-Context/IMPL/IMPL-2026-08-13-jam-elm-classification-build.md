@@ -411,3 +411,44 @@ Rule fixes (Step 1) roll back independently and safely — they are pure signal 
   (`analyze-phases.ts:210`). Options are a schema/ruleset version stamp in `classifications.json`
   that forces re-classification when it changes, release notes telling users to run `--full`, or
   accepting the staleness. Affects every future `archetypes.ts` change, not just this project.
+
+
+---
+
+## Step 3 — PRE-REGISTERED feasibility bar (written 2026-08-27, BEFORE any model was run)
+
+Recorded before seeing a single number, per the discipline that worked for `TN-J4`. Butter's
+argument in `NOTE-…-paths-a-c-split-and-findings-doc.md` § 4 is accepted: **infeasibility can be
+established without a gold set**, because a model that cannot reproduce the teacher does not become
+useful if the teacher is later corrected.
+
+**Primary metric: agreement-with-teacher** on the 83 held-out rows. It is *never* to be called
+accuracy — the teacher is known inconsistent on the `service`/`utility` boundary (`TN-J10`).
+
+**Baselines, recomputed from the corpus actually used (never quoted from a document):**
+- Held-out majority-class (`service`, 31/83) = **37.3%**
+- Whole-corpus majority = 38.0%
+
+**Thresholds, fixed in advance:**
+
+| Held-out agreement | Verdict |
+|---|---|
+| **≥ 55%** | The mapping is learnable. Path B proceeds and **`TN-J10` now binds** — "is the teacher right?" becomes the live question. |
+| **45 – 55%** | Inconclusive. Do not spin; report as inconclusive and take it to the leads with the confusion matrix. |
+| **< 45%** | **Path B is not viable.** Publish the negative. `TN-J10` becomes moot — no gold set can rescue a mapping the model cannot learn. |
+
+**Secondary, reported regardless of verdict:**
+- `service` ↔ `utility` confusion — those two are **74%** of the corpus and are exactly where the
+  teacher is shakiest. This is the number the leads need to decide `TN-J10`, and it replaces my
+  qualitative read of four filenames with a measurement.
+- Per-class F1 — **with the caveat stated in advance, not afterwards: 9 of 13 classes have under 10
+  training rows** (`store` 2, `gateway` 1, `hook` 1, `schema` 1, `test-helper` 1). Per-class F1 on
+  those is close to meaningless and will not be argued from.
+
+**Method constraints:** seed 42; the 83 held-out rows are not touched during training or tuning; the
+feature is the path string only (established in Step 0 — all unclassified files have zero signal
+evidence, so the path is the only thing available); confidence is captured per prediction so the
+gate that bounds Path B's downside can be evaluated separately from raw agreement.
+
+**If I tune anything after seeing the held-out number, the run is contaminated and must be
+re-declared as such.**
