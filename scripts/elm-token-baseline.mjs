@@ -48,6 +48,8 @@ const REPO_ROOT = resolve(HERE, "..");
 const BATCH_SIZE = 30;
 /** Deterministic file selection so re-runs measure the same prompts. */
 const SEED = 42;
+/** Matches what analyze sends. */
+const MODEL = "claude-sonnet-5";
 
 // ── args ──────────────────────────────────────────────────────────────────
 
@@ -182,19 +184,34 @@ if (dryRun) {
   process.exit(0);
 }
 
-const { callClaude } = await import(
-  join(REPO_ROOT, "packages/sourcevision/dist/analyzers/claude-client.js")
+// Invoke the CLI directly rather than through callClaude, because
+// CompletionResult (llm-client/src/types.ts:82-87) carries only {text, tokenUsage}
+// and has nowhere to put `num_turns` or `total_cost_usd`. That is a schema gap,
+// not a missing read — see TN-B6. Going direct also lets us cross-check n-dx's own
+// parser against the same envelope without paying for a second call.
+const { parseCliTokenUsage } = await import(
+  join(REPO_ROOT, "packages/llm-client/dist/token-usage.js")
 );
+
+/** One classify call, returning the whole envelope. */
+function callCliRaw(binPath, model, prompt) {
+  const out = execFileSync(binPath, ["-p", "-", "--output-format", "json", "--model", model], {
+    input: prompt, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+  });
+  return JSON.parse(out);
+}
 
 const observations = [];
 for (const [i, batch] of batches.entries()) {
   const prompt = buildClassifyPrompt(batch, catalog, true);
   process.stdout.write(`  call ${i + 1}/${batches.length} — ${batch.length} files, ${prompt.length} chars ... `);
   const startedAt = Date.now();
-  let usage, error;
+  let usage, error, envelope;
   try {
-    const r = await callClaude(prompt);
-    usage = r.tokenUsage;
+    envelope = callCliRaw(binary.path, MODEL, prompt);
+    // Parse with n-dx's own parser, so this instrument also regression-tests the
+    // TN-J3 fix on every run rather than trusting it.
+    usage = parseCliTokenUsage(envelope);
   } catch (err) {
     error = String(err?.message ?? err).slice(0, 200);
   }
@@ -211,9 +228,13 @@ for (const [i, batch] of batches.entries()) {
     continue;
   }
   const overhead = (usage.cacheCreationInput ?? 0) + (usage.cacheReadInput ?? 0);
-  console.log(`in=${usage.input} out=${usage.output} cacheCreate=${usage.cacheCreationInput ?? 0} cacheRead=${usage.cacheReadInput ?? 0} (${ms}ms)`);
+  console.log(`turns=${envelope.num_turns} $${(envelope.total_cost_usd ?? 0).toFixed(4)} in=${usage.input} out=${usage.output} cacheCreate=${usage.cacheCreationInput ?? 0} cacheRead=${usage.cacheReadInput ?? 0} (${ms}ms)`);
   observations.push({
     call: i + 1, files: batch.length, promptChars: prompt.length, ms,
+    // Jam's TN-J17 gate: if classify calls take >1 turn, CLI flags cannot fix the
+    // harness overhead, because 2.1.231 has no --max-turns in print mode.
+    numTurns: envelope.num_turns,
+    totalCostUsd: envelope.total_cost_usd,
     input: usage.input, output: usage.output,
     cacheCreationInput: usage.cacheCreationInput ?? 0,
     cacheReadInput: usage.cacheReadInput ?? 0,
@@ -238,6 +259,10 @@ console.log(`  of which overhead (cache create + read):`);
 console.log(`                   min ${overheads[0].toLocaleString()}  max ${overheads[overheads.length - 1].toLocaleString()}  mean ${Math.round(sum(overheads) / overheads.length).toLocaleString()}`);
 const meanPromptShare = sum(ok.map((o) => o.input + o.output)) / sum(ok.map((o) => o.totalTokens));
 console.log(`  prompt+completion as a share of the call: ${(meanPromptShare * 100).toFixed(2)}%`);
+const turns = [...new Set(ok.map((o) => o.numTurns))];
+const costs = ok.map((o) => o.totalCostUsd ?? 0);
+console.log(`  num_turns observed: ${turns.join(", ")}  ${turns.every((t) => t === 1) ? "<- ALL SINGLE-TURN: CLI flags CAN address the harness overhead (TN-J17 gate PASSED)" : "<- MULTI-TURN: flags cannot fix this; 2.1.231 has no --max-turns in print mode"}`);
+console.log(`  cost per call:   min $${Math.min(...costs).toFixed(4)}  max $${Math.max(...costs).toFixed(4)}  sum $${sum(costs).toFixed(4)}`);
 console.log(`\n  n=${ok.length} is a small sample. Quote the range, not the mean.`);
 console.log(`  This is the cost of ONE classify call. It is NOT a savings figure —`);
 console.log(`  calls avoided is Path B's number (scripts/elm-calls-avoided.mjs).`);
@@ -263,6 +288,7 @@ const out = {
     "Overhead varies with cache state; it is not a constant.",
     "Cost of one classify call. NOT a savings figure.",
     "Zone-enrichment calls are a separate, larger population an ELM cannot replace.",
+    "MACHINE-SPECIFIC: MCP servers connected on the measuring machine are established per spawn and inflate cache_creation. Jam's point — these numbers may not generalise to a user with none.",
   ],
   observations,
   summary: {
@@ -270,6 +296,9 @@ const out = {
     totalTokens: { min: totals[0], max: totals[totals.length - 1], mean: Math.round(sum(totals) / totals.length) },
     overheadTokens: { min: overheads[0], max: overheads[overheads.length - 1], mean: Math.round(sum(overheads) / overheads.length) },
     promptShareOfCall: Number(meanPromptShare.toFixed(4)),
+    numTurnsObserved: turns,
+    allSingleTurn: turns.every((t) => t === 1),
+    costUsd: { min: Math.min(...costs), max: Math.max(...costs), sum: Number(sum(costs).toFixed(6)) },
   },
 };
 
