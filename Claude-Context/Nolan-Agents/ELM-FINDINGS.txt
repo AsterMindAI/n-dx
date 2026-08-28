@@ -175,6 +175,37 @@ Binary: pnpm claude 2.1.231 -- the one on PATH, i.e. the one n-dx actually spawn
   RANGE: 53,553 - 267,952 tokens per classify call. 5.0x spread. n=3.
   Prompt + completion = 5.12% OF THE CALL. The other ~95% is cache overhead.
 
+  >>> SUPERSEDED 2026-08-27 by a second run, n=3 more (n=6 total). READ ON. <<<
+
+  A second run isolated where the variance comes from, and the honest number is
+  both LOWER and much TIGHTER than the range above:
+
+    call    total    cache_create   cache_read    out    turns    cost
+    run2-1  54,228        46,489            0   7,737        1  $0.3950
+    run2-2  49,671        23,776       22,249   3,644        1  $0.2040
+    run2-3  48,874        23,724       22,249   2,899        1  $0.1925
+
+  cache_creation is STABLE (~23.7k-25.1k warm; 46-59k on a run's first, cold
+  call). cache_READ is what swings: 0, then 22,249 four times, then 68,225 and
+  197,952 in the two outliers. The 267,952 figure I published was ONE call with
+  anomalous cache_read, and it dominated a range I then quoted as typical.
+
+    STEADY STATE, n=4 across both runs .... 48,874 - 54,228 tokens (1.11x spread)
+    mean .................................. 51,581
+    OUTLIERS (elevated cache_read) ........ 96,231 and 267,952
+    HARNESS FLOOR, every call ............. ~23,700 - 25,100 tokens
+
+  USE ~49k-54k AS THE TYPICAL CLASSIFY CALL. Quote the two outliers separately
+  and say what makes them outliers, rather than folding them into a range.
+
+  num_turns = 1 ON ALL SIX CALLS. This is the gate on TN-J17: single-turn means
+  CLI flags CAN address the harness overhead, because there is no agent loop to
+  cut. (2.1.231 has no --max-turns in print mode, so a multi-turn result would
+  have made flags useless and forced the api-provider swap instead.)
+
+  COST, measured: $0.1925 - $0.3950 per classify call.
+    -> n-dx's 9 classify batches = roughly $1.73 - $3.56 per full analyze.
+
 SUPERSEDED: an earlier range of 22,110 / 34,526 / 45,948 came from trivial
 2-in/4-out prompts. A real classify call is 1.2x to 12.1x that. Do not quote the
 trivial numbers.
@@ -249,7 +280,9 @@ n-dx already ships api-provider.ts for the API path.
 
     What an avoided call saves depends ENTIRELY on the backend:
 
-        CLI backend (no API key) ..... ~53,553 - 267,952 tokens saved per call
+        CLI backend (no API key) ..... ~49,000 - 54,000 tokens saved per call
+                                       (was quoted as 53,553-267,952; corrected
+                                        2026-08-27, see section 5)
         API backend (with key) ....... ~2,700 - 13,700 tokens saved per call
                                        (prompt + completion only -- the 5.12%)
 
