@@ -4,10 +4,10 @@
   "implements": "IMPL-2026-08-23-butter-token-measurement-and-path-a-b-seam.md § A4",
   "contract": "ADR-2026-08-23-butter-savings-measurement-contract.md",
   "provenance": {
-    "date": "2026-08-24T01:01:06.190Z",
+    "date": "2026-08-28T01:13:20.826Z",
     "repo": "AsterMind-Community-Edition",
     "repoCommit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
-    "ndxCommit": "4ebdeb1cd481acef697e83c8dc4517b80ff9f753",
+    "ndxCommit": "a783c137970fa3fdcc596fe6550c674546d330f1",
     "claudeBinary": "/Users/nolanmoore/Library/pnpm/claude",
     "claudeVersion": "2.1.231 (Claude Code)",
     "batchSize": 30,
@@ -18,58 +18,74 @@
     "Small sample — quote the range, not the mean.",
     "Overhead varies with cache state; it is not a constant.",
     "Cost of one classify call. NOT a savings figure.",
-    "Zone-enrichment calls are a separate, larger population an ELM cannot replace."
+    "Zone-enrichment calls are a separate, larger population an ELM cannot replace.",
+    "MACHINE-SPECIFIC: MCP servers connected on the measuring machine are established per spawn and inflate cache_creation. Jam's point — these numbers may not generalise to a user with none."
   ],
   "observations": [
     {
       "call": 1,
       "files": 30,
       "promptChars": 4182,
-      "ms": 111885,
-      "input": 12,
-      "output": 11145,
-      "cacheCreationInput": 59122,
-      "cacheReadInput": 197673,
-      "overheadTokens": 256795,
-      "totalTokens": 267952
+      "ms": 67225,
+      "numTurns": 1,
+      "totalCostUsd": 0.39499500000000004,
+      "input": 2,
+      "output": 7737,
+      "cacheCreationInput": 46489,
+      "cacheReadInput": 0,
+      "overheadTokens": 46489,
+      "totalTokens": 54228
     },
     {
       "call": 2,
       "files": 30,
       "promptChars": 4088,
-      "ms": 74377,
+      "ms": 30856,
+      "numTurns": 1,
+      "totalCostUsd": 0.2039967,
       "input": 2,
-      "output": 7326,
-      "cacheCreationInput": 23976,
+      "output": 3644,
+      "cacheCreationInput": 23776,
       "cacheReadInput": 22249,
-      "overheadTokens": 46225,
-      "totalTokens": 53553
+      "overheadTokens": 46025,
+      "totalTokens": 49671
     },
     {
       "call": 3,
       "files": 30,
       "promptChars": 3883,
-      "ms": 25630,
-      "input": 4,
-      "output": 2890,
-      "cacheCreationInput": 25112,
-      "cacheReadInput": 68225,
-      "overheadTokens": 93337,
-      "totalTokens": 96231
+      "ms": 23473,
+      "numTurns": 1,
+      "totalCostUsd": 0.1925097,
+      "input": 2,
+      "output": 2899,
+      "cacheCreationInput": 23724,
+      "cacheReadInput": 22249,
+      "overheadTokens": 45973,
+      "totalTokens": 48874
     }
   ],
   "summary": {
     "n": 3,
     "totalTokens": {
-      "min": 53553,
-      "max": 267952,
-      "mean": 139245
+      "min": 48874,
+      "max": 54228,
+      "mean": 50924
     },
     "overheadTokens": {
-      "min": 46225,
-      "max": 256795,
-      "mean": 132119
+      "min": 45973,
+      "max": 46489,
+      "mean": 46162
     },
-    "promptShareOfCall": 0.0512
+    "promptShareOfCall": 0.0935,
+    "numTurnsObserved": [
+      1
+    ],
+    "allSingleTurn": true,
+    "costUsd": {
+      "min": 0.1925097,
+      "max": 0.39499500000000004,
+      "sum": 0.791501
+    }
   }
 }
