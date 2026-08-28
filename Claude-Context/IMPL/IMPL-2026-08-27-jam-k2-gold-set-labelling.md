@@ -143,7 +143,7 @@ Report each with its `n`, and exclude `unclear`/`missing` rows from the agreemen
 | **(2) is low** | **The corpus is wrong**, not the model. Retrain against corrected labels; every archetype label the tool has ever produced is suspect. Escalate beyond Path B. |
 | **(1) is low** | **Paths are not enough information** — for the LLM as much as for us. Recommend feeding the classifier file contents. Bigger prize than Path B; currently nobody's scope. |
 | **(5) is low** | **The taxonomy is broken.** Fix the class definitions before judging any model. |
-| High `unclear` rate | Same as (5): the boundary is under-specified and no classifier can be held to it. |
+| High `unclear` rate **or** high not-confident rate | Same as (5): the boundary is under-specified and no classifier can be held to it. **⚠️ Corrected 2026-08-27, defect found by the labeller:** reading the `unclear` column *alone* gives a false pass. In the returned set `unclear` was **0/83** while `confident_yes_no = no` was **30/83 (36.1%)** — an order of magnitude more uncertainty than the `unclear` column shows. **Always evaluate this test against `confident_yes_no` as well.** |
 
 ## B5. After the numbers land
 
