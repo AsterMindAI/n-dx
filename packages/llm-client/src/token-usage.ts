@@ -172,6 +172,31 @@ export function parseCliTokenUsageWithDiagnostic(
   };
 }
 
+/** Per-call metadata the CLI reports alongside usage. */
+export interface CliCallMetadata {
+  costUsd?: number;
+  turns?: number;
+}
+
+/**
+ * Extract per-call cost and turn count from a Claude CLI JSON envelope.
+ *
+ * Both are absent from {@link CompletionResult} historically — the vendor returned
+ * them and the type had nowhere to put them (TN-B6). Fields are omitted rather than
+ * defaulted: a missing cost means "not reported", never "free", and a missing turn
+ * count must not read as a single turn.
+ */
+export function parseCliCallMetadata(
+  envelope: Record<string, unknown>,
+): CliCallMetadata {
+  const meta: CliCallMetadata = {};
+  const cost = envelope.total_cost_usd;
+  if (typeof cost === "number" && Number.isFinite(cost)) meta.costUsd = cost;
+  const turns = envelope.num_turns;
+  if (typeof turns === "number" && Number.isFinite(turns)) meta.turns = turns;
+  return meta;
+}
+
 // ── Stream token parsing ──────────────────────────────────────────────────
 
 /**

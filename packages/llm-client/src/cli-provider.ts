@@ -34,7 +34,7 @@ import type {
 } from "./types.js";
 import { ClaudeClientError } from "./types.js";
 import { resolveCliPath } from "./config.js";
-import { parseCliTokenUsage, parseStreamTokenUsage } from "./token-usage.js";
+import { parseCliTokenUsage, parseStreamTokenUsage, parseCliCallMetadata } from "./token-usage.js";
 import type { LLMProvider, ProviderInfo } from "./provider-interface.js";
 import { diagnoseCliInvocation, diagnoseCliNotFound, spawnCli } from "./exec.js";
 import { classifyAuthError } from "./llm-error-classifier.js";
@@ -346,7 +346,7 @@ function parseJsonOutput(stdout: string): CompletionResult {
           const env = event as Record<string, unknown>;
           const text = typeof env.result === "string" ? env.result : stdout;
           const tokenUsage = parseStreamTokenUsage(env);
-          return { text, tokenUsage };
+          return { text, tokenUsage, ...parseCliCallMetadata(env) };
         }
       }
       return { text: stdout };
@@ -355,7 +355,7 @@ function parseJsonOutput(stdout: string): CompletionResult {
     const envelope = parsed as Record<string, unknown>;
     const text = typeof envelope.result === "string" ? envelope.result : stdout;
     const tokenUsage = parseCliTokenUsage(envelope);
-    return { text, tokenUsage };
+    return { text, tokenUsage, ...parseCliCallMetadata(envelope) };
   } catch {
     return { text: stdout };
   }

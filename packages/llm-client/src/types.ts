@@ -84,6 +84,20 @@ export interface CompletionResult {
   text: string;
   /** Token usage from the call, if available. */
   tokenUsage?: TokenUsage;
+  /**
+   * Vendor-reported cost for this call, when the provider supplies one.
+   *
+   * The Claude CLI returns `total_cost_usd` on every `--output-format json`
+   * envelope. Undefined means the provider did not report a cost — it never
+   * means the call was free.
+   */
+  costUsd?: number;
+  /**
+   * Turns the provider took. 1 for a plain completion; greater than 1 means an
+   * agent loop ran. Measured at 1 for sourcevision classify calls (TN-J17 gate),
+   * which is what makes CLI flags a viable way to cut harness overhead.
+   */
+  turns?: number;
 }
 
 /** Error classification for structured error handling. */
