@@ -1,0 +1,117 @@
+{
+  "schema": "elm-architecture-sweep/v1",
+  "generatedAt": "2026-08-28T18:14:44.969Z",
+  "generatedBy": "scripts/elm-architecture-sweep.mjs",
+  "preRegistered": {
+    "committedAt": "f4a06175",
+    "adoption": {
+      "meanMarginPp": 1.5,
+      "minPairedWins": 7,
+      "totalPairs": 9
+    },
+    "foldSeeds": [
+      7,
+      13,
+      29
+    ],
+    "modelSeeds": [
+      101,
+      202,
+      303
+    ],
+    "folds": 5,
+    "note": "Fixed before this script existed. Editing these voids the run."
+  },
+  "method": {
+    "split": "TRAIN only (corpus.train); heldOut and gold set #1 not read",
+    "metric": "5-fold CV accuracy vs LLM labels — agreement with the teacher, NOT accuracy vs truth",
+    "feature": "path string only; library tokenize() + TF-IDF fitted per fold on that fold's train rows",
+    "paired": true
+  },
+  "corpusProvenance": {
+    "sources": [
+      "llm"
+    ],
+    "seed": 42,
+    "holdout": 0.25,
+    "repos": [
+      {
+        "repo": "n-dx-1",
+        "path": "/Users/nolanmoore/n-dx-1",
+        "git": {
+          "commit": "b8770042cb333334d864cca116c1c5e4189248ad",
+          "branch": "nolan-work",
+          "remote": "https://github.com/AsterMindAI/n-dx.git",
+          "dirty": true
+        },
+        "totalFiles": 683,
+        "classified": 683,
+        "unclassified": 0,
+        "harvested": 255
+      },
+      {
+        "repo": "AsterMind-Community-Edition",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/AsterMind-Community-Edition",
+        "git": {
+          "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+          "branch": "main",
+          "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git",
+          "dirty": true
+        },
+        "totalFiles": 114,
+        "classified": 114,
+        "unclassified": 0,
+        "harvested": 69
+      }
+    ]
+  },
+  "incumbent": {
+    "name": "INCUMBENT elm-1024 relu λ1e-2 v4000",
+    "kind": "elm",
+    "incumbent": true,
+    "runs": [
+      0.6016597510373444
+    ],
+    "mean": 0.6016597510373444,
+    "min": 0.6016597510373444,
+    "max": 0.6016597510373444,
+    "seconds": 14.19
+  },
+  "results": [
+    {
+      "name": "INCUMBENT elm-1024 relu λ1e-2 v4000",
+      "kind": "elm",
+      "incumbent": true,
+      "runs": [
+        0.6016597510373444
+      ],
+      "mean": 0.6016597510373444,
+      "min": 0.6016597510373444,
+      "max": 0.6016597510373444,
+      "seconds": 14.19
+    },
+    {
+      "name": "kelm rbf nystrom m64 λ1e-2",
+      "kind": "kernel",
+      "incumbent": false,
+      "runs": [
+        0.34854771784232363
+      ],
+      "mean": 0.34854771784232363,
+      "min": 0.34854771784232363,
+      "max": 0.34854771784232363,
+      "seconds": 0.225
+    }
+  ],
+  "verdicts": [
+    {
+      "name": "kelm rbf nystrom m64 λ1e-2",
+      "mean": 0.34854771784232363,
+      "deltaPp": -25.311203319502074,
+      "pairedWins": 0,
+      "of": 1,
+      "adopted": false
+    }
+  ],
+  "verdict": "NO CHANGE — architecture and regularisation are not levers either. Incumbent frozen for Phase 2."
+}

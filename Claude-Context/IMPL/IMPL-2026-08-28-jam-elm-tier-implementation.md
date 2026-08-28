@@ -101,6 +101,44 @@ is carried forward there rather than dropped.
 *"architecture and regularisation are not levers either"* — joining features and corpus size — and
 the incumbent is frozen for Phase 2. That is a result and gets published as one.
 
+### Addendum to the Phase 1 pre-registration — committed before the sweep ran
+
+Two harness diagnostics, run before the full sweep and **without reference to any accuracy number**.
+Both are properties of the feature space, not of a result, which is why adding an arm here is not
+fishing. Recorded in this order deliberately.
+
+**1. The vocabulary-cap concern above is inert, and I am striking it rather than quietly dropping
+it.** The train split's TF-IDF vocabulary is **1688 terms**, so caps of 2000 and 4000 produce an
+identical 1688-dimensional space. `elm-diagnostics.mjs` (4000) and `elm-feasibility-screen.mjs`
+(2000) were never actually measuring different feature spaces. Only `vocabCap: 1000` binds, and it
+stays in the sweep as the one arm that tests whether truncation helps.
+
+**2. `KernelELM`'s default RBF gamma is degenerate on this feature space, and the pre-registered
+RBF arm would have measured that rather than the architecture.** `KernelSpec.gamma` defaults to
+`1/D`. Here:
+
+```
+D = 1688                     ->  default gamma = 5.92e-4
+mean ||x - z||^2  = 1.862        (TF-IDF rows, train split)
+max  ||x - z||^2  = 3.697
+K(x,z) = exp(-gamma * 1.862)  =  0.9989
+```
+
+**Every pair of points has kernel similarity ~0.999.** The Gram matrix is all-ones to three decimal
+places and carries no discriminative structure. A bad score from that arm is a statement about a
+default, not about kernel methods — and "a broken configuration and a genuine negative look
+identical in a results table" is the § 6.3 trap this project already has a guard for.
+
+`KernelELM` itself is fine: on a separable 2-class problem it returns the correct labels in all six
+(kernel × mode) combinations. So the harness works; the default does not. A
+`assertKernelHarnessCanLearn()` check is added alongside `assertHarnessCanLearn()` so a future
+kernel negative carries the same guarantee the ELM ones do.
+
+**Declared addition — a gamma arm, on the same adoption rule.** `gamma` ∈ `{0.5, 1, 2, 4}` at
+`m=128`, `λ` ∈ `{1e-2, 1e-1}`. These bracket the median-heuristic scale (`1/median ||x-z||^2 ≈ 0.54`)
+and an order of magnitude above it. **The default-gamma arms stay in the sweep and get reported**,
+labelled confounded, because deleting them would hide why the arm was added.
+
 ## Phase 2 pre-registration — operating point (DEV only)
 
 Fixed at the same commit, for the same reason: the operating-point search is where a bar gets
