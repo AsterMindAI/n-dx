@@ -4,7 +4,7 @@
 - **Owner:** Butter (Team Nolan)
 - **Backlog item:** `TN-B3`
 - **Branch:** `Nolan-Work-Butter` · **Worktree:** `/Users/nolanmoore/n-dx-butter`
-- **Status:** Not started — **Step 0 gates everything and needs a second lead**
+- **Status:** **Sequencing amended 2026-08-27 by** [`ADR-2026-08-27-butter-prove-before-provisioning.md`](../ADR/ADR-2026-08-27-butter-prove-before-provisioning.md). Step 0 is no longer first and no longer blocks the lane: the ELM is proved as a script-tier prototype first ([`IMPL-2026-08-27-butter-elm-prototype-and-telemetry.md`](IMPL-2026-08-27-butter-elm-prototype-and-telemetry.md)), and the workspace dependency is taken only if it clears Path B's bar. **This document remains the plan for the promoted module**; its Steps 1–4 are correct and are what promotion executes. Sign-off requests with Jarrett and Thomas stand, downgraded from blocking to pending.
 
 > Line anchors verified at `5e24f80a`. Numbers attributed to Jam are cited, not re-derived.
 
