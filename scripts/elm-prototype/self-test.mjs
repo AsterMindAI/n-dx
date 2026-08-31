@@ -10,6 +10,17 @@
  *
  * The task is the hello-world's, verbatim: 3 classes, 30 training rows, 6 held-out,
  * seed 42, random baseline 33%, documented floor 66%.
+ *
+ * ⚠️ THE TASK IS THE SAME; THE CONFIG IS NOT. This runs through ElmClassifier's config
+ * (maxLen 80), not the script's (maxLen 32), so its number is NOT directly comparable to
+ * the 83% `scripts/elm-hello-world.mjs` itself reports. Both are correct for their own
+ * config, and Thomas's ADR-001 citation of 83% is right.
+ *
+ * ⚠️ AND n=6 CANNOT DISTINGUISH THEM. 83% vs 100% is 5/6 vs 6/6 — one held-out path
+ * flipping. This gate is a smoke test for "did the wrapper learn anything at all", and
+ * it is not evidence about model quality in either direction. Do not build an argument
+ * on the difference; Syrup flagged the two numbers as a discrepancy worth chasing, and
+ * the honest answer is that six samples cannot support the comparison.
  */
 
 import { ElmClassifier } from "./classifier.mjs";

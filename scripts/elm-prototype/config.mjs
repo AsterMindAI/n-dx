@@ -13,13 +13,25 @@
  * RegExp character class, so a '-' anywhere else forms an invalid range and throws
  * from deep inside the library. Enforced by assertValidCharSet below.
  *
- * ⚠️ UPPERCASE IS REQUIRED and is NOT in the hello-world's charSet. Measured against
- * the 324-row corpus: 20 distinct capitals (A, C, D, E, ... W) appear in real paths —
- * `AsterMind-Community-Edition`, `CONTEXT.md` and friends. Characters outside charSet
- * are dropped, so omitting them silently deletes signal.
+ * ⚠️ DO NOT ADD UPPERCASE. I did, on 2026-08-27, on the reasoning that capitals appear
+ * in real paths and characters outside charSet are dropped. **The premise was wrong and
+ * the change was actively harmful.** Knight (Team Jarrett) found the mechanism and Syrup
+ * relayed it; confirmed here at source:
+ *
+ *   charToOneHot(c) { const index = this.charSet.indexOf(c.toLowerCase()); ... }
+ *     -- astermind.umd.js:762
+ *
+ * Every lookup lowercases FIRST, so 'S' resolves to index 18 under a lowercase-only
+ * charSet just as well. Uppercase was never being dropped. Adding 26 capitals made
+ * those slots unreachable by construction and widened every one-hot block, taking the
+ * input vector from 3,200 to 5,280 dimensions with 2,080 permanently zero.
+ *
+ * Measured cost, corpus, seed 42, hidden 512, maxLen 80:
+ *     uppercase charSet ... 4.8% agreement
+ *     lowercase charSet ... 9.6% agreement   <- same everything else
+ * The "fix" was halving the score.
  */
-export const DEFAULT_CHAR_SET =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./_-";
+export const DEFAULT_CHAR_SET = "abcdefghijklmnopqrstuvwxyz0123456789./_-";
 
 /** Split paths on separators so directory names become tokens. */
 export const DEFAULT_TOKENIZER_DELIMITER = /[/._-]+/;
