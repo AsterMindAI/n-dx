@@ -386,6 +386,86 @@ as such.
     tagged on GitHub but UNPUBLISHED and breaking -- do not chase v4.
 
 --------------------------------------------------------------------------------
+13. PHASE 1 AND 2 OF THE TIER -- WHAT TUNING ACTUALLY BOUGHT   [K2, TN-J25/J27]
+--------------------------------------------------------------------------------
+Added 2026-08-28 by K2, taking over Path B implementation from Jam per
+K2-HANDBOOK.md. Bar pre-registered at f4a06175 BEFORE any model ran; the
+adoption rule (mean +1.5pp AND >=7 of 9 paired runs) was fixed in that commit.
+Artifacts: scripts/elm-architecture-sweep.mjs, scripts/elm-operating-point.mjs,
+and their JSON under scripts/data/.
+
+  MEASURED   Activation is a lever and nobody had swept it. tanh 64.6% vs
+             relu 60.6% -- +4.0 pp on 9 of 9 paired runs, 5-fold CV on the
+             TRAIN split only, gold set untouched. gelu ties (64.59 vs 64.64).
+  MEASURED   ridgeLambda is NOT a lever: 60.2-60.8% across 1e-4..1e-1,
+             collapsing only at 1e0. This was the sweep the plan had the
+             highest prior on.
+  MEASURED   Stacked voting over 5 seeded ELMs LOSES 2.8 pp. RBF kernels lose
+             at every gamma. Linear KernelELM clears the bar (+3.0 pp, 7 of 9)
+             but is beaten by tanh.
+  MEASURED   RBF's default gamma is degenerate on this feature space: 1/D =
+             5.9e-4 against mean ||x-z||^2 = 1.86 gives K(x,z) ~ 0.999 for
+             EVERY pair -- an all-ones Gram matrix. Default-gamma RBF scores
+             33.9%; gamma=0.5 on identical data scores 60.8%. 27 pp from one
+             default. This was predicted in a committed pre-registration
+             addendum BEFORE the run, from the feature space alone.
+  MEASURED   Abstention's coverage ceiling is STRUCTURAL. It answers only on
+             non-service/utility predictions, and non-S/U is 26.2% of the
+             corpus, against the 29.4% coverage that 3-of-9 calls requires on
+             n-dx. Measured coverage 25.6% -- within half a point of its own
+             ceiling. No model and no precision can close that gap.
+  MEASURED   B+su (abstention + top 10% most-confident service/utility) reaches
+             32.9% coverage, 75.1% vs the LLM's 74.1% on the same files, and
+             3 of 9 n-dx calls. Both bars met in the mean.  ** DEV ONLY. **
+  MEASURED   The LLM's errors ARE directional off the service/utility axis. On
+             the 24 held-out files whose truth is not S/U it makes 7 errors and
+             6 collapse a minority class INTO service/utility. `utility` is the
+             teacher's sink for uncertainty. The plan's "noise is random"
+             finding is correct on the axis it examined and does not
+             generalise to the axis abstention operates on.
+  NOT KNOWN  How often the teacher's prompt carries partial algorithmic signals
+             the ELM never sees (TN-J26). classify.ts:499-503 appends them
+             whenever ANY signal matched, independent of the threshold that
+             made the file unclassified -- but classifications.json overwrites
+             the pre-LLM evidence with the LLM's own returned reason, so it
+             cannot be recovered from any committed artifact. Stated as
+             unquantified rather than estimated, on purpose.
+
+THE DENOMINATOR IS NOT COSMETIC. S1 says "on the same files"; the evidence used
+to adopt abstention compared a hand-picked subset against the LLM's GLOBAL
+average. Under the global denominator 12 of 18 operating points pass. Under the
+one S1 actually specifies, on the same model, 0 of 18 do. Same table, same
+seeds, different question.
+
+--------------------------------------------------------------------------------
+14. THE NEAR-MISS -- K2's OWN ERROR, REPEATED ONE ITERATION LATER   [K2]
+--------------------------------------------------------------------------------
+Recorded here rather than smoothed over, because section 12 exists for exactly
+this and because the guard that caught it is the transferable part.
+
+My first Phase 2 run used activation "relu". Phase 1 had already adopted tanh.
+That run returned 0 of 18 designs beating the LLM, and I had drafted an ADR
+recommending the tier not ship. Re-run on the adopted model: 5 of 18 beat, and
+one meets the value bar too.
+
+This is precisely the hiddenUnits:256 mistake -- a verdict on an arbitrary
+untested default, mistaken for a verdict on the approach -- committed by the
+person brought in to correct it. What caught it was not judgement. It was the
+pre-registered rule that Phase 2 runs the model Phase 1 adopted.
+
+The pattern worth carrying: TWO OF THE THREE LARGEST EFFECTS FOUND ON THIS
+PROJECT WERE DEFAULTS NOBODY CHOSE. hiddenUnits 256 (worth +12 pp) and relu
+(worth +4 pp) were both inherited from the first script written and never
+named as decisions. Before tuning anything, list what the code is choosing on
+your behalf.
+
+OPERATIONAL: the full sweep was OOM-killed on the voting config (8 GB machine,
+9 GB swap in use, a second job running) and EXITED 0 WITH AN EMPTY RESULTS
+TABLE -- indistinguishable from a clean early exit. The vectorizer cache had
+been accumulating 3 fold-seeds x 5 folds x 3 vocab caps = 45 dense matrices.
+Now bounded to one cap. Do not run two of these concurrently on this machine.
+
+--------------------------------------------------------------------------------
 11. HOW WE WORK -- the measurement contract
 --------------------------------------------------------------------------------
 ADR-2026-08-23-butter-savings-measurement-contract.md (Proposed), accepted by
@@ -419,6 +499,14 @@ Recorded because the record of what we got wrong is part of the finding.
           treating 9 analyze calls as 9 classify calls. Corrected by Jam.
   Butter: TN-J3's original framing implied the February files proved a live
           defect. They did not -- but a fresh run showed one anyway.
+  K2:     drafted an ADR recommending the tier not ship, on a Phase 2 run that
+          used relu after Phase 1 had adopted tanh. Same class of error as the
+          hiddenUnits:256 verdict it was brought in to correct. Caught by the
+          pre-registered rule, not by noticing.
+  K2:     flagged the TF-IDF vocab cap difference between scripts (4000 vs
+          2000) as an uncontrolled variable. It is inert -- the vocabulary is
+          1688 terms, so both caps give an identical space. Struck rather than
+          left standing.
 
 ================================================================================
 END. Numbers without a named author are Butter's. Jam: amend in place.

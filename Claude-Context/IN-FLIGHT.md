@@ -34,7 +34,7 @@ owner a note before assuming it's stale — don't just delete it.
 
 | 2026-08-27 | Butter | Nolan | `TN-B3` Lane 1 — **adding `scripts/elm-prototype/`**, announced before creation per the shared-`scripts/` rule. Script-tier ELM engine per [`ADR-2026-08-27-butter-prove-before-provisioning.md`](ADR/ADR-2026-08-27-butter-prove-before-provisioning.md): prove the ELM before anyone provisions for it. **No workspace dependency, no lockfile change, no sign-off** — `scripts/` already resolves the root ELM dep (`elm-hello-world.mjs:19`). **Reads Jam's corpus; does not write it.** Publishes no accuracy number — the verdict is `TN-B5`, Jam's. | New `scripts/elm-prototype/{README.md,config.mjs,classifier.mjs,train-eval.mjs}`. Read-only against `scripts/data/elm-archetype-corpus.json`. | On promotion or on a negative result |
 
-| 2026-08-28 | K2 (Team Nolan) | Nolan | `TN-J23` Phase 1 remainder + **`TN-J25` — replacing K1, on the lead's instruction.** Taking over Path B implementation from Jam per [`K2-HANDBOOK.md`](Nolan-Agents/K2-HANDBOOK.md). Two things: (a) finish the Phase-1 sweep Jam left open — architecture (`KernelELM`, `ConfidenceClassifierELM`, `VotingClassifierELM`) and `ridgeLambda`, **train-CV only, gold set untouched**; (b) **modify/replace K1** (`≥3 of 9 classify calls on n-dx`), which the handbook § 7 correctly left to the leads and which the lead has now handed to me. **Bar pre-registered and committed before any model runs.** No `packages/**` edits in this pass — scripts and docs only, so nothing here can break a build. | New `scripts/elm-architecture-sweep.mjs`, `scripts/elm-operating-point.mjs` + their `scripts/data/*.json`. **Announced before creation per the shared-`scripts/` rule.** Writes `Claude-Context/ADR/ADR-2026-08-28-k2-*.md`, `Claude-Context/IMPL/IMPL-2026-08-28-jam-elm-tier-implementation.md`, `Claude-Context/Nolan-Agents/{BACKLOG,ELM-FINDINGS}.txt\|.md`, and this row. **Reads `scripts/data/elm-archetype-corpus.json` and gold set #1; writes neither.** Runs no state-writing `ndx` command. | On the K1 replacement ADR being accepted or rejected |
+| 2026-08-28 | K2 (Team Nolan) | Nolan | **`TN-J25` — K1 replaced; ADR up, awaiting the leads.** Phase 1 remainder of `TN-J23` is **done** (`tanh` adopted, +4.0 pp, 9 of 9 paired runs) and Phase 2 is **done** on the adopted model. **No further writes planned in this pass** — the row stays only until the ADR is accepted or rejected. **Cross-team relevance:** K1 was a shared kill criterion, and `TN-J29` (the LLM collapses minority classes into `utility`) bears on anyone using the classify prompt. | **Wrote** `scripts/elm-architecture-sweep.mjs`, `scripts/elm-operating-point.mjs`, their `scripts/data/*.json`, one new ADR, and Team Nolan's own docs. **No `packages/**` edits. No shared-file edits** — neither script imports `child_process`, so `tests/e2e/**` needed no `ALLOWED` entry. Root suite verified green: **1996 passed / 1 skipped / 0 failed** (`npx vitest run tests/`). Ran no state-writing `ndx` command. | On the ADR being accepted or rejected |
 
 | 2026-08-31 | Syrup | Nolan | `TN-S1` — **surveying Teams Jarrett and Thomas and reporting their findings into Team Nolan's inbox.** New agent (charter created today). **This is a read-only claim on `origin/Jarrett`, `origin/Thomas_Branch`, and `origin/Thomas's_Branch`** — I inspect them with `git show`/`git diff` and **change nothing on any of them**: no commits, no pushes, no cherry-picks, no fixes. I am claiming it so neither Jarrett nor Thomas is surprised to hear their work has been read and summarised, and so a second Nolan agent does not duplicate the survey. Any defect I find in their territory goes to Jam and Butter as a within-team note, and — if it warrants crossing the seam — as a draft outbound note for **Nolan** to send. I do not send cross-team notes myself. | Writes only `Claude-Context/Nolan-Agents/{Syrup.md,README.md,BACKLOG.md}`, new `Claude-Context/Nolan-Agents/Notes/NOTE-nolan-internal-2026-08-31-*.md`, and this row. **No source files. No other team's files. No state-writing command** — I am on the shared checkout `/Users/nolanmoore/n-dx-1` (branch `nolan-work`) alongside Jam and Fluff, and reading branches touches none of `.rex/`, `.sourcevision/`, `.hench/`. | **RELEASED 2026-08-31** — both notes committed to `nolan-work`. Nothing on any other team's branch was modified. |
 
@@ -54,7 +54,7 @@ Read-only (`ndx status`, `ndx usage`) is always safe.
 One line per team, updated by that lead. This is the standing answer to "what is everyone doing
 right now" so nobody has to ask.
 
-- **Team Nolan:** <in flight · shipped since last update · blockers>
+- **Team Nolan:** *In flight* — `TN-J25` K1 replacement ADR awaiting the leads; `TN-J23` Phases 1–2 done (`tanh` adopted, +4.0 pp; `B+su` meets both bars on DEV at 32.9% coverage / 3 of 9 calls). *Blocker* — **Phase 3 cannot run without gold set #2**; gold set #1 is spent and every current figure is DEV. Also open: `TN-B3` Step 0 lockfile sign-off (Butter).
 - **Team Jarrett:** <…>
 - **Team Thomas:** <…>
 
@@ -67,6 +67,25 @@ right now" so nobody has to ask.
 
 Things every team needs to know — ADRs accepted, interfaces changed, measured ELM results,
 direction changes. Link the ADR; don't restate it here.
+
+- **2026-08-28 — K1 is being replaced, and two Path B numbers moved. Ask K2 / Nolan (Team Nolan).**
+  [`ADR-2026-08-28-k2-replace-k1-with-a-coverage-criterion.md`](ADR/ADR-2026-08-28-k2-replace-k1-with-a-coverage-criterion.md).
+  - **K1 (`≥3 of 9 classify calls on n-dx`) is broken three ways, all arithmetic.** It is
+    **non-monotone** — better `archetypes.ts` rules shrink the residue, and 255→180 files raises the
+    bar from 29.4% to **50%** coverage. It is **unreachable on small repos** (3 calls on
+    AsterMind-CE = 100% coverage). It is **blind across a 30-file band**. Proposed replacement is a
+    coverage criterion; **this is a re-expression, not a relaxation.**
+  - **⚠️ The denominator in a "beats the LLM" claim is not cosmetic.** Comparing a gate's
+    hand-picked subset against the LLM's *global* average is a different and easier test than
+    comparing on the same files. Same table, same seeds: **12 of 18 operating points pass one, 0 of
+    18 pass the other.** Anyone quoting a gated-model comparison should state which they mean.
+  - **Untested defaults are where the effects were.** `activation` had never been swept — `relu`
+    was inherited from the first script written. `tanh` is worth **+4.0 pp on 9 of 9 paired runs**.
+    Together with `hiddenUnits: 256 → 1024` (+12 pp), **two of the three largest effects on this
+    project were defaults nobody chose.**
+  - **The classify prompt is not "path only"** (`TN-J26`): `classify.ts:499-503` appends partial
+    algorithmic signals whenever any signal matched, so **the teacher sees hints the ELM does not**.
+    Unquantified — the pre-LLM evidence is overwritten in `classifications.json`.
 
 - **2026-08-20 — Path B corpus built (324 LLM-labelled rows). The premise held; the bar went up.**
   Ask Jam / Nolan (Team Nolan). `scripts/data/elm-archetype-corpus.json`, commit `2e6a3e43`.
