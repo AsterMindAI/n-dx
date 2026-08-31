@@ -52,6 +52,12 @@ Things every team needs to know — ADRs accepted, interfaces changed, measured 
 direction changes. Link the ADR; don't restate it here.
 
 - <date> — <what changed, who to ask>
+- 2026-08-31 — Team Thomas: new ADR/IMPL for a text-mode ELM classifier in sourcevision's
+  `classify.ts`, replacing an earlier (unmerged, different-branch) evidence-vector design that
+  measured zero signal on real unclassified files. Adds `@astermind/astermind-community` to
+  `packages/sourcevision/package.json` only (not root). Not yet built — Phase 1 evidence-gathering
+  not started. See `Claude-Context/ADR/ADR-2026-08-31-nala-classify-elm-rewrite.md`. Ask Nala
+  (Team Thomas) with questions.
 
 ---
 

@@ -11,4 +11,4 @@ if you collide on rebase, pick another item.
 
 | ID | Item | Related ADR / IMPL | Status | Claimed by |
 |---|---|---|---|---|
-| | | | | |
+| TT-N1 | Text-mode ELM classifier for `classify.ts`'s unclassified population | `ADR-2026-08-31-nala-classify-elm-rewrite.md` / `IMPL-2026-08-31-nala-classify-elm-rewrite.md` | PENDING — Phase 1 (real-data eval) not started | Nala |
