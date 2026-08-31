@@ -1,0 +1,129 @@
+{
+  "schema": "elm-goldset2-power/v1",
+  "generatedAt": "2026-08-31T16:43:50.615Z",
+  "generatedBy": "scripts/elm-goldset2-power.mjs",
+  "status": "DESIGN AID. Discordance structure measured on gold set #1 (DEV); gold set #2 is a different sample.",
+  "model": {
+    "hiddenUnits": 1024,
+    "activation": "tanh",
+    "ridgeLambda": 0.01,
+    "vocabCap": 4000
+  },
+  "operatingPoint": {
+    "design": "B+su",
+    "suAdmit": 0.1
+  },
+  "seeds": 15,
+  "alpha": 0.05,
+  "coverage": 0.33,
+  "measuredOnGoldSet1": {
+    "claimedFiles": 27.266666666666666,
+    "elmRightLlmWrong": 1.6,
+    "elmWrongLlmRight": 1.3333333333333333,
+    "discordantRate": 0.1075794621026895,
+    "elmWinShareAmongDiscordant": 0.5454545454545454
+  },
+  "powerByGoldSetSize": [
+    {
+      "goldSetSize": 83,
+      "claimed": 27,
+      "discordant": 3,
+      "power": 0
+    },
+    {
+      "goldSetSize": 150,
+      "claimed": 50,
+      "discordant": 5,
+      "power": 0
+    },
+    {
+      "goldSetSize": 250,
+      "claimed": 83,
+      "discordant": 9,
+      "power": 0.04675
+    },
+    {
+      "goldSetSize": 400,
+      "claimed": 132,
+      "discordant": 14,
+      "power": 0.0183
+    },
+    {
+      "goldSetSize": 800,
+      "claimed": 264,
+      "discordant": 28,
+      "power": 0.05735
+    },
+    {
+      "goldSetSize": 1600,
+      "claimed": 528,
+      "discordant": 57,
+      "power": 0.07325
+    },
+    {
+      "goldSetSize": 3200,
+      "claimed": 1056,
+      "discordant": 114,
+      "power": 0.165
+    }
+  ],
+  "detectableEffectAt80Power": [
+    {
+      "goldSetSize": 83,
+      "discordant": 3,
+      "minWinShare": null,
+      "marginPp": null
+    },
+    {
+      "goldSetSize": 150,
+      "discordant": 5,
+      "minWinShare": null,
+      "marginPp": null
+    },
+    {
+      "goldSetSize": 250,
+      "discordant": 9,
+      "minWinShare": 0.9050000000000004,
+      "marginPp": 8.713936430317858
+    },
+    {
+      "goldSetSize": 400,
+      "discordant": 14,
+      "minWinShare": 0.8900000000000003,
+      "marginPp": 8.391198044009789
+    },
+    {
+      "goldSetSize": 800,
+      "discordant": 28,
+      "minWinShare": 0.7650000000000002,
+      "marginPp": 5.701711491442548
+    }
+  ],
+  "nonInferioritySizing": [
+    {
+      "marginPp": 10,
+      "claimedNeeded": 25,
+      "goldSetNeeded": 80
+    },
+    {
+      "marginPp": 5,
+      "claimedNeeded": 82,
+      "goldSetNeeded": 250
+    },
+    {
+      "marginPp": 3,
+      "claimedNeeded": 184,
+      "goldSetNeeded": 560
+    },
+    {
+      "marginPp": 2,
+      "claimedNeeded": 329,
+      "goldSetNeeded": 1000
+    },
+    {
+      "marginPp": 1,
+      "claimedNeeded": 745,
+      "goldSetNeeded": 2260
+    }
+  ]
+}
