@@ -101,9 +101,19 @@ function shuffledIndices(n, seed) {
   return idx;
 }
 
-/** TF-IDF is refit per (foldSeed, fold, vocabCap) on the TRAIN rows of that fold only. */
+/**
+ * TF-IDF is refit per (foldSeed, fold, vocabCap) on the TRAIN rows of that fold only.
+ *
+ * ⚠️ The cache is bounded to ONE vocabCap at a time. Unbounded, it accumulates
+ * 3 fold-seeds x 5 folds x 3 caps = 45 dense 193x1688 matrices; as nested JS
+ * arrays that is enough to exhaust an 8 GB machine, and the first full run of
+ * this sweep was OOM-killed on the voting config with no error and no verdict —
+ * an empty results table that looks exactly like a crash-free early exit.
+ */
 const vecCache = new Map();
+let vecCacheCap = null;
 function vectorsFor(rows, trIdx, teIdx, key, vocabCap) {
+  if (vecCacheCap !== vocabCap) { vecCache.clear(); vecCacheCap = vocabCap; }
   const cached = vecCache.get(key);
   if (cached) return cached;
   const v = new TFIDFVectorizer(trIdx.map((i) => docOf(rows[i].text)), vocabCap);
@@ -182,11 +192,18 @@ function fitVotingELM(cfg, cats, Xtr, Ytr, Xte, modelSeed, ytrLabels) {
   });
   voter.train(oofPred, oofConf, ytrLabels);
 
-  const full = baseSeeds.map((s) => { const e = mk(s); e.trainFromData(Xtr, Ytr); return e; });
-  return Xte.map((x) => {
-    const tops = full.map((e) => e.predictFromVector([x], 1)[0][0]);
-    return voter.predict(tops.map((t) => t.label), tops.map((t) => t.prob), 1)[0].label;
-  });
+  // Predict per base model and discard it, rather than holding five 1688x1024
+  // weight matrices live at once — that is what pushed the first run into swap.
+  const labelsByModel = [], confByModel = [];
+  for (const s of baseSeeds) {
+    const e = mk(s);
+    e.trainFromData(Xtr, Ytr);
+    const tops = Xte.map((x) => e.predictFromVector([x], 1)[0][0]);
+    labelsByModel.push(tops.map((t) => t.label));
+    confByModel.push(tops.map((t) => t.prob));
+  }
+  return Xte.map((_, j) =>
+    voter.predict(labelsByModel.map((l) => l[j]), confByModel.map((c) => c[j]), 1)[0].label);
 }
 
 const FITTERS = { elm: fitPlainELM, kernel: fitKernelELM, voting: fitVotingELM };
