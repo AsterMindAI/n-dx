@@ -314,7 +314,88 @@ table** — indistinguishable from a clean early exit. The vectorizer cache is n
 `vocabCap` (it had been accumulating 3 fold-seeds × 5 folds × 3 caps = 45 dense matrices) and base
 models are freed as predictions are taken. **Do not run two of these concurrently on this machine.**
 
-## Phase 3 — Certify (BLOCKED on the leads)
+## Phase 3 pre-registration — fixed 2026-09-01 by K2, BEFORE gold set #2 exists
+
+> Funded by the lead 2026-08-31; **Option B** chosen 2026-09-01. This section is committed before
+> any repo is cloned, any LLM call is spent, and any file is labelled. **It is a record, not a
+> knob.** If a number below changes after labels are visible, the certification is void.
+
+### What is being certified, and what is NOT
+
+**The frozen model** — `scripts/data/elm-frozen-model.json`, content hash `d794f847a886d56e…`,
+9-seed majority vote, ELM 1024 / tanh / λ1e-2 / vocab 4000, operating point `B+su`
+(abstain on `service`/`utility`, admit the top 10% most-confident of them).
+
+**The claim being tested is NON-INFERIORITY, not superiority.** This is the central design decision
+and it comes from measurement, not preference (`scripts/elm-goldset2-power.mjs`):
+
+```
+At the frozen operating point, on gold set #1, the tier claims ~27 of 83 files
+and the ELM and the LLM AGREE on 89% of them — only ~2.9 discordant pairs.
+Power to detect the DEV-observed +1.0 pp margin:
+   83 files  0%      250 files  5%      3200 files 17%
+```
+
+**Superiority is not certifiable by any hand-labelled gold set.** Reporting a "PASS" from a
+superiority test at these sizes would mean *"we could not tell them apart"* dressed as *"the ELM is
+better"*. **That claim will not be made.**
+
+### Primary endpoint — pre-registered
+
+> **Non-inferiority margin δ = 5 pp, one-sided α = 0.05.**
+> Let `d = P(ELM correct) − P(LLM correct)` on the claimed subset, paired (same files).
+> **Non-inferiority is declared iff the one-sided 95% LOWER confidence bound on `d` exceeds −0.05.**
+
+- **Method:** Tango's asymptotic score interval for the paired risk difference (the standard method
+  for paired binary non-inferiority), **and** a 20,000-resample bootstrap percentile lower bound.
+  **Both must exceed −5 pp.** Requiring both is deliberately conservative — at ~9 discordant pairs
+  the asymptotic method alone is not trustworthy.
+- **Analysis set:** rows whose `pass2_after_reading_file` is a real archetype (`unclear`/`missing`
+  excluded and reported separately as a count, never silently dropped), intersected with the subset
+  the frozen operating point claims.
+- **δ = 5 pp is chosen against the measured baseline:** ELM precision is ~75% and the LLM ~74%, so a
+  5 pp floor bounds the worst case near 70%. A 10 pp floor would permit ~65%, which is too wide a
+  door for a field users see.
+
+### Secondary — descriptive, reported, and explicitly NOT bars
+
+None of these can turn a failed primary into a pass.
+
+- Point estimate of `d`, with the discordant counts `b01`/`b10` shown, since `d` rests entirely on them.
+- **K1′ check:** realised coverage ≥ 30%, with the `ceil(n/30)` call count per repo.
+- **Per-repo breakdown.** The gold set spans two repos of deliberately different shape. If the
+  per-repo estimates diverge materially, **that heterogeneity is the finding** and the pooled number
+  must not be quoted without it.
+- Path-information ceiling (pass 1 vs pass 2) and LLM-vs-truth, both recomputed on this set rather
+  than carried over from gold set #1.
+- **Inter-rater agreement, if a different labeller from #1 is used** — the number `TN-J20` could not
+  produce.
+
+### Sampling — fixed now
+
+- **250 files**, drawn by **simple random sample with seed 20260901** from the pooled LLM residue
+  (`source: "llm"`) of the fresh repos. **Not stratified** — stratifying by predicted class would
+  distort the coverage the tier actually achieves, which is a measured quantity here.
+- **Fresh repos only.** No file that appears in `elm-archetype-corpus.json` may enter the packet;
+  enforced by an assertion, not by inspection. Corpus #1 harvested the *entire* LLM-labelled
+  population of n-dx and AsterMind-CE, so both are excluded outright.
+- **Two repos, chosen for contrast:** one near the training distribution, one from a different
+  ecosystem. Certification on a single near-distribution repo would overstate generalisation.
+- The packet carries **paths only** — no teacher label, no ELM prediction, no confidence. Same blind
+  two-pass protocol as gold set #1.
+
+### Stopping rules
+
+- **The model is frozen. No tuning after this point.** If the primary fails, the honest move is a
+  **third** gold set, not a retune against the second.
+- The labels are read **once**. Gold set #2 becomes a spent DEV set the moment it is analysed.
+- **If the primary fails**, the tier does not ship, and the result is published as a measured
+  negative — Phases 1–2 and the frozen model stay on record.
+- **If the primary passes**, that licenses exactly one sentence: *"the tier is not worse than the
+  LLM by more than 5 pp on the files it claims, at 95% confidence."* It does not license "as good
+  as", "better than", or any claim about repos unlike the two sampled.
+
+## Phase 3 — Certify (FUNDED 2026-08-31; Option B chosen 2026-09-01)
 
 - [ ] Commission gold set #2: fresh files not in the corpus, same blind two-pass protocol,
       `scripts/elm-goldset-packet.mjs` regenerated against a new sample. **A different labeller from
