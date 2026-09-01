@@ -371,6 +371,37 @@ None of these can turn a failed primary into a pass.
 - **Inter-rater agreement, if a different labeller from #1 is used** — the number `TN-J20` could not
   produce.
 
+### Amendment, 2026-09-01 — pinning the teacher. Still before any label exists.
+
+Found while preparing the run, not after seeing a result: **the corpus does not record which model
+labelled it, and it was not one model.**
+
+```
+n-dx           .n-dx.json present, llm.claude.model = claude-sonnet-4-6   -> 255 rows
+AsterMind-CE   no .n-dx.json -> NEWEST_MODELS.claude = claude-sonnet-5    ->  69 rows
+```
+
+`NEWEST_MODELS.claude` has been `claude-sonnet-5` since 2026-07-01, before the corpus was built, so
+this is not drift — **corpus #1 has always been 79% one teacher and 21% another**, and nothing in
+`elm-archetype-corpus.json` says so. Filed as `TN-J31`. It does not invalidate the corpus (both are
+the same family, and the ELM learns a path→archetype mapping either way) but it is exactly the kind
+of unrecorded provenance this project has been bitten by before.
+
+**Decision, fixed now: gold set #2's LLM labels are produced with `claude-sonnet-5`, pinned
+explicitly in the target repos rather than inherited by accident.** Reasoning, in order:
+
+1. **It is what a user actually gets.** A repo with no `.n-dx.json` resolves to the default. The
+   call the tier would *avoid* is a `claude-sonnet-5` call, so that is the call it must be compared
+   against.
+2. **It is the conservative choice.** The ELM learned mostly from `sonnet-4-6` labels, so testing it
+   against `sonnet-5` gives it no home-teacher advantage. Pinning `sonnet-4-6` would have been the
+   flattering option.
+3. **The mismatch is real, not artificial.** A shipped ELM is always frozen against a teacher that
+   keeps moving. Certifying against the current teacher measures the tier as deployed.
+
+**Consequence to state with any result:** a pass means non-inferior to `claude-sonnet-5` on these
+repos. It says nothing about a user pinned to a different model.
+
 ### Sampling — fixed now
 
 - **250 files**, drawn by **simple random sample with seed 20260901** from the pooled LLM residue
