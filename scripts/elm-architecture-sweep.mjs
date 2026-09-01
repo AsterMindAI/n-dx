@@ -32,8 +32,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { ELM, KernelELM, TFIDFVectorizer, VotingClassifierELM, tokenize } from "@astermind/astermind-community";
 
-const CORPUS = "scripts/data/elm-archetype-corpus.json";
-const OUT = "scripts/data/elm-architecture-sweep.json";
+const arg = (k, d) => {
+  const a = process.argv.find((x) => x.startsWith(`--${k}=`));
+  return a ? a.slice(k.length + 3) : d;
+};
+const CORPUS = arg("corpus", "scripts/data/elm-archetype-corpus.json");
+const OUT = arg("out", CORPUS.includes("-v2") ? "scripts/data/elm-architecture-sweep-v2.json" : "scripts/data/elm-architecture-sweep.json");
 
 /** Pre-registered at f4a06175. A record, not a knob. */
 const ADOPTION = { meanMarginPp: 1.5, minPairedWins: 7, totalPairs: 9 };
@@ -271,7 +275,32 @@ const CONFIGS = [
   { name: "voting 5x elm-1024 (stacked, OOF)", kind: "voting" },
 ];
 
+/**
+ * Phase 1b grid — corpus v2 (624 rows, 7 ecosystems). Declared and committed
+ * before this ran, per the Phase 1b pre-registration.
+ *
+ * Capacity is re-opened ONLY because the corpus roughly doubled: the 1024
+ * plateau was measured on 241 rows, so leaving it pinned would be assuming
+ * rather than measuring. Everything else Phase 1 settled stays settled --
+ * ridgeLambda, voting, RBF and feature engineering are not re-litigated.
+ *
+ * Incumbent is Phase 1's winner. Adoption rule is unchanged: mean +1.5 pp AND
+ * >= 7 of 9 paired wins.
+ */
+const PHASE1B_CONFIGS = [
+  { name: "INCUMBENT elm-1024 tanh (phase 1 winner)", kind: "elm", activation: "tanh", hidden: 1024, incumbent: true },
+  { name: "elm-512 tanh", kind: "elm", activation: "tanh", hidden: 512 },
+  { name: "elm-2048 tanh", kind: "elm", activation: "tanh", hidden: 2048 },
+  { name: "elm-4096 tanh", kind: "elm", activation: "tanh", hidden: 4096 },
+  { name: "elm-512 gelu", kind: "elm", activation: "gelu", hidden: 512 },
+  { name: "elm-1024 gelu", kind: "elm", activation: "gelu", hidden: 1024 },
+  { name: "elm-2048 gelu", kind: "elm", activation: "gelu", hidden: 2048 },
+  { name: "elm-1024 relu", kind: "elm", activation: "relu", hidden: 1024 },
+  { name: "elm-2048 relu", kind: "elm", activation: "relu", hidden: 2048 },
+];
+
 function main() {
+  const phase1b = process.argv.includes("--phase1b");
   const only = (process.argv.find((a) => a.startsWith("--only=")) ?? "").slice(7);
   const quick = process.argv.includes("--quick");
   const foldSeeds = quick ? FOLD_SEEDS.slice(0, 1) : FOLD_SEEDS;
@@ -290,7 +319,7 @@ function main() {
   console.log(`  PRE-REGISTERED adoption (f4a06175): mean >= incumbent + ${ADOPTION.meanMarginPp} pp AND >= ${ADOPTION.minPairedWins} of ${ADOPTION.totalPairs} paired wins`);
   console.log("  held-out split and gold set #1 are NOT read by this script\n");
 
-  const configs = CONFIGS.filter((c) => c.incumbent || !only || c.name.includes(only));
+  const configs = (phase1b ? PHASE1B_CONFIGS : CONFIGS).filter((c) => c.incumbent || !only || c.name.includes(only));
   const results = [];
   for (const cfg of configs) {
     const t0 = Date.now();
