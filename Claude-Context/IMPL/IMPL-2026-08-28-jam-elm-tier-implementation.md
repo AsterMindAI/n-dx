@@ -426,6 +426,86 @@ repos. It says nothing about a user pinned to a different model.
   LLM by more than 5 pp on the files it claims, at 95% confidence."* It does not license "as good
   as", "better than", or any claim about repos unlike the two sampled.
 
+## Phase 1b pre-registration — unfreezing, and why that is not retuning against the test
+
+> **Fixed 2026-09-01 by K2, BEFORE any new corpus is built or any model is refit.** Committed in its
+> own commit. A record, not a knob.
+
+### The decision being recorded
+
+The lead directed: **fix the corpus, then re-certify.** That requires breaking a freeze the Phase 3
+pre-registration declared final, so the reasoning is recorded rather than assumed.
+
+**Unfreezing `elm-frozen-model.json` (`d794f847…`) is legitimate here, and the test remains honest,
+because of what triggered it:**
+
+- The trigger was **`TN-J32`**, measured by `scripts/elm-coverage-check.mjs`, which uses **only the
+  model's own predictions and the teacher's labels**. It never touches a human label.
+- **Gold set #2's human labels do not exist.** Nobody has read them, because nobody has written
+  them. There is no test-set response variable to contaminate.
+- Detecting covariate shift from unlabelled inputs is not peeking. What would be peeking is
+  adjusting the model after seeing *truth*, and that has not happened and must not.
+
+**What this does NOT license.** After the refit, gold set #2 is scored **once**. If it fails, the
+answer is a third gold set, not another corpus tweak. The exemption is for a training-data defect
+found without truth — it is not a general licence to iterate.
+
+### The one real cost, stated plainly
+
+**Hono and trpc are excluded from the training corpus**, even though 105 of their LLM-labelled files
+were never sampled into the packet and are sitting free. Using them would make the gold-set repos
+*seen*, and the whole finding was that the tier fails on **unseen** repos. Certifying on repos that
+contributed training data would answer a weaker question than the one that matters.
+
+So the free rows go unused, and diversity is bought from new repos instead. That is the more
+expensive choice and it is the correct one.
+
+### The corpus change — fixed now
+
+`TN-J9` (filed 2026-08-13, never claimed) said the corpus needs **ecosystem diversity, not more
+repos**, and `TN-J32` is that prediction coming true. The learning curve is flat on volume — the
+last 48 rows bought **<1 pp** — so this adds *breadth*, not bulk.
+
+Five repos, chosen by diversity-per-call from a free `--fast` measurement, none of them the gold-set
+repos:
+
+| repo | ecosystem it adds | residue | calls |
+|---|---|---|---|
+| `express` | classic Node/JS server, pre-TS conventions | 17 | 1 |
+| `fastify` | plugin/schema-driven server, JS | 48 | 2 |
+| `commerce` | Next.js/React storefront — `component`/`page` | 15 | 1 |
+| `got` | focused HTTP client library | 8 | 1 |
+| `core` (Vue) | reactive framework — `component`/`hook` heavy | 235 | 8 |
+| | **total** | **323** | **13** |
+
+Corpus goes from **324 rows across 2 ecosystems** to roughly **647 across 7**.
+
+**Deliberately NOT included: `typeorm`** (531 residue, **18 calls**). It is the only candidate that
+would supply the `model` class, which has zero training rows and appears 14 times in gold set #2 —
+but that is ~4% of the packet, and 18 calls is more than the entire rest of the plan. **Recorded as
+a known, priced omission** rather than an oversight: if `model` errors dominate the certification,
+this is the first thing to revisit.
+
+### Phase 1b selection — same rules as Phase 1
+
+- **Train-CV only**, on the new corpus's training split. Gold sets are not inputs to selection.
+- The Phase 1 adoption rule stands unchanged: a challenger needs **mean ≥ incumbent + 1.5 pp AND
+  ≥ 7 of 9 paired wins**. The incumbent is Phase 1's winner, `ELM 1024 / tanh / λ1e-2 / vocab 4000`.
+- **Capacity is re-opened, and only because the corpus size changed.** The 1024 plateau was measured
+  on 241 rows; roughly doubling the data moves the capacity/data ratio, so leaving it pinned would
+  be assuming rather than measuring. Same adoption rule, same channel.
+- **Re-freeze** to a new artifact with a new hash. The old freeze is kept, not overwritten, so the
+  before/after is inspectable.
+
+### The gate before any labelling happens
+
+**`scripts/elm-coverage-check.mjs` is re-run on the 250-file packet after re-freezing, and it needs
+no human labels.** It is the cheapest possible check that the fix worked:
+
+- **coverage ≥ 30% on gold set #2 → the packet goes for labelling.**
+- **coverage < 30% → it does not.** The tier would fail K1′ again, and spending a labelling day on
+  it would be spending the lead's time to confirm something already known for free.
+
 ## Phase 3 — Certify (FUNDED 2026-08-31; Option B chosen 2026-09-01)
 
 - [ ] Commission gold set #2: fresh files not in the corpus, same blind two-pass protocol,
