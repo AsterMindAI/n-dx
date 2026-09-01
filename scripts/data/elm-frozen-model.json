@@ -1,0 +1,482 @@
+{
+  "schema": "elm-frozen-model/v1",
+  "frozenAt": "2026-08-31T17:03:30.026Z",
+  "frozenBy": "scripts/elm-freeze-model.mjs",
+  "status": "FROZEN. Phase 3 evaluates this and only this. Any change voids the certification.",
+  "spec": {
+    "hiddenUnits": 1024,
+    "activation": "tanh",
+    "ridgeLambda": 0.01,
+    "vocabCap": 4000,
+    "ensembleSeeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50
+    ],
+    "operatingPoint": {
+      "design": "B+su",
+      "abstainOn": [
+        "service",
+        "utility"
+      ],
+      "suAdmitFraction": 0.1
+    }
+  },
+  "categories": [
+    "cli-command",
+    "config",
+    "entrypoint",
+    "gateway",
+    "hook",
+    "middleware",
+    "route-handler",
+    "schema",
+    "service",
+    "store",
+    "test-helper",
+    "types",
+    "utility"
+  ],
+  "trainedOn": {
+    "corpus": "scripts/data/elm-archetype-corpus.json",
+    "split": "train",
+    "rows": 241,
+    "corpusProvenance": {
+      "sources": [
+        "llm"
+      ],
+      "seed": 42,
+      "holdout": 0.25,
+      "repos": [
+        {
+          "repo": "n-dx-1",
+          "path": "/Users/nolanmoore/n-dx-1",
+          "git": {
+            "commit": "b8770042cb333334d864cca116c1c5e4189248ad",
+            "branch": "nolan-work",
+            "remote": "https://github.com/AsterMindAI/n-dx.git",
+            "dirty": true
+          },
+          "totalFiles": 683,
+          "classified": 683,
+          "unclassified": 0,
+          "harvested": 255
+        },
+        {
+          "repo": "AsterMind-Community-Edition",
+          "path": "/Users/nolanmoore/n-dx-elm-corpus/AsterMind-Community-Edition",
+          "git": {
+            "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+            "branch": "main",
+            "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git",
+            "dirty": true
+          },
+          "totalFiles": 114,
+          "classified": 114,
+          "unclassified": 0,
+          "harvested": 69
+        }
+      ]
+    }
+  },
+  "selection": {
+    "channel": "5-fold CV on the TRAIN split only, fold seeds [7,13,29]. Gold sets NOT consulted.",
+    "singleSeedCv": [
+      0.6556016597510373,
+      0.6431535269709544,
+      0.6597510373443983
+    ],
+    "ensembleCv": [
+      0.6556016597510373,
+      0.6929460580912863,
+      0.6597510373443983
+    ],
+    "deltaPp": 1.6597510373443924,
+    "note": "Majority vote over seeds is variance reduction, NOT the stacked VotingClassifierELM that lost 2.8 pp in Phase 1."
+  },
+  "vectorizer": {
+    "kind": "TFIDFVectorizer",
+    "vocabCap": 4000,
+    "fittedOn": "train split only",
+    "tokenizer": "library tokenize()",
+    "featureDim": 1688
+  },
+  "refitFingerprint": {
+    "sha256": "298965084e9d208f6981dfb0f3db2efbeb94fa437beec1699ba3636740c1257d",
+    "over": "ensemble vote on the train split paths",
+    "note": "Certification must re-fit and match this before scoring anything."
+  },
+  "library": {
+    "name": "@astermind/astermind-community",
+    "version": "3.0.0"
+  },
+  "models": [
+    {
+      "seed": 42,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 43,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 44,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 45,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 46,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 47,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 48,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 49,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    },
+    {
+      "seed": 50,
+      "config": {
+        "hiddenUnits": 1024,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "cli-command",
+          "config",
+          "entrypoint",
+          "gateway",
+          "hook",
+          "middleware",
+          "route-handler",
+          "schema",
+          "service",
+          "store",
+          "test-helper",
+          "types",
+          "utility"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          1024,
+          1688
+        ],
+        "b": [
+          1024,
+          1
+        ],
+        "beta": [
+          1024,
+          13
+        ]
+      }
+    }
+  ],
+  "contentHash": "d794f847a886d56eed0bf750b7cd72ad27f3bc2b564942b8ddf4ee3f539329b0"
+}
