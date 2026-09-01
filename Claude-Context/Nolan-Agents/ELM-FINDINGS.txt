@@ -466,6 +466,67 @@ been accumulating 3 fold-seeds x 5 folds x 3 vocab caps = 45 dense matrices.
 Now bounded to one cap. Do not run two of these concurrently on this machine.
 
 --------------------------------------------------------------------------------
+15. PHASE 3 -- THE TIER DOES NOT GENERALISE                    [K2, TN-J30/J32]
+--------------------------------------------------------------------------------
+Gold set #2 was funded 2026-08-31 and built 2026-09-01. The most useful result
+came before a single file was hand-labelled, and it cost nothing.
+
+  METHOD     Coverage depends only on the model's own predictions, so it can be
+             measured with no ground truth. scripts/elm-coverage-check.mjs.
+
+  MEASURED   gold set #1 held-out (n-dx + AsterMind-CE -- TRAINED-ON ecosystems)
+               ELM predicts service/utility 72.3%, teacher says 72.3%
+               9 distinct labels used vs the teacher's 10
+               COVERAGE 34.9%  -> K1' PASS
+             gold set #2 (hono + trpc -- FRESH ecosystems, 250 files)
+               ELM predicts service/utility 96.4%, teacher says 48.4%
+               5 distinct labels used vs the teacher's 13
+               241 of 250 files predicted service or utility
+               COVERAGE 13.2%  -> K1' FAIL
+
+  READING    On the ecosystems it was trained on, the model's class prior tracks
+             the teacher EXACTLY. On unseen ecosystems it collapses onto the
+             majority class. THE TIER LEARNED N-DX'S ARCHETYPE PRIOR, NOT A
+             GENERAL PATH->ARCHETYPE MAPPING.
+
+  CONSEQUENCE  K1' fails on the certification set regardless of what the human
+             labels would have said, so the labelling day was not spent. At
+             13.2% coverage, 250 labelled files would have yielded only ~33
+             claimed -- short of the ~83 that a 5 pp non-inferiority margin
+             needs.
+
+  ALSO       This is a limitation of K1' AS PROPOSED. Coverage is a property of
+             (model, repo), not of the model alone. K1' fixes K1's arithmetic
+             pathologies -- non-monotonicity, small-repo unreachability,
+             step-function blindness -- but not repo-dependence. Recorded rather
+             than buried.
+
+  TN-J9 WAS RIGHT, AND UNCLAIMED FOR 19 DAYS. "Corpus needs ecosystem diversity,
+  not more repos", filed 2026-08-13. It is exactly what stopped Phase 3.
+
+METHODOLOGY THAT HELD UP, worth keeping:
+  * The model was FROZEN before the gold set existed (elm-frozen-model.json,
+    hash d794f847). The certification script was written and committed BEFORE
+    any label existed, so the analysis could not be shaped by the data.
+  * The contamination check is an ASSERTION, not a comment: 0 of 355 candidates
+    appear in corpus #1, checked mechanically, refusing to build the packet
+    otherwise.
+  * Superiority was abandoned on a POWER CALCULATION before the labelling was
+    commissioned, not discovered afterwards. ELM and LLM agree on 89% of claimed
+    files, leaving ~3 informative pairs per 83 -- 0% power at n=83, 17% at
+    n=3200. The endpoint became non-inferiority because that is what the data
+    can support.
+
+TEACHER PROVENANCE, newly pinned:
+  Corpus #1 was labelled by TWO models and nothing recorded it -- n-dx resolved
+  claude-sonnet-4-6 from .n-dx.json (255 rows) while AsterMind-CE had no config
+  and got the default claude-sonnet-5 (69 rows). Filed TN-J31. Gold set #2 and
+  corpus v2 pin claude-sonnet-5 explicitly in each target repo.
+
+SPEND: 25 classify calls total. 12 for gold set #2 (hono 4, trpc 8), 13 for the
+corpus v2 diversity fix (express 1, fastify 2, commerce 1, got 1, Vue core 8).
+
+--------------------------------------------------------------------------------
 11. HOW WE WORK -- the measurement contract
 --------------------------------------------------------------------------------
 ADR-2026-08-23-butter-savings-measurement-contract.md (Proposed), accepted by
