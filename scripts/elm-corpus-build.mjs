@@ -116,6 +116,34 @@ function gitInfo(repoPath) {
 
 // ── Load ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Which model actually labelled this repo.
+ *
+ * TN-J31: corpus #1 was labelled by TWO models and nothing recorded it — n-dx pinned
+ * claude-sonnet-4-6 via .n-dx.json while AsterMind-CE had no config and silently took
+ * NEWEST_MODELS.claude. It went undetected for 19 days because the corpus artifact had
+ * nowhere to put the answer. It does now.
+ *
+ * The unpinned default is read out of config.ts rather than hard-coded here, so this
+ * does not quietly drift the day someone bumps the constant.
+ */
+function teacherOf(abs) {
+  const cfg = join(abs, ".n-dx.json");
+  if (existsSync(cfg)) {
+    try {
+      const model = JSON.parse(readFileSync(cfg, "utf-8"))?.llm?.claude?.model;
+      if (model) return { model, pinned: true, via: "<repo>/.n-dx.json → llm.claude.model" };
+    } catch { /* fall through to the default path below */ }
+  }
+  const constants = "packages/llm-client/src/config.ts";
+  try {
+    const src = readFileSync(constants, "utf-8");
+    const m = src.match(/NEWEST_MODELS[^{]*\{[^}]*?claude:\s*"([^"]+)"/s);
+    if (m) return { model: m[1], pinned: false, via: `unpinned — default from ${constants} NEWEST_MODELS.claude` };
+  } catch { /* not run from the monorepo root */ }
+  return { model: null, pinned: false, via: "unpinned and UNRESOLVED — run from the monorepo root to resolve" };
+}
+
 function loadRepo(repoPath, sources) {
   const abs = resolve(repoPath);
   const file = join(abs, ".sourcevision", "classifications.json");
@@ -143,6 +171,7 @@ function loadRepo(repoPath, sources) {
     repo: basename(abs),
     path: abs,
     git: gitInfo(abs),
+    teacher: teacherOf(abs),
     totalFiles: data.summary.totalClassified + data.summary.totalUnclassified,
     classified: data.summary.totalClassified,
     unclassified: data.summary.totalUnclassified,
@@ -181,6 +210,26 @@ function distribution(rows) {
   return Object.fromEntries(Object.entries(d).sort((a, b) => b[1] - a[1]));
 }
 
+/**
+ * Roll the per-repo teachers up into a row-weighted mix, so "which model labelled this
+ * corpus" is answerable from the artifact alone rather than from a laptop's directory tree.
+ */
+function teacherMix(loaded) {
+  const byModel = {};
+  let total = 0;
+  for (const l of loaded) {
+    const key = l.teacher.model ?? "(unresolved)";
+    byModel[key] = (byModel[key] ?? 0) + l.harvested;
+    total += l.harvested;
+  }
+  const share = Object.fromEntries(
+    Object.entries(byModel)
+      .sort((a, b) => b[1] - a[1])
+      .map(([m, n]) => [m, { rows: n, share: total ? n / total : 0 }]),
+  );
+  return { distinct: Object.keys(byModel).length, mixed: Object.keys(byModel).length > 1, byModel: share };
+}
+
 /** Majority-class rate — the honest baseline for an imbalanced corpus. */
 function majorityBaseline(rows) {
   const d = distribution(rows);
@@ -208,7 +257,20 @@ function main() {
     console.log(`    ${l.totalFiles} source files | ${l.classified} classified | ${l.unclassified} unclassified (${pct}%)`);
     console.log(`    bySource: ${JSON.stringify(l.bySource)}`);
     console.log(`    harvested ${l.harvested} rows matching [${opts.sources.join(",")}]`);
+    console.log(`    teacher  ${l.teacher.model ?? "UNRESOLVED"}  (${l.teacher.via})`);
     if (l.git.dirty) console.log("    WARNING: working tree is dirty — provenance commit is approximate");
+    console.log("");
+  }
+
+  // TN-J31 went undetected for 19 days because nothing said this out loud at build time.
+  const mix = teacherMix(loaded);
+  if (mix.mixed) {
+    console.log("  WARNING: MIXED TEACHERS — this corpus was labelled by more than one model.");
+    for (const [model, { rows, share }] of Object.entries(mix.byModel)) {
+      console.log(`    ${model.padEnd(24)} ${String(rows).padStart(4)} rows  (${(share * 100).toFixed(1)}%)`);
+    }
+    console.log("    Not necessarily wrong, but every 'LLM vs truth' figure from this corpus");
+    console.log("    must name its teacher. Pin llm.claude.model per repo to avoid the mix.");
     console.log("");
   }
 
@@ -263,9 +325,10 @@ function main() {
       sources: opts.sources,
       seed: opts.seed,
       holdout: opts.holdout,
-      repos: loaded.map(({ repo, path, git, totalFiles, classified, unclassified, harvested }) => ({
-        repo, path, git, totalFiles, classified, unclassified, harvested,
+      repos: loaded.map(({ repo, path, git, teacher, totalFiles, classified, unclassified, harvested }) => ({
+        repo, path, git, teacher, totalFiles, classified, unclassified, harvested,
       })),
+      teachers: teacherMix(loaded),
     },
     stats: {
       total: rows.length,
