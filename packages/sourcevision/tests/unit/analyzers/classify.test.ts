@@ -534,6 +534,92 @@ describe("enrichClassificationsWithLLM", () => {
     expect(result.tokenUsage.inputTokens).toBe(300);
     expect(result.tokenUsage.outputTokens).toBe(130);
   });
+
+  // ── ELM gate (shadow mode) ──────────────────────────────────────────────
+  // ELM_GATE_ENABLED is false (see classify-elm.ts) — these confirm the gate never skips the
+  // Claude batch regardless of how confident the ELM is, per
+  // ADR-2026-08-31-nala-classify-elm-rewrite.md's shadow-mode requirement.
+
+  function makeElmReadyClassifications(unclassifiedPath: string): Classifications {
+    // 25 labeled examples with a strongly distinctive path pattern, so an ELM trained on them
+    // would very plausibly be confident about a same-pattern held-out file — the point is to
+    // make the gate's "would it have fired" case as likely as possible, then confirm it still
+    // doesn't skip Claude while ELM_GATE_ENABLED is false.
+    const labeled = Array.from({ length: 25 }, (_, i) => ({
+      path: `src/server/routes/handler-${i}.route.ts`,
+      archetype: "route-handler",
+      confidence: 0.8,
+      source: "algorithmic" as const,
+    }));
+    const unclassified = {
+      path: unclassifiedPath,
+      archetype: null,
+      confidence: 0,
+      source: "algorithmic" as const,
+    };
+    return {
+      archetypes: [
+        { id: "route-handler", name: "Route handler", description: "HTTP route handler", signals: [] },
+        { id: "utility", name: "Utility", description: "Utility module", signals: [] },
+      ],
+      files: [...labeled, unclassified],
+      summary: {
+        totalClassified: 25,
+        totalUnclassified: 1,
+        byArchetype: { "route-handler": 25 },
+        bySource: { algorithmic: 26 },
+      },
+    };
+  }
+
+  it("still sends unclassified files to Claude even when enough labeled data exists to train an ELM", async () => {
+    const base = makeElmReadyClassifications("src/server/routes/handler-new.route.ts");
+
+    mockedCallClaude.mockResolvedValueOnce({
+      text: JSON.stringify([
+        { path: "src/server/routes/handler-new.route.ts", archetype: "route-handler", reason: "matches pattern" },
+      ]),
+    });
+
+    const result = await enrichClassificationsWithLLM(
+      base,
+      makeInventory(base.files.map((f) => f.path)),
+      emptyImports,
+    );
+
+    // The Claude call must still happen — the ELM gate is shadow-mode only.
+    expect(mockedCallClaude).toHaveBeenCalledTimes(1);
+    expect(result.updatedFiles.find((f) => f.path === "src/server/routes/handler-new.route.ts")?.source).toBe("llm");
+    // No file should ever come back with source "elm" while the gate is disabled.
+    expect(result.updatedFiles.some((f) => f.source === "elm")).toBe(false);
+  });
+
+  it("produces the same Claude-call count with or without enough data to train an ELM", async () => {
+    const withElmData = makeElmReadyClassifications("src/server/routes/handler-new.route.ts");
+    const withoutElmData: Classifications = {
+      archetypes: withElmData.archetypes,
+      files: [{ path: "src/server/routes/handler-new.route.ts", archetype: null, confidence: 0, source: "algorithmic" }],
+      summary: { totalClassified: 0, totalUnclassified: 1, byArchetype: {}, bySource: { algorithmic: 1 } },
+    };
+
+    mockedCallClaude.mockResolvedValue({
+      text: JSON.stringify([
+        { path: "src/server/routes/handler-new.route.ts", archetype: "route-handler", reason: "x" },
+      ]),
+    });
+
+    await enrichClassificationsWithLLM(withElmData, makeInventory(withElmData.files.map((f) => f.path)), emptyImports);
+    const callsWithElmData = mockedCallClaude.mock.calls.length;
+
+    mockedCallClaude.mockClear();
+    await enrichClassificationsWithLLM(withoutElmData, makeInventory(withoutElmData.files.map((f) => f.path)), emptyImports);
+    const callsWithoutElmData = mockedCallClaude.mock.calls.length;
+
+    // Shadow mode must be provably inert: whether or not there's enough data to train an ELM,
+    // the single unclassified file always makes exactly one Claude call.
+    expect(callsWithElmData).toBe(1);
+    expect(callsWithoutElmData).toBe(1);
+  });
 });
 
 // ── mergeClassificationResults ──────────────────────────────────────────────

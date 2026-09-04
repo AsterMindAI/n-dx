@@ -1,0 +1,31 @@
+Name: Week 2 Overview
+Date Of Creation: 08/23/26
+Created By: Thomas Addison
+Purpose: To document the work I've done on the n-dx repository in a readable
+    human friendly format.
+
+
+___MONDAY___
+
+
+WORK DONE THROUGH-OUT THE DAY:
+
+    t
+
+
+
+___FRIDAY___
+
+
+WORK DONE THROUGH-OUT THE DAY:
+
+    t
+
+
+___SATURDAY___
+
+
+WORK DONE THROUGH-OUT THE DAY:
+
+    t
+

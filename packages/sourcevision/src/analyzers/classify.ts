@@ -28,6 +28,7 @@ import { sortClassifications } from "../util/sort.js";
 import { callClaude, ClaudeClientError } from "./claude-client.js";
 import { emptyAnalyzeTokenUsage, accumulateTokenUsage } from "./token-usage.js";
 import { startSpinner } from "../cli/output.js";
+import { ELM_GATE_ENABLED, trainClassifyPathELM, predictWithClassifyPathELM } from "./classify-elm.js";
 
 /** Minimum accumulated score for a primary classification. */
 const PRIMARY_THRESHOLD = 0.4;
@@ -342,6 +343,35 @@ export async function enrichClassificationsWithLLM(
     return { updatedFiles, tokenUsage };
   }
 
+  // ELM gate: try a path-text classifier ahead of the Claude batch. Always trains and predicts
+  // (exercising the code path) but only removes a file from the Claude queue when
+  // ELM_GATE_ENABLED is true — see classify-elm.ts and ADR-2026-08-31-nala-classify-elm-rewrite.md
+  // for why this stays shadow-mode-only for now.
+  const elmModel = trainClassifyPathELM(classifications);
+  let remainingUnclassified = unclassified;
+
+  if (elmModel) {
+    const stillUnclassified: FileClassification[] = [];
+    for (const file of unclassified) {
+      const prediction = predictWithClassifyPathELM(file.path, elmModel);
+      if (prediction && ELM_GATE_ENABLED) {
+        updatedFiles.push({
+          path: file.path,
+          archetype: prediction.archetype,
+          confidence: prediction.confidence,
+          source: "elm" as const,
+        });
+      } else {
+        stillUnclassified.push(file);
+      }
+    }
+    remainingUnclassified = stillUnclassified;
+  }
+
+  if (remainingUnclassified.length === 0) {
+    return { updatedFiles, tokenUsage };
+  }
+
   // Build archetype catalog for the prompt
   const archetypeCatalog = classifications.archetypes.map((a) => ({
     id: a.id,
@@ -349,10 +379,10 @@ export async function enrichClassificationsWithLLM(
     description: a.description,
   }));
 
-  // Batch unclassified files
+  // Batch remaining unclassified files (post-ELM-gate)
   const batches: FileClassification[][] = [];
-  for (let i = 0; i < unclassified.length; i += LLM_BATCH_SIZE) {
-    batches.push(unclassified.slice(i, i + LLM_BATCH_SIZE));
+  for (let i = 0; i < remainingUnclassified.length; i += LLM_BATCH_SIZE) {
+    batches.push(remainingUnclassified.slice(i, i + LLM_BATCH_SIZE));
   }
 
   // Valid archetype IDs for validation
