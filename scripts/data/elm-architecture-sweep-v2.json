@@ -1,0 +1,407 @@
+{
+  "schema": "elm-architecture-sweep/v1",
+  "generatedAt": "2026-09-01T18:57:25.348Z",
+  "generatedBy": "scripts/elm-architecture-sweep.mjs",
+  "preRegistered": {
+    "committedAt": "f4a06175",
+    "adoption": {
+      "meanMarginPp": 1.5,
+      "minPairedWins": 7,
+      "totalPairs": 9
+    },
+    "foldSeeds": [
+      7,
+      13,
+      29
+    ],
+    "modelSeeds": [
+      101,
+      202,
+      303
+    ],
+    "folds": 5,
+    "note": "Fixed before this script existed. Editing these voids the run."
+  },
+  "method": {
+    "split": "TRAIN only (corpus.train); heldOut and gold set #1 not read",
+    "metric": "5-fold CV accuracy vs LLM labels — agreement with the teacher, NOT accuracy vs truth",
+    "feature": "path string only; library tokenize() + TF-IDF fitted per fold on that fold's train rows",
+    "paired": true
+  },
+  "corpusProvenance": {
+    "sources": [
+      "llm"
+    ],
+    "seed": 42,
+    "holdout": 0.25,
+    "repos": [
+      {
+        "repo": "n-dx-1",
+        "path": "/Users/nolanmoore/n-dx-1",
+        "git": {
+          "commit": "90e5bdb73074aeccdc83d1427291f5ce9f0a2b40",
+          "branch": "nolan-work",
+          "remote": "https://github.com/AsterMindAI/n-dx.git",
+          "dirty": false
+        },
+        "totalFiles": 683,
+        "classified": 683,
+        "unclassified": 0,
+        "harvested": 255
+      },
+      {
+        "repo": "AsterMind-Community-Edition",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/AsterMind-Community-Edition",
+        "git": {
+          "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+          "branch": "main",
+          "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git",
+          "dirty": true
+        },
+        "totalFiles": 114,
+        "classified": 114,
+        "unclassified": 0,
+        "harvested": 69
+      },
+      {
+        "repo": "express",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/express",
+        "git": {
+          "commit": "023767fe9872e029271df1418f73401bff20ff40",
+          "branch": "master",
+          "remote": "https://github.com/expressjs/express.git",
+          "dirty": true
+        },
+        "totalFiles": 48,
+        "classified": 48,
+        "unclassified": 0,
+        "harvested": 17
+      },
+      {
+        "repo": "fastify",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/fastify",
+        "git": {
+          "commit": "4cdb0c5def812f5773c952efdb79f1e99dcfae92",
+          "branch": "main",
+          "remote": "https://github.com/fastify/fastify.git",
+          "dirty": true
+        },
+        "totalFiles": 52,
+        "classified": 52,
+        "unclassified": 0,
+        "harvested": 48
+      },
+      {
+        "repo": "commerce",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/commerce",
+        "git": {
+          "commit": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+          "branch": "main",
+          "remote": "https://github.com/vercel/commerce.git",
+          "dirty": true
+        },
+        "totalFiles": 64,
+        "classified": 64,
+        "unclassified": 0,
+        "harvested": 15
+      },
+      {
+        "repo": "got",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/got",
+        "git": {
+          "commit": "64f21e2a4797b8c56493143e416508893983063f",
+          "branch": "main",
+          "remote": "https://github.com/sindresorhus/got.git",
+          "dirty": true
+        },
+        "totalFiles": 33,
+        "classified": 33,
+        "unclassified": 0,
+        "harvested": 8
+      },
+      {
+        "repo": "core",
+        "path": "/Users/nolanmoore/n-dx-elm-corpus/core",
+        "git": {
+          "commit": "d63616ca17de965ed32dcb449a4c5cd9982f15d2",
+          "branch": "main",
+          "remote": "https://github.com/vuejs/core.git",
+          "dirty": true
+        },
+        "totalFiles": 303,
+        "classified": 280,
+        "unclassified": 23,
+        "harvested": 212
+      }
+    ]
+  },
+  "incumbent": {
+    "name": "INCUMBENT elm-1024 tanh (phase 1 winner)",
+    "kind": "elm",
+    "incumbent": true,
+    "runs": [
+      0.6508620689655172,
+      0.6745689655172413,
+      0.6637931034482759,
+      0.6810344827586207,
+      0.6961206896551724,
+      0.6443965517241379,
+      0.665948275862069,
+      0.6422413793103449,
+      0.6875
+    ],
+    "mean": 0.6673850574712643,
+    "min": 0.6422413793103449,
+    "max": 0.6961206896551724,
+    "seconds": 359.84
+  },
+  "results": [
+    {
+      "name": "INCUMBENT elm-1024 tanh (phase 1 winner)",
+      "kind": "elm",
+      "incumbent": true,
+      "runs": [
+        0.6508620689655172,
+        0.6745689655172413,
+        0.6637931034482759,
+        0.6810344827586207,
+        0.6961206896551724,
+        0.6443965517241379,
+        0.665948275862069,
+        0.6422413793103449,
+        0.6875
+      ],
+      "mean": 0.6673850574712643,
+      "min": 0.6422413793103449,
+      "max": 0.6961206896551724,
+      "seconds": 359.84
+    },
+    {
+      "name": "elm-512 tanh",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.5926724137931034,
+        0.625,
+        0.6293103448275862,
+        0.6422413793103449,
+        0.6379310344827587,
+        0.6271551724137931,
+        0.6551724137931034,
+        0.6357758620689655,
+        0.6443965517241379
+      ],
+      "mean": 0.632183908045977,
+      "min": 0.5926724137931034,
+      "max": 0.6551724137931034,
+      "seconds": 172.022
+    },
+    {
+      "name": "elm-2048 tanh",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.6594827586206896,
+        0.6573275862068966,
+        0.6724137931034483,
+        0.6831896551724138,
+        0.6918103448275862,
+        0.6767241379310345,
+        0.6918103448275862,
+        0.665948275862069,
+        0.6982758620689655
+      ],
+      "mean": 0.6774425287356322,
+      "min": 0.6573275862068966,
+      "max": 0.6982758620689655,
+      "seconds": 913.271
+    },
+    {
+      "name": "elm-4096 tanh",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.6702586206896551,
+        0.6724137931034483,
+        0.6637931034482759,
+        0.6939655172413793,
+        0.7068965517241379,
+        0.6853448275862069,
+        0.7068965517241379,
+        0.6767241379310345,
+        0.7155172413793104
+      ],
+      "mean": 0.6879789272030652,
+      "min": 0.6637931034482759,
+      "max": 0.7155172413793104,
+      "seconds": 2735.6
+    },
+    {
+      "name": "elm-512 gelu",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.6206896551724138,
+        0.6443965517241379,
+        0.6400862068965517,
+        0.6508620689655172,
+        0.6551724137931034,
+        0.6443965517241379,
+        0.6616379310344828,
+        0.6487068965517241,
+        0.6702586206896551
+      ],
+      "mean": 0.6484674329501916,
+      "min": 0.6206896551724138,
+      "max": 0.6702586206896551,
+      "seconds": 167.406
+    },
+    {
+      "name": "elm-1024 gelu",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.646551724137931,
+        0.6810344827586207,
+        0.6724137931034483,
+        0.6745689655172413,
+        0.6918103448275862,
+        0.6487068965517241,
+        0.6681034482758621,
+        0.6508620689655172,
+        0.6961206896551724
+      ],
+      "mean": 0.6700191570881225,
+      "min": 0.646551724137931,
+      "max": 0.6961206896551724,
+      "seconds": 401.781
+    },
+    {
+      "name": "elm-2048 gelu",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.6487068965517241,
+        0.6594827586206896,
+        0.6788793103448276,
+        0.6831896551724138,
+        0.6961206896551724,
+        0.6767241379310345,
+        0.6939655172413793,
+        0.6767241379310345,
+        0.6982758620689655
+      ],
+      "mean": 0.6791187739463601,
+      "min": 0.6487068965517241,
+      "max": 0.6982758620689655,
+      "seconds": 1025.568
+    },
+    {
+      "name": "elm-1024 relu",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.6293103448275862,
+        0.6314655172413793,
+        0.6077586206896551,
+        0.6336206896551724,
+        0.6336206896551724,
+        0.646551724137931,
+        0.625,
+        0.6422413793103449,
+        0.6573275862068966
+      ],
+      "mean": 0.6340996168582377,
+      "min": 0.6077586206896551,
+      "max": 0.6573275862068966,
+      "seconds": 408.804
+    },
+    {
+      "name": "elm-2048 relu",
+      "kind": "elm",
+      "incumbent": false,
+      "runs": [
+        0.6357758620689655,
+        0.6293103448275862,
+        0.6637931034482759,
+        0.6702586206896551,
+        0.6487068965517241,
+        0.646551724137931,
+        0.646551724137931,
+        0.6681034482758621,
+        0.6702586206896551
+      ],
+      "mean": 0.6532567049808429,
+      "min": 0.6293103448275862,
+      "max": 0.6702586206896551,
+      "seconds": 980.931
+    }
+  ],
+  "verdicts": [
+    {
+      "name": "elm-512 tanh",
+      "mean": 0.632183908045977,
+      "deltaPp": -3.5201149425287293,
+      "pairedWins": 0,
+      "of": 9,
+      "adopted": false
+    },
+    {
+      "name": "elm-2048 tanh",
+      "mean": 0.6774425287356322,
+      "deltaPp": 1.0057471264367845,
+      "pairedWins": 7,
+      "of": 9,
+      "adopted": false
+    },
+    {
+      "name": "elm-4096 tanh",
+      "mean": 0.6879789272030652,
+      "deltaPp": 2.0593869731800885,
+      "pairedWins": 7,
+      "of": 9,
+      "adopted": true
+    },
+    {
+      "name": "elm-512 gelu",
+      "mean": 0.6484674329501916,
+      "deltaPp": -1.8917624521072707,
+      "pairedWins": 1,
+      "of": 9,
+      "adopted": false
+    },
+    {
+      "name": "elm-1024 gelu",
+      "mean": 0.6700191570881225,
+      "deltaPp": 0.2634099616858232,
+      "pairedWins": 6,
+      "of": 9,
+      "adopted": false
+    },
+    {
+      "name": "elm-2048 gelu",
+      "mean": 0.6791187739463601,
+      "deltaPp": 1.1733716475095801,
+      "pairedWins": 6,
+      "of": 9,
+      "adopted": false
+    },
+    {
+      "name": "elm-1024 relu",
+      "mean": 0.6340996168582377,
+      "deltaPp": -3.328544061302663,
+      "pairedWins": 1,
+      "of": 9,
+      "adopted": false
+    },
+    {
+      "name": "elm-2048 relu",
+      "mean": 0.6532567049808429,
+      "deltaPp": -1.4128352490421436,
+      "pairedWins": 2,
+      "of": 9,
+      "adopted": false
+    }
+  ],
+  "verdict": "ADOPT: elm-4096 tanh"
+}
