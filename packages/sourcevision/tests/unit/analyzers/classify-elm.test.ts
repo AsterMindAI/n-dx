@@ -10,6 +10,8 @@ import {
   loadBaselineArchetypeELM,
   getArchetypeELM,
   classifyWithELM,
+  extractPathExportExamples,
+  pathExportVector,
 } from "../../../src/analyzers/classify-elm.js";
 import { analyzeClassifications } from "../../../src/analyzers/classify.js";
 import { BUILTIN_ARCHETYPES } from "../../../src/analyzers/archetypes.js";
@@ -378,5 +380,124 @@ describe("classifyWithELM", () => {
     // The 30 training files all already have a real (non-null) archetype — none should
     // reappear in the ELM's output, regardless of what the model would predict for them.
     expect(result.updatedFiles.every((f) => f.path === PROBE_PATH)).toBe(true);
+  });
+});
+
+// ── pathExportVector / extractPathExportExamples (TJ-R2, design-only — not yet wired) ──────
+
+describe("pathExportVector", () => {
+  const imports: Imports = {
+    edges: [
+      { from: "src/other.ts", to: "src/utils/format.ts", type: "reexport", symbols: ["formatDate", "formatCurrency"] },
+    ],
+    external: [],
+    summary: { totalEdges: 1, totalExternal: 0, circularCount: 0, circulars: [], mostImported: [], avgImportsPerFile: 0 },
+  };
+
+  it("is never all-zero, even for a path with zero algorithmic evidence and zero exports", () => {
+    // "src/random9000.ts" matches no archetype signal (see classifyWithELM's zero-evidence
+    // fixture above) and has no entry in `imports` at all — exactly the population the
+    // evidence-vector representation degenerates to all-zero for.
+    const vector = pathExportVector("src/random9000.ts", emptyImports);
+    expect(vector.some((v) => v !== 0)).toBe(true);
+  });
+
+  it("is deterministic for the same input", () => {
+    const v1 = pathExportVector("src/utils/format.ts", imports);
+    const v2 = pathExportVector("src/utils/format.ts", imports);
+    expect(v1).toEqual(v2);
+  });
+
+  it("produces a fixed-length vector independent of the archetype catalog", () => {
+    const v1 = pathExportVector("src/utils/format.ts", imports);
+    const v2 = pathExportVector("src/a.ts", emptyImports);
+    expect(v1.length).toBe(v2.length);
+    expect(v1.length).toBeGreaterThan(0);
+  });
+
+  it("produces different vectors for different paths", () => {
+    const v1 = pathExportVector("src/utils/format.ts", emptyImports);
+    const v2 = pathExportVector("src/services/billing.ts", emptyImports);
+    expect(v1).not.toEqual(v2);
+  });
+
+  it("export names change the encoding for an otherwise-identical path", () => {
+    const withExports = pathExportVector("src/utils/format.ts", imports);
+    const withoutExports = pathExportVector("src/utils/format.ts", emptyImports);
+    expect(withExports).not.toEqual(withoutExports);
+  });
+});
+
+describe("extractPathExportExamples", () => {
+  it("resolves a file the evidence-vector representation cannot: zero algorithmic signal, LLM-labeled", () => {
+    // Mirrors the real production shape: a file only ever reaches source: "llm" because the
+    // algorithmic pass found zero evidence for it. extractNumericExamples gives this file an
+    // all-zero vector (documented behavior — see classifyWithELM's zero-evidence tests above);
+    // extractPathExportExamples must not, since that's the entire premise of TJ-R2.
+    const inv = makeInventory([{ path: "src/random9000.ts" }, { path: "src/index.ts" }]);
+    const fresh = analyzeClassifications(inv, emptyImports);
+    expect(fresh.files.find((f) => f.path === "src/random9000.ts")!.archetype).toBeNull();
+
+    const withLLMLabel: Classifications = {
+      ...fresh,
+      files: fresh.files.map((f) =>
+        f.path === "src/random9000.ts"
+          ? { ...f, archetype: "utility", confidence: 0.7, source: "llm" as const }
+          : f,
+      ),
+    };
+
+    const numericExamples = extractNumericExamples(withLLMLabel, inv, emptyImports);
+    const pathExamples = extractPathExportExamples(withLLMLabel, inv, emptyImports);
+
+    const numericExample = numericExamples.find((e) => e.archetype === "utility" && e.vector.every((v) => v === 0));
+    expect(numericExample).toBeDefined(); // sanity: confirms the contrast is real, not assumed
+
+    const pathExample = pathExamples.find((e) => e.archetype === "utility");
+    expect(pathExample).toBeDefined();
+    expect(pathExample!.vector.some((v) => v !== 0)).toBe(true);
+  });
+
+  it("excludes files with no resolved archetype", () => {
+    const inv = makeInventory([{ path: "src/index.ts" }, { path: "src/analyzer.ts" }]);
+    const classifications = analyzeClassifications(inv, emptyImports);
+
+    const examples = extractPathExportExamples(classifications, inv, emptyImports);
+    expect(examples.map((e) => e.archetype)).toEqual(["entrypoint"]);
+  });
+
+  it("excludes non-source-role files even if a label was force-set on them", () => {
+    const inv = makeInventory([{ path: "src/index.ts" }, { path: "src/fixture.json", role: "config" }]);
+    const classifications = analyzeClassifications(inv, emptyImports);
+    const withFakeLabel: Classifications = {
+      ...classifications,
+      files: classifications.files.map((f) =>
+        f.path === "src/fixture.json" ? { ...f, archetype: "config", source: "algorithmic" as const } : f,
+      ),
+    };
+
+    const examples = extractPathExportExamples(withFakeLabel, inv, emptyImports);
+    expect(examples.some((e) => e.archetype === "config")).toBe(false);
+  });
+
+  it("excludes source values other than algorithmic/llm", () => {
+    const inv = makeInventory([{ path: "src/index.ts" }]);
+    const classifications = analyzeClassifications(inv, emptyImports);
+    const overridden: Classifications = {
+      ...classifications,
+      files: classifications.files.map((f) => ({ ...f, source: "user-override" as const })),
+    };
+
+    expect(extractPathExportExamples(overridden, inv, emptyImports)).toHaveLength(0);
+  });
+
+  it("produces vectors with consistent length regardless of the archetype catalog size", () => {
+    const inv = makeInventory([{ path: "src/index.ts" }, { path: "src/utils/format.ts" }]);
+    const classifications = analyzeClassifications(inv, emptyImports);
+    const examples = extractPathExportExamples(classifications, inv, emptyImports);
+
+    expect(examples.length).toBeGreaterThan(0);
+    const lengths = new Set(examples.map((e) => e.vector.length));
+    expect(lengths.size).toBe(1); // same fixed length for every example
   });
 });
