@@ -181,26 +181,42 @@ function main() {
   // The library exposes no toJSON()/saveModelAsJSON(); weights live on `.model`
   // as {W, b, beta}, and `serializeConfig()` gives the resolved config. Both are
   // captured, so the artifact does not depend on re-fitting to be readable.
-  const fitted = SPEC.ensembleSeeds.map((seed) => {
+  // ⚠️ MEMORY. Fitting all 9 seeds and HOLDING them was fine at 1024 units but
+  // OOMs at 4096: W is 4096 x 2890 doubles per model, and nine of those plus the
+  // ridge solve's transient 4096 x 4096 exceed node's 2096 MB default heap. The
+  // first 4096 freeze died exactly there, AFTER completing the CV comparison.
+  //
+  // Nothing downstream needs nine live models — it needs each model's PREDICTIONS
+  // on the probe set, plus shapes and configs. So fits are streamed: fit, extract,
+  // drop. Peak is one model instead of nine. This changes no number in the
+  // artifact; it is the same seeds, the same fits, in the same order.
+  const probe = rows.map((r) => docOf(r.text));
+  const probeVecs = probe.map((d) => v.vectorize(d));
+
+  const models = [];
+  const perSeedProbe = [];
+  let firstBeta = null;
+  for (const seed of SPEC.ensembleSeeds) {
     const e = new ELM({ categories: cats, hiddenUnits: SPEC.hiddenUnits, activation: SPEC.activation, ridgeLambda: SPEC.ridgeLambda, seed, log: { modelName: "frozen", verbose: false } });
     e.trainFromData(Xtr, Ytr);
-    return { seed, elm: e };
-  });
-  const models = fitted.map(({ seed, elm }) => ({
-    seed,
-    config: elm.serializeConfig(),
-    // Shape only. See the header: the weights themselves are 536 MB of JSON and
-    // are reproducible from (corpus, spec, seed).
-    weightShape: { W: [elm.model.W.length, elm.model.W[0].length], b: [elm.model.b.length, elm.model.b[0].length], beta: [elm.model.beta.length, elm.model.beta[0].length] },
-  }));
+    models.push({
+      seed,
+      config: e.serializeConfig(),
+      // Shape only. See the header: the weights themselves are 536 MB of JSON and
+      // are reproducible from (corpus, spec, seed).
+      weightShape: { W: [e.model.W.length, e.model.W[0].length], b: [e.model.b.length, e.model.b[0].length], beta: [e.model.beta.length, e.model.beta[0].length] },
+    });
+    perSeedProbe.push(probeVecs.map((x) => e.predictFromVector([x], 1)[0][0]));
+    // Retained for the determinism check below — beta is 4096 x 16, ~0.5 MB, so
+    // keeping it costs nothing while keeping the whole model costs ~95 MB.
+    if (firstBeta === null) firstBeta = JSON.stringify(e.model.beta);
+  }
 
   // A refit fingerprint. The fit is deterministic given the seed (verified), so
   // certification can re-fit and confirm it is scoring the SAME model rather than
   // trusting that nothing drifted — a library bump would show up here as a
   // mismatch instead of as a quietly different result.
-  const probe = rows.map((r) => docOf(r.text));
-  const probeVecs = probe.map((d) => v.vectorize(d));
-  const votedProbe = voteLabels(fitted.map(({ elm }) => probeVecs.map((x) => elm.predictFromVector([x], 1)[0][0])), cats);
+  const votedProbe = voteLabels(perSeedProbe, cats);
   const fingerprint = createHash("sha256")
     .update(votedProbe.map((p) => `${p.label}:${p.prob.toFixed(6)}`).join("|"))
     .digest("hex");
@@ -209,7 +225,7 @@ function main() {
   // Verify it rather than assuming it: refit one seed and require an identical fit.
   const check = new ELM({ categories: cats, hiddenUnits: SPEC.hiddenUnits, activation: SPEC.activation, ridgeLambda: SPEC.ridgeLambda, seed: SPEC.ensembleSeeds[0], log: { modelName: "determinism", verbose: false } });
   check.trainFromData(Xtr, Ytr);
-  const a = JSON.stringify(fitted[0].elm.model.beta);
+  const a = firstBeta;
   const b2 = JSON.stringify(check.model.beta);
   if (a !== b2) {
     throw new Error("DETERMINISM CHECK FAILED: refitting the same seed gave different weights.\n" +
