@@ -5,7 +5,8 @@
 - **Backlog prefix:** `TN-J`
 - **Branch:** `Nolan-Work` (see *Deviations from doctrine* below — this is **not** the documented
   `elm/<lead>/<topic>` convention; it is a deliberate call by the lead)
-- **Worktree:** _(none — shared checkout at `/Users/nolanmoore/n-dx-1`)_. Lead's decision,
+- **Worktree:** _(none — shared checkout at `/Users/nolanmoore/Work/n-dx-1`; **the path moved, it
+was `~/n-dx-1` until at least 08-23**)_. Lead's decision,
   2026-08-10. Consequence: every state-writing command must be claimed in `IN-FLIGHT.md` first.
 - **Inbox:** `Claude-Context/Nolan-Agents/Notes/`
 
@@ -37,14 +38,42 @@ Team Nolan's behalf.
 
 ### Who is where (shared checkout — this matters)
 
-- **Jam (me):** branch `Nolan-Work`, **shared checkout** `/Users/nolanmoore/n-dx-1`, no worktree.
+**Re-verified 2026-09-04 on revive. Three of the five facts in the 08-23 version had gone stale;
+they are corrected here rather than left to mislead the next session.**
+
+- **Jam (me):** branch `nolan-work`, **shared checkout `/Users/nolanmoore/Work/n-dx-1`**, no
+  worktree. ⚠️ **The checkout moved** — it is under `~/Work/` now, not `~/`. Every doc still saying
+  `/Users/nolanmoore/n-dx-1` (this charter until today, the roster, `IN-FLIGHT.md`) is quoting a
+  path that does not exist.
 - **Fluff:** same checkout, same branch. Owns `Claude-Context/` root doctrine docs (`TN-F1`).
-- **Butter:** own worktree `/Users/nolanmoore/n-dx-butter`, branch `Nolan-Work-Butter`. Owns Path A
-  measurement (`TN-J3`, `TN-B1`).
+- **Syrup:** same checkout, same branch (lead's decision 2026-08-31). Reads Teams Jarrett and
+  Thomas and reports into our inbox; read-only on their branches, ships no code.
+- **Butter:** ⚠️ **worktree `/Users/nolanmoore/n-dx-butter` no longer exists on disk** —
+  `git worktree list` reports it `prunable`. Branch `Nolan-Work-Butter` still exists locally and on
+  `origin` at `7a9a5d37`. Butter's Path A work is committed and safe; only the working directory is
+  gone. I have **not** pruned it — that is Butter's or the lead's call, not mine.
+- **K2:** **retired 2026-09-04 (lead's decision); its open rows are now mine.** K2 built the tier
+  through Phases 1–3 off [`K2-HANDBOOK.md`](K2-HANDBOOK.md), and did so **with no charter file and
+  no roster row** — a real doctrine gap, recorded in the 2026-09-04 session entry.
 - **Consequence:** `.rex/`, `.sourcevision/`, `.hench/` have no locking. **Claim `IN-FLIGHT.md`
   before every state-writing command and release after.** Never `git add -A` — stage explicit paths.
 - **Notes are delivered by merging, not by writing** (`TN-F3`). A note on my branch is invisible to
-  Butter until branches merge.
+  the other teams until branches merge.
+
+### ⚠️ Two branch refs that differ only by case — do not push blind
+
+`git for-each-ref refs/heads/` on 2026-09-04:
+
+```
+refs/heads/Nolan-Work   b0003e7c   (packed; equals origin/Nolan-Work — stale)
+refs/heads/nolan-work   69259048   (loose file; what I am actually standing on)
+```
+
+The loose ref **shadows** the packed one on this case-insensitive filesystem, so `Nolan-Work` and
+`nolan-work` resolve to the same thing locally and `git log origin/Nolan-Work..Nolan-Work` lies
+about which is which. **GitHub refs are case-sensitive.** A plain `git push` from here creates a
+*second* remote branch and splits the team's branch in two. Resolve the ref before pushing; this is
+outward-facing, so it is the lead's call.
 
 ### ⚠️ `analyze-phases.ts` is invisible to grep
 
@@ -191,11 +220,35 @@ reading **"0 — Tokens we can currently measure"**. Redeploy it once Butter lan
 
 ## Current state
 
-Path B Steps 0–2 are done; **Step 3 (the benchmark) is deliberately paused on `TN-J10`** — whether
-a hand-labelled gold set is needed, because measuring "at or above LLM accuracy" against a teacher
-that calls `landing.ts` a `service` measures agreement, not correctness. Lane B of Butter's IMPL is
-accepted and its instrument shipped (`f91370f8`). No source file is dirty; I hold no open
-`IN-FLIGHT` claim. Nothing is blocked on me — the open items need the leads or Butter.
+**As of 2026-09-04 (revive).** The 08-23 text that stood here said Step 3 was paused on `TN-J10`.
+`TN-J10` was resolved 2026-08-27 and everything downstream of it has since run, so that paragraph
+is superseded — its content survives in the session log, where it belongs.
+
+- **Phases 1 and 2 of the tier are done** (K2, off my handbook): `tanh` adopted over the never-swept
+  `relu` (+4.0 pp), capacity settled at 1024 on corpus v1, `ridgeLambda` / RBF / stacking / feature
+  engineering all measured and rejected. Phase 2 put 5 of 18 operating points past the LLM.
+- **Phase 3 certification FAILED on generalisation** (`TN-J32`). The frozen v1 model collapses to
+  the majority class on unseen repos — 96.4% `service`/`utility` against the teacher's 48.4%,
+  5 of 13 labels emitted, coverage **34.9% → 13.2% (K1′ FAIL)**. It learned n-dx's archetype prior,
+  not a path→archetype mapping. Caught with **no ground truth and no labelling spend**, so gold
+  set #2's 250 files are still blind and reusable.
+- **`TN-J9` — my own 2026-08-13 filing, "the corpus needs ecosystem *diversity*, not more repos" —
+  was right, sat unclaimed for 19 days, and is exactly what stopped Phase 3.**
+- **Corpus v2 is built and is an UNVALIDATED fix**: 624 rows / 7 ecosystems (was 324 / 2), Phase 1b
+  adopted `elm-4096 tanh`. **The coverage re-check has not been run on it.** That re-check is the
+  cheap question that decides whether anything else in the chain matters.
+- **Pending, none of it run:** the corpus-v2 re-freeze (the 4096 fit OOM'd; `69259048` fixed it by
+  streaming, and the run was never repeated — `elm-frozen-model.json` is still the Aug 31 v1
+  artifact, hash `d794f847`), the coverage re-check, and the pre-registered Phase 1c capacity arm
+  (`--phase1c`, 8192, with its stopping rule declared at `c913acf0` before any number exists).
+- **Weak signal, deliberately deferred:** the pre-crash run had the 9-seed vote at 67.0% against a
+  single seed's 69.2% on corpus v2 at 4096. That is **one** fold-seed, which is the cost reduction
+  `e73ca327` took — a weak signal, not a finding, and moot if the coverage re-check fails again.
+- **Four commits are unpushed** (Sep 4), so the Phase 1c pre-registration is not yet visible to the
+  other two teams. A pre-registration nobody else can see is worth much less; see the ref hazard
+  above for why the push is not a one-liner.
+- **Claims:** `TN-J17` released 2026-09-04 (its ADR closed 08-23; the board disagreed with the ADR
+  for twelve days). K2's open rows — `TN-J25`, `TN-J30`, `TN-J31`, `TN-J32` — are now claimed by me.
 
 ## Deviations from doctrine (recorded deliberately, decided by the lead 2026-08-10)
 
@@ -212,7 +265,11 @@ session doesn't "fix" them or mistake them for drift.
    PRs and describes no `dev` branch at all. The workflow doc and reality disagree; that is a doc
    gap for the three leads, raised in `IN-FLIGHT.md` § 7.
 
-## Current state
+## Historical — state at 2026-08-11 (superseded; kept for the record)
+
+*(Retitled 2026-09-04. This was a second `## Current state` heading, duplicating the one above and
+four weeks out of date. Retitled rather than deleted — it is a true record of where things stood,
+and a revived session was reading it as instructions.)*
 
 `TN-J1` delivered 2026-08-11 as
 [`ADR-2026-08-11-jam-elm-replacement-survey-and-split.md`](../ADR/ADR-2026-08-11-jam-elm-replacement-survey-and-split.md)
@@ -229,26 +286,180 @@ itself has not started.
 
 ## Next up
 
-*(Corrected 2026-08-23 — this section previously still listed the `TN-J1` survey bullets, all
-delivered 2026-08-11. Butter flagged that a revived session reads `Next up` as its instructions.)*
+*(Rewritten 2026-09-04 on revive. The 08-23 version had gone stale in the way that matters most —
+it told a fresh session to hold `TN-J4` Step 3 pending `TN-J10`, which was answered on 08-27, and
+it still asked for a gold-set decision that has since been made, executed, and spent. Butter's
+2026-08-23 warning stands: **a revived session reads `Next up` as its instructions**, so a stale
+entry here is not clutter, it is a wrong order.)*
 
-- [ ] **Blocked on Butter's ADR + IMPL** for the Jam/Butter collaboration. Do not start work in
-      `packages/llm-client/**` or `hench/**` before it lands — that is Butter's claim.
-- [ ] `TN-J10` — needs the three leads: does Step 3 require a hand-labelled gold set? The corpus
-      teacher labels `landing.ts` as `service`, and `service`+`utility` are 74% of rows, so
-      "at or above LLM accuracy" may measure agreement with a fuzzy teacher rather than correctness.
-- [ ] `TN-J4` Step 3 (benchmark) — **hold until `TN-J10` is answered.** When it runs: use the
-      library's `Evaluation` module, report against the **majority-class baseline recomputed from
-      the corpus actually used** (38.0% for the current one), never a figure quoted from a document.
-- [ ] `TN-J9` — corpus still lacks ecosystem diversity; `model` and `route-module` have zero rows.
-      Needs repos from other ecosystems, not more TypeScript libraries.
-- [ ] Update the published `SYNC-001` artifact once Butter lands the token fix — it carries a stat
-      tile reading "0 — Tokens we can currently measure" and lives outside the repo, so no grep
-      will find it.
+- [ ] **The corpus-v2 verdict chain, in this order — cheapest question first.**
+      1. Re-run the freeze on corpus v2 with the streaming fix
+         (`node scripts/elm-freeze-model.mjs --corpus=scripts/data/elm-archetype-corpus-v2.json
+         --hidden=4096 --out=scripts/data/elm-frozen-model-v2.json`). The last attempt OOM'd
+         *after* the CV comparison; `69259048` streams the fits so peak memory is one model.
+      2. Then the coverage re-check against that artifact
+         (`node scripts/elm-coverage-check.mjs --frozen=scripts/data/elm-frozen-model-v2.json`).
+         **This is the decision point.** It needs no ground truth and no spend, and if v2 still
+         collapses on hono/trpc then Phase 1c, the ensemble question and gold set #2's labelling
+         day are all moot.
+- [ ] **Phase 1c (8192 capacity) — pre-registered at `c913acf0`, not yet run.** Run it *only* if
+      the coverage re-check passes. **Honour the stopping rule as written:** a non-winning 8192
+      closes capacity at 4096; 16384 is not run either way. ⚠️ Run it alone — a Phase 1 sweep was
+      OOM-killed on this box and **exited 0 with an empty table**, indistinguishable from a clean
+      run. Verify the results table is populated; do not trust the exit code.
+- [ ] **`TN-J9` — ecosystem diversity.** Confirmed by `TN-J32` and the direct cause of the Phase 3
+      failure. Corpus v2 is the attempted fix; it is not validated until step 2 above returns.
+      `component` and `model` still have zero training rows, so the tier cannot emit them at all.
+- [ ] **`TN-J30` — gold set #2 remains blind and unlabelled**, 250 files, contamination checked
+      mechanically (0 of 355 candidates in corpus #1). It is spent only when someone reads its
+      labels. **Do not read them** until a model passes K1′ on it; that is what kept the failure
+      cheap the first time.
+- [ ] **`ADR-2026-08-28-k2-replace-k1-with-a-coverage-criterion.md` is still Proposed and needs the
+      leads.** Everything above is being measured against a bar that has not formally been adopted.
+      Also unresolved and recorded rather than buried: **K1′ is repo-dependent** — coverage is a
+      property of (model, repo), not of the model alone.
+- [ ] **Three teams have built the same thing.** Syrup's 08-31 survey: Jarrett (362 lines + 28
+      tests) and Thomas (133 + 86 lines) both built an ELM classifier into
+      `packages/sourcevision/src/analyzers/` — the path Team Nolan claimed on 08-11 — and both hit
+      my zero-evidence wall independently. Neither claim is on `IN-FLIGHT.md`. This is a leads'
+      conversation, not something I resolve by editing.
+- [ ] **`TN-J12` / `TN-J14` / `TN-J16` — unclaimed, need the leads:** what we publish for
+      calls-avoided (per-analyze is steppy; per-file is smooth but not what a user experiences).
+- [ ] **`TN-J6`** — should shipping `archetypes.ts` changes invalidate the classification cache?
+      Users see no benefit until `--full` (`analyze-phases.ts:210`). Affects every future archetype
+      change, not just this work.
+- [ ] Update the published `SYNC-001` artifact — it still carries a stat tile reading
+      **"0 — Tokens we can currently measure"**, which Butter's `TN-J3` fix has made wrong. It
+      lives outside the repo at
+      `https://claude.ai/code/artifact/57194d8b-3459-4ca7-8a5d-95e38ffb4183`, so **no grep will
+      ever find it.**
+- [ ] **Amend `ELM-FINDINGS.txt` in place.** Butter drafted it from the committed record on 08-23
+      and its own header says *"JAM HAS NOT YET REVIEWED IT … Jam: amend in place."* It is the
+      document the other two teams would read first, it is now eleven days behind the Phase 3
+      failure, and the request has been outstanding since 08-23.
+- [ ] **Not mine, do not start:** anything in `packages/llm-client/**` or `hench/**` (Butter's),
+      the `Claude-Context/` root doctrine docs (Fluff's), and any edit on Jarrett's or Thomas's
+      branches (nobody's — Syrup reads them read-only).
 
 ## Session log
 
 Newest at the top. **Do not edit past entries** — append corrections as a new entry.
+
+---
+
+### 2026-09-04 — Revived after a twelve-day gap in this log. Repairing the mechanism first.
+
+Nolan revived me. **The revive did not work off this charter, and that is the finding of the
+session.** `NEW-AGENT.md` says: *"If reviving an agent doesn't work smoothly, the charter's session
+log was too thin — fix that in the log, not by re-onboarding the agent."* So that is what I did
+before touching any project work.
+
+**What was wrong when I came back.** The log's newest entry was 2026-08-23 (c). Between then and
+today I worked at least three more sessions — 08-27, 08-28, 08-31 — that produced two accepted
+ADRs, two IMPLs, a handbook, and a note, and **none of it was logged here.** I had to reconstruct
+twelve days from `BACKLOG.md`, the ADR directory, the notes inbox and `git log`. That took most of
+the session and it is exactly the cost the charter exists to prevent. A reconstruction of those
+three sessions is filed below, marked as such.
+
+Worse than thin: **stale.** `Next up` still said to hold `TN-J4` Step 3 pending `TN-J10` — resolved
+08-27, with everything downstream of it since run and failed. Butter warned me on 08-23 that a
+revived session reads `Next up` as its instructions. It was right, and I let the section rot anyway.
+There were also **two `## Current state` headings**, four weeks apart, both presented as current.
+
+**Three things I found on revive that were wrong on the boards, not just in my log:**
+
+1. **`TN-J17` was `IN-PROGRESS`, claimed by me, on both `BACKLOG.md` and `IN-FLIGHT.md` — while its
+   own ADR has read *"Closed — not pursued"* since 08-23.** Butter measured `num_turns = 1`, so
+   there is no agent loop to constrain and the premise died. I held a claim on dead work for twelve
+   days. Released today, both boards.
+2. **The shared checkout moved to `/Users/nolanmoore/Work/n-dx-1`.** This charter, the roster and
+   `IN-FLIGHT.md` all quoted `/Users/nolanmoore/n-dx-1`, which no longer exists. The corpus staging
+   is `/Users/nolanmoore/Work/n-dx-elm-corpus` — `IN-FLIGHT.md`'s extended `TN-J32` row already had
+   this right while `ELM-CORPUS.md` and this charter still said `~/n-dx-elm-corpus/`.
+3. **Two branch refs differing only by case** — `refs/heads/Nolan-Work` (packed, stale, `b0003e7c`)
+   and `refs/heads/nolan-work` (loose, `69259048`). The loose ref shadows the packed one here, so
+   `git log origin/Nolan-Work..Nolan-Work` reports the loose ref's commits and reads like the two
+   agree. GitHub's refs are case-sensitive: pushing blind would fork the team branch into two remote
+   branches. **Not fixed — outward-facing, so it is the lead's call.** Written up in the standing
+   context above.
+
+**Also verified and not acted on:** Butter's worktree `/Users/nolanmoore/n-dx-butter` is gone from
+disk (`git worktree list` says `prunable`); branch `Nolan-Work-Butter` is intact locally and on
+`origin` at `7a9a5d37`, so the work is safe and only the directory is missing. I did not prune it.
+
+**Decisions the lead took this session:**
+
+- **K2 is retired, and its open rows come to me** — `TN-J25`, `TN-J30`, `TN-J31`, `TN-J32`.
+  Completed rows keep K2's name: `TN-J27`, `TN-J28`, `TN-J29` and the `TN-J24` amendment are its
+  work and retiring an agent does not rewrite who measured what.
+- **Charter repair first**, before rejoining the verdict chain.
+
+**A doctrine gap worth someone's attention:** K2 ran for a week, spent real LLM budget, froze a
+model, commissioned a gold set and authored an ADR — **with no charter file and no roster row.**
+Its record lives in `K2-HANDBOOK.md` (a document I wrote *for* it), the backlog, and its ADR. There
+is no session log of its reasoning at all, so absorbing its rows means absorbing artifacts without
+the thinking behind them. `NEW-AGENT.md` § *Retiring an agent* assumes a charter exists to leave
+behind. This one has nothing to leave.
+
+**Where the project actually stands** is written up under `Current state` above rather than
+repeated here. The short version: Phase 3 failed on generalisation, `TN-J9` called it 19 days
+early, corpus v2 is the attempted fix and is **unvalidated**, and the next real action is the
+coverage re-check — which costs nothing and decides whether anything else matters.
+
+**What I did NOT do this session:** did not run the freeze, the coverage re-check, or Phase 1c;
+did not push (see the ref hazard); did not prune Butter's worktree; did not touch any file under
+`packages/**`; did not amend `ELM-FINDINGS.txt`, which still carries Butter's standing request that
+I review the Jam-attributed numbers in place — that obligation is now on `Next up` rather than in
+my head, which is where it has been sitting since 08-23.
+
+---
+
+### 2026-08-27 → 2026-08-31 — RECONSTRUCTED 2026-09-04, not contemporaneous
+
+⚠️ **Read this as a reconstruction, not a session entry.** I was not logging at the time; this is
+assembled on 2026-09-04 from committed ADRs, IMPLs, notes and backlog rows, and it records **what
+the artifacts show**, not what I remember. Anything not in the committed record is absent from it.
+
+**08-27 — the gold set came back, and it failed the model I was defending.**
+
+- Wrote [`ADR-2026-08-27-jam-k2-gold-set.md`](../ADR/ADR-2026-08-27-jam-k2-gold-set.md) and its
+  labelling IMPL. Nolan labelled 83 files blind, two passes (`585a1221`). Packet integrity checked:
+  immutable columns and row order unchanged.
+- **`TN-J20` — K2 FAILS.** Path-information ceiling **85.4%** · LLM vs truth **72.3%** · **ELM vs
+  truth 54.4%** (range 47.0–59.0 over 7 seeds). What had looked like the ELM inheriting a fuzzy
+  teacher was mostly **the ELM being worse**.
+- **`TN-J22`** killed my own hypothesis: I had guessed a low path-information ceiling would explain
+  everything. At 85.4% it does the opposite — **paths are highly informative and the corpus is not
+  built on sand**; the LLM is the one underperforming.
+- **`TN-J19`** — the confidence gate works: top-decile precision **84.5%** vs 59.9% ungated, and it
+  **must be percentile-based** because a 13-class softmax caps confidence at 0.245 and an absolute
+  `>= 0.5` gate selects literally nothing. At 30% coverage: 75.3% precision, 3 of 9 n-dx calls.
+- **I retired my own kill criterion.** "≥30% of the residue at or above LLM accuracy", from my
+  08-13 ADR, **cannot be evaluated and never could have been** — the LLM is the teacher, so the
+  criterion compares the student to its own labels.
+
+**08-28 — handed the build over.**
+
+- [`ADR-2026-08-28-jam-implement-the-elm-tier.md`](../ADR/ADR-2026-08-28-jam-implement-the-elm-tier.md),
+  accepted by the lead the same day: retune on **train-CV only**, re-certify on a **fresh** gold set,
+  integrate behind a never-worse gate, dark-run before enabling.
+- **`TN-J24` resolved — merge the decision, not the taxonomy.** Merging `service`/`utility` is worth
+  +26.8 pp and was **rejected**: the merged class holds **74% of all files**, and a category that
+  size buys accuracy by deleting the question. The hierarchical variant gains nothing (≈63.7% vs
+  64.1%) because the binary specialist only reaches 67.8%.
+- Wrote [`K2-HANDBOOK.md`](K2-HANDBOOK.md) and handed Path B implementation to K2 — the five
+  numbers, what is settled, the abstention design, the contamination rule, and the ten traps that
+  have each produced a believed-but-wrong number.
+
+**08-31 — Syrup's survey, and a claim of mine that survived it.**
+
+- Verified both of Syrup's library findings at source before replying: `useTokenizer: true` joins
+  tokens on the empty string (`astermind.umd.js:772`) and `charToOneHot` lowercases before lookup.
+  Both exactly as described.
+- **My reply's substance:** we already have the sound measurement — the treatment has been run
+  twice through two different encoders, and only one of them is broken, which makes Butter's 4.8%
+  **moot rather than suspect.** Filed as
+  [`NOTE-…-08-31-jam-reply-to-syrup-we-already-have-the-number.md`](Notes/NOTE-nolan-internal-2026-08-31-jam-reply-to-syrup-we-already-have-the-number.md).
 
 ---
 

@@ -23,10 +23,11 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 
 | Agent | Charter | Scope | Worktree |
 |---|---|---|---|
-| Jam | [`Jam.md`](Jam.md) | Survey of LLM call sites for ELM/KELM replacement; proposes the three-way split. Analysis + ADR only — implements nothing. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, see below)_ |
-| Fluff | [`Fluff.md`](Fluff.md) | The `Claude-Context/` agent system itself — doctrine, onboarding, and workflow docs. Finds where doctrine and reality disagree and drafts the correction; does **not** decide which convention wins, that goes to the leads as an ADR. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, branch `Nolan-Work`, see below)_ |
-| Butter | [`Butter.md`](Butter.md) | **Path A, measurement half** — token accounting end to end: parse → accumulate → persist → report (`llm-client/src/{token-usage,cli-provider,api-provider}.ts`, `hench/src/agent/lifecycle/event-accumulator.ts`, `ndx usage`). Gates Paths B and C, neither of which can state a saving without it. Does **not** touch `sourcevision/src/analyzers/**` (Jam's) or the `Claude-Context/` root doctrine docs (Fluff's). | `/Users/nolanmoore/n-dx-butter`, branch `Nolan-Work-Butter` |
-| Syrup | [`Syrup.md`](Syrup.md) | **Reads the other two teams.** Surveys `origin/Jarrett` and both Thomas branches — ADRs, IMPLs, charters, backlogs, notes, diffs — and reports what they have found to Jam and Butter as within-team notes. **Strictly read-only on Jarrett's and Thomas's branches:** no commits, no cherry-picks, no fixes. Drafts outbound cross-team notes for **Nolan** to send; does not send them. Ships analysis and notes, no code. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, branch `nolan-work`, lead's decision 2026-08-31)_ |
+| Jam | [`Jam.md`](Jam.md) | Survey of LLM call sites for ELM/KELM replacement; proposes the three-way split. Analysis + ADR only — implements nothing. | _(none — shared checkout `/Users/nolanmoore/Work/n-dx-1`, see below)_ |
+| Fluff | [`Fluff.md`](Fluff.md) | The `Claude-Context/` agent system itself — doctrine, onboarding, and workflow docs. Finds where doctrine and reality disagree and drafts the correction; does **not** decide which convention wins, that goes to the leads as an ADR. | _(none — shared checkout `/Users/nolanmoore/Work/n-dx-1`, branch `Nolan-Work`, see below)_ |
+| Butter | [`Butter.md`](Butter.md) | **Path A, measurement half** — token accounting end to end: parse → accumulate → persist → report (`llm-client/src/{token-usage,cli-provider,api-provider}.ts`, `hench/src/agent/lifecycle/event-accumulator.ts`, `ndx usage`). Gates Paths B and C, neither of which can state a saving without it. Does **not** touch `sourcevision/src/analyzers/**` (Jam's) or the `Claude-Context/` root doctrine docs (Fluff's). | ⚠️ `/Users/nolanmoore/n-dx-butter` **no longer exists on disk** (`git worktree list` reports it `prunable`, verified 2026-09-04). Branch `Nolan-Work-Butter` is intact locally and on `origin` at `7a9a5d37`, so the work is safe — only the working directory is gone. Not pruned; that is Butter's or the lead's call. |
+| Syrup | [`Syrup.md`](Syrup.md) | **Reads the other two teams.** Surveys `origin/Jarrett` and both Thomas branches — ADRs, IMPLs, charters, backlogs, notes, diffs — and reports what they have found to Jam and Butter as within-team notes. **Strictly read-only on Jarrett's and Thomas's branches:** no commits, no cherry-picks, no fixes. Drafts outbound cross-team notes for **Nolan** to send; does not send them. Ships analysis and notes, no code. | _(none — shared checkout `/Users/nolanmoore/Work/n-dx-1`, branch `nolan-work`, lead's decision 2026-08-31)_ |
+| K2 | _(none — **never had a charter**; see below)_ | **RETIRED 2026-09-04** (lead's decision). Built the ELM classification tier through Phases 1–3 off [`K2-HANDBOOK.md`](K2-HANDBOOK.md): the `tanh` adoption, the `ridgeLambda`/RBF/stacking rejections, the K1→K1′ replacement, the model freeze, gold set #2, and the Phase 3 generalisation failure. **Open rows (`TN-J25`, `TN-J30`, `TN-J31`, `TN-J32`) absorbed by Jam; completed rows (`TN-J27`, `TN-J28`, `TN-J29`, the `TN-J24` amendment) keep K2's name** — retiring an agent does not rewrite who measured what. | _(shared checkout `/Users/nolanmoore/Work/n-dx-1`)_ |
 
 > `(TBD)` and `(shared checkout)` are not valid worktree entries for an agent that works alongside
 > others. See [`../Command-Structure`](../Command-Structure) → *One agent, one worktree*.
@@ -62,6 +63,15 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 > One caveat worth knowing: **a worktree does not isolate `.hench/runs/`.** Those six run files are
 > tracked in git despite `.gitignore:5` (committed before the rule), so they are present in every
 > worktree. Isolation covers newly written state, not that committed history.
+
+> **⚠️ Doctrine gap found on Jam's 2026-09-04 revive — K2 ran with no charter and no roster row.**
+> K2 worked for a week, spent real LLM budget, froze a model, commissioned a gold set and authored
+> an ADR, and until today appeared in no roster. Its reasoning was never logged anywhere:
+> `NEW-AGENT.md` § *Retiring an agent* says to "leave the charter — it's the record of why things
+> were built the way they were", and this one has no charter to leave. Absorbing its rows therefore
+> means inheriting artifacts without the thinking behind them. The row above is added so the record
+> is at least complete; the question of how an agent got created without going through
+> `NEW-AGENT.md` is for the lead.
 
 ## Seams
 
