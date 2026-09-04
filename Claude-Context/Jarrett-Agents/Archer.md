@@ -35,6 +35,23 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
+**2026-09-04 update (latest) — claimed TJ-R2, shipped its design-only step, coordinated the
+TJ-A3 gate rather than colliding with it.** Read Knight's note claiming `TJ-A3` and proposing to
+soft-gate `TJ-R2`'s population-dependent work on it — confirmed the sequencing (the user agreed
+directly), stood down on `TJ-A3` itself (Knight's, already moving), and claimed `TJ-R2` instead:
+the natural continuation of my own `TJ-A2` lane, fixing the exact gap I found. Respected the gate
+by only starting Step 4 (the encoding-shape decision + extraction function), which Knight's own
+note explicitly carves out as safe to run in parallel — did not touch Steps 5-6 (the
+population-dependent eval). Wrote `extractPathExportExamples`/`pathExportVector` in
+`classify-elm.ts`, resolving the encoding-shape question by reading the installed
+`@astermind/astermind-community` source directly rather than assuming: confirmed Knight's `TJ-K1`
+tokenizer bug is still present in `ELM`'s own text-mode config, found `UniversalEncoder` supports
+char-mode encoding independently of that broken path, and that the encoder only takes a single
+string (no structured multi-field option) — settling the IMPL's open question with evidence, not
+a guess. Sanity-checked against real data: a genuinely zero-evidence path now encodes to a
+non-zero vector, every time. 32 unit tests passing (10 new), `pnpm build/typecheck/test` clean.
+Full detail in today's session log.
+
 **2026-08-27 update (latest) — test coverage for the wired-but-opt-in ELM pre-filter, plus a real
 gap closed along the way.** Wrote the test coverage `IMPL-2026-08-23` steps 8-9 called for:
 `tests/unit/analyzers/classify-elm.test.ts` (22 tests — extraction filtering, training/prediction,
@@ -164,21 +181,92 @@ Status can move to Accepted.
 
 ## Next up
 
-(`TJ-A2` steps 1-9 are done — see IMPL and session log below. Superseded entries from the
-`TJ-A1` prototype phase removed rather than left stale.)
+(`TJ-A2` steps 1-9 are done. `TJ-R2` step 4 is done, design-only, soft-gated on `TJ-A3`. See IMPLs
+and session log below.)
 
-- [ ] IMPL step 10: regression check — classification correctness on a fixed corpus (this repo's
-      own `.sourcevision/` data is a reasonable fixture) must not regress relative to
+- [ ] `TJ-A2` IMPL step 10: regression check — classification correctness on a fixed corpus (this
+      repo's own `.sourcevision/` data is a reasonable fixture) must not regress relative to
       algorithmic+LLM-only.
-- [ ] IMPL step 11: `pnpm build && pnpm typecheck && pnpm test` clean across the *whole* repo, not
-      just `@n-dx/sourcevision` (already clean there — see session log).
-- [ ] The actual open problem: a feature representation that doesn't degenerate to an all-zero
-      vector for the zero-evidence population — needed before `elmPrefilter.enabled` can default to
-      `true`. See IMPL Open questions for the candidate directions, none measured yet.
-- [ ] IMPL steps 12-13: update ADR status once a representation fix is validated (not before), open
-      a PR.
+- [ ] `TJ-A2` IMPL step 11: `pnpm build && pnpm typecheck && pnpm test` clean across the *whole*
+      repo, not just `@n-dx/sourcevision` (already clean there).
+- [ ] **Waiting on Knight:** `TJ-A3`'s Step 6a (re-measured zero-evidence population). Once that
+      lands, resume `TJ-R2` Steps 5-6 — extract each corpus's (post-`TJ-A3`) zero-evidence file
+      list, label whatever isn't already labeled, write the eval script, run it against the
+      path/export representation built in Step 4.
+- [ ] `TJ-R2` Open questions: does export-name text add measurable signal over path-only (ablation
+      during Steps 5-6)? Is `PATH_EXPORT_MAX_LEN`/`PATH_EXPORT_CHARSET` (reasoned, not validated)
+      actually adequate for real path-length distributions across the 5 corpora?
+- [ ] `TJ-A2` IMPL steps 12-13: update ADR status once a representation fix is validated (not
+      before), open a PR.
 
 ## Session log
+
+### 2026-09-04 — claimed TJ-R2, coordinated the TJ-A3 gate instead of duplicating it, shipped Step 4
+
+The user pointed me at Knight's inbox note
+(`NOTE-knight-to-archer-and-realm-2026-09-03-claiming-tj-a3-gating-tj-r2.md`) and said to start
+implementing. Two ways to read that: take over `TJ-A3` (Knight explicitly offered to stand down if
+I said so), or pick up the natural next thing in my own lane. Checked `BACKLOG.md` before assuming
+either — `TJ-A3` was already committed as claimed by Knight, "not started yet." Reimplementing it
+myself in parallel would have been exactly the kind of collision the claim protocol exists to
+prevent, and Knight's own IMPL (`IMPL-2026-09-03-knight-tj-a3-execution-and-tj-r2-gate.md`)
+already explicitly carves out what's safe to do in parallel: `TJ-R2`'s Step 4 (design-only), not
+Steps 5-6 (the population-dependent eval, which needs to wait for `TJ-A3`'s re-measurement so it
+isn't built against a population that's about to move).
+
+**Read the actual plans before acting**, not just the notes: `ADR-2026-08-31-realm-path-based-elm-classifier.md`
+and its `IMPL`, plus Knight's `TJ-A3` execution doc, to understand exactly what was already
+decided and what was still open. Then:
+
+- **Replied to Knight and Realm** (`NOTE-archer-to-knight-and-realm-2026-09-04-tj-r2-claimed-design-only-for-now.md`):
+  confirmed the sequencing, stood down on `TJ-A3`, claimed `TJ-R2` for the design-only work only.
+- **Claimed `TJ-R2` in `BACKLOG.md`** and committed that before writing any code — first-commit-wins,
+  same protocol as every prior claim in this line of work.
+- **Resolved the IMPL's Open Question 1 with evidence, not assumption.** Went into the worktree
+  and read the installed `@astermind/astermind-community` v3.0.0 source directly (both the `.d.ts`
+  surface and the bundled `astermind.esm.js` implementation, not just the type signatures):
+  - `ELM`'s own `TextConfig` (`useTokenizer: true`) still routes through
+    `TextEncoder.textToVector`'s `this.tokenizer.tokenize(text).join('')` — no separator between
+    tokens before re-joining. This is the exact bug Knight's `TJ-K1` found in the retired
+    text-mode code, and it's still present in the currently-installed version. `TextConfig`'s
+    `useTokenizer` field is typed as the literal `true`, so there's no way to reach a working
+    char-mode encoding through `ELM`'s own config surface — the type system itself blocks it.
+  - `UniversalEncoder` — exported from the package root, not an `ELM`-internal type — supports
+    char-mode directly via `mode: "char"`, which never constructs or calls the tokenizer at all.
+    Constructing it independently of `ELM` and feeding its output through the *existing*
+    `NumericConfig` path (`trainArchetypeELMNumeric`/`predictArchetypeNumeric`, both already
+    representation-agnostic — they just consume `{vector, archetype}` pairs) sidesteps the broken
+    path entirely without needing any change to the training/prediction code.
+  - `encode(text: string): number[]` takes a single string, confirmed no structured multi-field
+    option exists anywhere in the type surface — so path and export names get concatenated into
+    one string, the same pattern the retired `fileToText` used for path + evidence hints.
+  - Checked the *default* `charSet`/`maxLen` too, not just the tokenizer question: default
+    `charSet` is 26 lowercase letters only — every digit, `/`, `.`, `-`, `_` in a real path would
+    silently encode as zero, destroying exactly the directory/extension structure that makes a
+    path meaningful. Default `maxLen` (15) is far shorter than a real path. Both widened.
+- **Wrote the real code**: `extractPathExportExamples`/`pathExportVector` in `classify-elm.ts`,
+  alongside the existing evidence-vector functions (not replacing them — they're still correct for
+  contexts where evidence isn't uniformly zero). Duplicated a small `buildExportMap` helper from
+  `classify.ts` rather than exporting it — consistent with this module's established "stays
+  standalone" invariant, and low drift risk since it's a simple grouping pass, not scoring logic.
+- **Sanity-checked against real data before writing tests**: built a throwaway script encoding a
+  genuinely zero-evidence path (`src/random9000.ts`, matches nothing) — confirmed it produces a
+  non-zero vector, every time, unlike the evidence-vector representation. Checked cosine
+  similarity between similar and dissimilar paths (0.65 vs. 0.50) as an informal signal the
+  representation carries real structure, not noise — not a substitute for the real eval, but worth
+  doing before investing in one.
+- **Wrote 10 new unit tests**, including a direct contrast test: the same real zero-evidence file,
+  run through both `extractNumericExamples` (all-zero vector, documented existing behavior) and
+  `extractPathExportExamples` (non-zero) — makes the entire premise of `TJ-R2` a executable,
+  regression-proof assertion rather than just prose in an ADR.
+- Committed to the worktree (`ae9dc463`), then updated the IMPL (Step 4 done with full detail,
+  Open Question 1 resolved, new open questions about `maxLen`/`charSet` validation and the `TJ-A3`
+  dependency added), `BACKLOG.md`'s `TJ-R2` row, and this file — same paired
+  worktree-code/main-checkout-docs commit pattern used throughout this whole line of work.
+- **Explicitly stopped there.** Did not touch Steps 5-6 (the eval), per the gate. Waiting on
+  Knight's Step 6a before resuming.
+
+### 2026-08-27 (later) — production wiring done, shipped opt-in after finding a real gap
 
 ### 2026-08-27 (latest) — IMPL steps 8-9: test coverage, plus turning a calibration accident into a real guard
 
