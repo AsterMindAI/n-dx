@@ -1,8 +1,10 @@
 # ADR — Replace `classify.ts`'s LLM enrichment pass with a text-mode ELM
 
-- **Status:** Proposed — Thomas has signed off on the direction; this ADR records the design so
-  the rest of Team Thomas (and Nolan/Jarrett's teams, since this touches a shared dependency
-  pattern) can see it before code lands.
+- **Status:** Proposed — Thomas has signed off on the direction and on building Phase 1 + Phase 2
+  (see `IMPL-2026-08-31-nala-classify-elm-rewrite.md`, both done, shadow-mode code green). Status
+  stays Proposed rather than Accepted: the shadow-mode code shipping doesn't itself decide
+  anything irreversible (`ELM_GATE_ENABLED` is still `false`), and this repo's ADRs read Accepted
+  as a real sign-off checkpoint, not a rubber stamp once code exists.
 - **Date:** 2026-08-31
 - **Author:** Nala (Team Thomas)
 - **Supersedes:** none. An earlier ELM-gate design for this same call site was built and evaluated
@@ -36,24 +38,39 @@ ADR does not repeat the evidence-vector approach, not a reproducible figure per 
 evidence bar (see Evidence, below). Nobody should treat "0/260" as re-verifiable without rerunning
 the underlying analysis on that data.
 
-**The working counter-example, which is committed:** `scripts/elm-hello-world.mjs` (present on
-this branch, current HEAD) feeds raw file-path *text* — not a precomputed evidence vector — through
-a text-mode ELM (`useTokenizer: true`, character-tokenized on path separators) and gets 83%
-accuracy on held-out synthetic paths across 3 categories. Path text carries signal
-(directory names, filenames, extensions) even for files whose algorithmic pass produced zero
-evidence — exactly the population the evidence-vector design couldn't touch.
+**The working counter-example — corrected during this ADR's own writing.**
+`scripts/elm-hello-world.mjs` was believed to show raw file-path *text* (not a precomputed
+evidence vector) getting 83% accuracy through a text-mode ELM. Verifying it while building the
+Evidence for this ADR found that belief is wrong: `ELM.train()`'s only parameter is
+`augmentationOptions`, not a training set — passed the script's `TRAINING_SET` array, every
+property it reads comes back `undefined`, so the call trains only on character-augmented variants
+of the three category *label strings*, never on any path the script provides. Confirmed
+empirically (three models — real training set, contradictory training set, no argument at all —
+produced byte-identical weights and predictions). That script's 83% is not evidence the library
+learns from labeled path examples.
+
+The library does have an API that genuinely does this: `UniversalEncoder.encode()` feeding
+`ELM.trainFromData(X, y)` (the same numeric-mode call the abandoned evidence-vector design used
+correctly). Sanity-checked with a shuffled-label control (real labels 6/6, shuffled 3/6 = chance)
+before trusting it, then run against n-dx's own real classification data — see Evidence below for
+the actual number this produced, which is what this ADR's Decision now rests on, not the
+`elm-hello-world.mjs` figure.
 
 Thomas's call: the process validated well enough to proceed, with the plan changed to match what
-actually worked — a text-mode ELM on path strings, not the evidence vector.
+actually worked — a text-mode-encoded ELM on path strings, not the evidence vector. That
+direction held up once verified on real data with the corrected method (see Evidence).
 
 ## Decision
 
 Build `packages/sourcevision/src/analyzers/classify-elm.ts` (new file, no naming collision on this
-branch — it doesn't exist here) implementing a **text-mode** ELM classifier:
+branch — it doesn't exist here) implementing a text-encoded ELM classifier:
 
-- Base `core/ELM.ts` from `@astermind/astermind-community`, configured `useTokenizer: true`,
-  mirroring the proven config in `scripts/elm-hello-world.mjs` (character set, tokenizer
-  delimiter on path separators, fixed seed).
+- `UniversalEncoder` from `@astermind/astermind-community` (char set with `-` last, tokenizer
+  delimiter on path separators, `maxLen` sized to the longest real path seen — 80 covers this
+  run's 70-char max with headroom) encodes each path to a fixed-length numeric vector, fed to
+  `core/ELM.ts`'s `trainFromData(X, y)` / `predictProbaFromVector`. **Not** `ELM.train()` /
+  `useTokenizer: true` text mode — that call doesn't train on supplied examples at all (see
+  Context and Evidence below); `scripts/classify-elm-eval.mjs` is the reference implementation.
 - **Training data:** file paths already labeled by this run's algorithmic pass or by a past LLM
   pass (`FileClassification.source === "algorithmic" | "llm"`) — `path` → `archetype`. No new
   labeling work; this data already sits in `Classifications.files` on every run.
@@ -118,25 +135,33 @@ Jarrett's teams see it regardless.
 
 **Required for any ELM-viability claim.**
 
-- **Task framing:** input = file path string; label = one of 17 archetype IDs
-  (`archetypes.ts`, re-count at implementation time); multi-class, single-label.
-- **What's already committed and reproducible:** `scripts/elm-hello-world.mjs` — 3-category
-  synthetic path classification, seed `42`, 30 training / 6 held-out, **83% accuracy vs. a 33%
-  random baseline** (3 categories). Proves the library trains and generalizes on path text under
-  Node in this exact environment. **Does not** prove accuracy on the real 17-archetype task —
-  different label count, different (real, not synthetic) path distribution.
-- **What is not yet committed or reproducible:** the earlier 0/260 evidence-vector figure
-  (directional only, per Context above) and any text-mode number on this project's real
-  classification data — neither exists as a committed script on this branch. **Producing that
-  script and that number is Phase 1 of the paired implementation plan, before any gate logic is
-  written**, per this repo's own rule that an ELM-works claim needs a committed, re-runnable
-  script and a stated random baseline.
-- **Seed:** carry forward `42` (elm-hello-world's seed) for the real-data eval, for continuity;
-  record whatever seed is actually used in the eval script's own header.
-- **Random baseline for the real task:** 1/17 ≈ 5.9% (uniform) — report the *actual* class-frequency
-  baseline too, since archetype distribution is not uniform in practice, and a frequency baseline
-  is the harder bar to beat.
+- **Task framing:** input = file path string; label = one of 17 archetype IDs (`archetypes.ts`,
+  re-counted on this branch: 17); multi-class, single-label.
+- **What's committed and reproducible, on the real task, not a synthetic one:**
+  `scripts/classify-elm-eval.mjs` — stratified 80/20 split of this run's 423 algorithmically- or
+  LLM-labeled files (338 train / 85 held-out; the lone `config`-archetype example stays in
+  training and isn't evaluable), text-encoded via `UniversalEncoder` and trained via
+  `ELM.trainFromData`. **90.6% held-out accuracy (77/85)** vs. a 5.9% uniform baseline and a
+  19.5% majority-class baseline (always predicting `utility`, the most common label). Full output
+  committed at `scripts/classify-elm-eval-results.md`.
+- **What this does not prove:** generalization to the actual deployment target — the 259 files
+  the algorithmic pass currently leaves unclassified, which have no ground-truth label to test
+  against by construction. The held-out set here is drawn from the *already-classifiable*
+  population; several of its 8 misclassifications (barrel `index.ts` files, `types.ts`/`validate.ts`
+  files) are plausibly the same kind of file that also stumps the algorithmic pass, which is
+  reason for cautious optimism, not a measurement. This is exactly why the Decision keeps
+  `ELM_GATE_ENABLED = false` through Phase 2 rather than treating 90.6% as license to skip Claude
+  immediately.
+- **`scripts/elm-hello-world.mjs`'s 83% figure is retracted as evidence** — see Context above.
+  The earlier evidence-vector design's 0/260 figure remains directional-only (never a committed
+  script) and isn't relied on here beyond motivating why that approach isn't repeated.
+- **Seed:** `42`, a local `mulberry32` PRNG (not `Math.random()`) for the stratified shuffle —
+  reproducible exactly, recorded in the eval script's header.
+- **Random baselines for the real task:** both reported per the template's requirement — 5.9%
+  uniform (1/17) and 19.5% majority-class (the harder, more honest bar). Acceptance bar was set
+  *before* running the eval (IMPL step 4: 2x majority-class baseline, 60% floor = 60.0%, since
+  2×19.5% < 60%) — 90.6% clears it by 30 points.
 
-An ADR that says "ELM works for this" without this section is not accepted, and this one
-explicitly doesn't say that yet for the real task — it says the prior approach is falsified, the
-mechanism a validated smoke test proves out, and the real number is the next committed step.
+This ADR says "ELM works for this task, on the population it was measured against" — and is
+explicit that the population it matters most for (currently-unclassified files) is still
+unmeasured, which is a Phase 2/shadow-mode question, not a Phase 1 one.

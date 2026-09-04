@@ -39,7 +39,9 @@ right now" so nobody has to ask.
 
 - **Team Nolan:** <in flight · shipped since last update · blockers>
 - **Team Jarrett:** <…>
-- **Team Thomas:** <…>
+- **Team Thomas:** TT-N1 (text-encoded ELM classifier for sourcevision) — Phase 1 + Phase 2 code
+  done, shadow-mode (`ELM_GATE_ENABLED = false`), full test suite green including root
+  domain-isolation/architecture-policy e2e. Not yet a branch/PR. See `Thomas-Agents/BACKLOG.md`.
 
 **Fork sync:** last `upstream/main` → `origin/main` fast-forward: _<date, by whom>_
 (one person, once a day — see [`GITHUB-WORKFLOW.md`](GITHUB-WORKFLOW.md) § 3)
@@ -52,12 +54,24 @@ Things every team needs to know — ADRs accepted, interfaces changed, measured 
 direction changes. Link the ADR; don't restate it here.
 
 - <date> — <what changed, who to ask>
-- 2026-08-31 — Team Thomas: new ADR/IMPL for a text-mode ELM classifier in sourcevision's
+- 2026-08-31 — Team Thomas: new ADR/IMPL for a text-encoded ELM classifier in sourcevision's
   `classify.ts`, replacing an earlier (unmerged, different-branch) evidence-vector design that
   measured zero signal on real unclassified files. Adds `@astermind/astermind-community` to
-  `packages/sourcevision/package.json` only (not root). Not yet built — Phase 1 evidence-gathering
-  not started. See `Claude-Context/ADR/ADR-2026-08-31-nala-classify-elm-rewrite.md`. Ask Nala
-  (Team Thomas) with questions.
+  `packages/sourcevision/package.json` only (not root). See
+  `Claude-Context/ADR/ADR-2026-08-31-nala-classify-elm-rewrite.md`. Ask Nala (Team Thomas) with
+  questions.
+- 2026-08-31 — Team Thomas: **`scripts/elm-hello-world.mjs` (and the root `elm:hello` script) don't
+  test what their names claim.** `ELM.train()`'s only parameter is `augmentationOptions`, not a
+  training set — passed `elm-hello-world.mjs`'s `TRAINING_SET` array, every property it reads is
+  `undefined`, so the model trains only on character-augmented variants of the category label
+  strings, never on the example paths the script provides. Confirmed empirically (three models —
+  real/contradictory/no training data — produced byte-identical weights and predictions). The
+  script's 83%-accuracy claim isn't evidence the library learns from labeled examples; don't cite
+  it as such. The API that does work — `UniversalEncoder` → `ELM.trainFromData(X, y)` — is used
+  correctly in the new `scripts/classify-elm-eval.mjs` (90.6% on real n-dx path/archetype data).
+  Full write-up: `scripts/classify-elm-eval-results.md` and the ADR above. Not fixed in
+  `elm-hello-world.mjs` itself — not this team's file; flagged as an open question in the IMPL for
+  whoever owns it.
 
 ---
 

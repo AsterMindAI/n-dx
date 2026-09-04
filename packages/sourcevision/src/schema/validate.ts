@@ -136,7 +136,7 @@ const FileClassificationSchema = z.object({
   archetype: z.string().nullable(),
   secondaryArchetypes: z.array(z.string()).optional(),
   confidence: z.number().min(0).max(1),
-  source: z.enum(["algorithmic", "llm", "user-override"]),
+  source: z.enum(["algorithmic", "llm", "user-override", "elm"]),
   evidence: z.array(ClassificationEvidenceSchema).optional(),
 });
 
