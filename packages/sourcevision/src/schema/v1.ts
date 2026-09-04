@@ -603,7 +603,7 @@ export interface FileClassification {
   archetype: string | null;
   secondaryArchetypes?: string[];
   confidence: number;
-  source: "algorithmic" | "llm" | "user-override" | "elm";
+  source: "algorithmic" | "llm" | "elm" | "user-override";
   evidence?: ClassificationEvidence[];
 }
 

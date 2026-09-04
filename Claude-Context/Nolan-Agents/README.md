@@ -23,10 +23,30 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 
 | Agent | Charter | Scope | Worktree |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| Jam | [`Jam.md`](Jam.md) | Survey of LLM call sites for ELM/KELM replacement; proposes the three-way split. Analysis + ADR only — implements nothing. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, see below)_ |
+| Fluff | [`Fluff.md`](Fluff.md) | The `Claude-Context/` agent system itself — doctrine, onboarding, and workflow docs. Finds where doctrine and reality disagree and drafts the correction; does **not** decide which convention wins, that goes to the leads as an ADR. | _(none — shared checkout `/Users/nolanmoore/n-dx-1`, branch `Nolan-Work`, see below)_ |
 
 > `(TBD)` and `(shared checkout)` are not valid worktree entries for an agent that works alongside
 > others. See [`../Command-Structure`](../Command-Structure) → *One agent, one worktree*.
+>
+> **Open item:** Jam runs in the shared checkout on branch `Nolan-Work` by the lead's decision
+> (2026-08-10), so the rule above is knowingly not met. The mitigation is the one
+> `Command-Structure` names for shared checkouts: **every `ndx plan|work|ci|refresh|self-heal` and
+> every rex MCP write is claimed in [`../IN-FLIGHT.md`](../IN-FLIGHT.md) before running and
+> released after**, because `.rex/`, `.sourcevision/`, and `.hench/` lose data silently under
+> concurrent writers. Team Nolan's worktree-vs-shared-checkout choice is still unrecorded in
+> `OWNERSHIP.md` § Untracked-state hazard.
+>
+> **Correction (2026-08-11, same day):** an earlier revision of this file said *"Fluff does meet
+> the rule — own worktree at `../n-dx-fluff`."* **That is no longer true.** Fluff was set up with a
+> worktree and the lead reversed it the same day for ease of oversight; the worktree was removed
+> after its commit was fast-forwarded onto `Nolan-Work`. **Fluff is on the shared checkout on
+> `Nolan-Work`, alongside Jam**, and carries the same mitigation: claim every state-writing command
+> in `../IN-FLIGHT.md`.
+>
+> So **no agent on Team Nolan has worktree isolation**, and two agents now share one branch in one
+> working directory. `OWNERSHIP.md` § Untracked-state hazard is still blank, and the claim board is
+> now the only thing standing between the two of us and silent PRD corruption.
 
 ## Seams
 

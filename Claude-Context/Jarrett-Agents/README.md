@@ -23,10 +23,18 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 
 | Agent | Charter | Scope | Worktree |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| Archer | [`Archer.md`](Archer.md) | _(unassigned)_ | _(none — shared checkout, see below)_ |
+| Knight | [`Knight.md`](Knight.md) | _(unassigned)_ | _(none — shared checkout, see below)_ |
+| Realm | [`Realm.md`](Realm.md) | _(unassigned)_ | _(none — shared checkout, see below)_ |
 
 > `(TBD)` and `(shared checkout)` are not valid worktree entries for an agent that works alongside
 > others. See [`../Command-Structure`](../Command-Structure) → *One agent, one worktree*.
+>
+> **Open item:** Archer, Knight, and Realm are migrated from `team/Jarrett/*.md`
+> (2026-08-08, `IMPL-2026-08-05-nolan-migrate-team-profiles-to-charters.md`) and have never run
+> in separate worktrees — they're prior session names for the same shared checkout, not concurrent
+> agents. `OWNERSHIP.md`'s worktree-isolation-vs-shared-checkout choice is still unmade for Team
+> Jarrett; until it is, the "not valid" rule above is aspirational for these three, not yet met.
 
 ## Seams
 

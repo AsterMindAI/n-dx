@@ -1,133 +1,362 @@
 /**
- * Text-encoded ELM classifier for files the algorithmic pass leaves unclassified.
+ * ELM-based pre-filter for classify.ts's LLM fallback.
  *
- * Trains on this run's already-labeled files (`source: "algorithmic" | "llm"`) — no separate
- * labeling step. Encodes each file path with `UniversalEncoder` and trains via
- * `ELM.trainFromData(X, y)`, NOT `ELM.train()` / `useTokenizer: true` text mode: that call
- * doesn't train on supplied examples at all (its only parameter is `augmentationOptions`, not a
- * training set — see `scripts/classify-elm-eval.mjs`'s header and
- * `scripts/classify-elm-eval-results.md` for how that was found and confirmed). Config here
- * mirrors that eval script exactly, since a different config in production than in the eval
- * would invalidate the accuracy number it measured.
+ * TJ-A1/TJ-A2 — see Claude-Context/ADR/ADR-2026-08-11-jarrett-elm-prefilter-classify.md and
+ * Claude-Context/IMPL/IMPL-2026-08-23-jarrett-classify-elm-production-hardening.md.
  *
- * Shadow-mode gate: `ELM_GATE_ENABLED` is `false` until a documented decision flips it. See
- * `Claude-Context/ADR/ADR-2026-08-31-nala-classify-elm-rewrite.md` and the paired IMPL.
+ * This module is intentionally standalone: it doesn't modify classify.ts or
+ * analyze-phases.ts, it only reads the same FileClassification/Inventory/Imports shapes
+ * those already produce and export (`analyzeClassifications` and `BUILTIN_ARCHETYPES` are
+ * both imported, not reimplemented — see `extractNumericExamples`).
+ *
+ * Text-mode training (`fileToText`/`trainArchetypeELM`/`predictArchetype`) was retired here
+ * 2026-08-27 — the numeric feature representation measurably outperforms it (100%@59.0%
+ * vs. 60.9%@29.5% out-of-domain precision/coverage, see the ADR's Evidence section) and
+ * Knight's TJ-K1 found the underlying reason: `useTokenizer: true`'s tokenizer doesn't
+ * produce real token embeddings at all (`tokenize().join('')` with no separator destroys
+ * word boundaries). The text-mode code is preserved in git history
+ * (`elm/jarrett/classify-elm-prefilter` prior to this commit), not carried forward.
  */
 
-import { ELM, UniversalEncoder } from "@astermind/astermind-community";
-import type { Classifications, FileClassification } from "../schema/index.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import { ELM } from "@astermind/astermind-community";
+import { analyzeClassifications } from "./classify.js";
+import { BUILTIN_ARCHETYPES } from "./archetypes.js";
+import type {
+  Classifications,
+  FileClassification,
+  Imports,
+  Inventory,
+} from "../schema/index.js";
+
+const HIDDEN_UNITS = 128;
 
 /**
- * Shadow-mode gate. While false, `enrichClassificationsWithLLM` always trains and predicts with
- * this model (so the code path is exercised) but never uses a prediction to skip the Claude
- * batch. A wrong ELM label is silent — no LLM in the loop to catch it — so this stays false until
- * shadow-mode evidence (beyond the cross-validation run in `classify-elm-eval-results.md`)
- * justifies flipping it.
+ * Default confidence threshold for production wiring. Resolved 2026-08-24
+ * (`ADR-2026-08-24-realm-elm-primary-classifier-pivot.md`, independently reproduced from
+ * both `TJ-A1`'s and `TJ-K1`'s actual committed eval scripts): the coverage-favoring end of
+ * the verified 0.11-0.15 range, where this repo's own held-out curve shows 100% precision
+ * at 59.0% coverage — identical across that whole range, so the lower (more permissive)
+ * end is used. Provisional pending re-verification once `TJ-A3`'s archetype-catalog work
+ * lands (see `Notes/NOTE-realm-to-archer-2026-08-27-tjr1-stays-provisional.md`) — overridable
+ * via `.n-dx.json`'s `sourcevision.classification.elmPrefilter.confidenceThreshold` in the
+ * meantime, which is exactly what that override exists for.
  */
-export const ELM_GATE_ENABLED = false;
+export const DEFAULT_ELM_CONFIDENCE_THRESHOLD = 0.11;
 
-/** Same config family as `scripts/classify-elm-eval.mjs` — keep in sync; see file header. */
-const SEED = 42;
-const HIDDEN_UNITS = 512;
-/** '-' MUST stay last — unescaped RegExp character-class gotcha in the underlying encoder. */
-const CHAR_SET = "abcdefghijklmnopqrstuvwxyz0123456789./_-";
-const TOKENIZER_DELIMITER = /[/._-]+/;
-/** Longest real path measured in `classify-elm-eval-results.md` was 70 chars; 80 gives headroom. */
-const MAX_LEN = 80;
+export interface ELMPrediction {
+  archetype: string;
+  confidence: number;
+}
 
-/** Below this many labeled examples, don't train at all — too little data to trust a model. */
-const MIN_TRAINING_EXAMPLES = 20;
-/** Minimum top1/top2 probability margin to treat a prediction as confident. */
-const MARGIN_THRESHOLD = 0.3;
+// ── Numeric feature representation (Realm's review, 2026-08-19/20; extraction reworked
+// 2026-08-24 per Knight's TJ-K1 critique) ───────────────────────────────────────────────
+//
+// classifyFile computes a per-archetype weighted score for every file
+// (classify.ts:135-208/159-165). Feeding that directly as a numeric vector — rather than
+// as a tokenized "path + archetypeId(weight) hint" string — is what made the difference
+// between not clearing the ADR's gate and clearing it by a wide margin.
+//
+// Originally (2026-08-20) this reimplemented classify.ts's private matchSignal/classifyFile
+// independently, to avoid needing any new export from classify.ts. Knight's TJ-K1 correctly
+// called that out as a real maintenance risk — duplicated logic drifts silently if
+// classify.ts's archetype-matching regexes ever change. Reworked 2026-08-24 to instead call
+// the real, already-exported analyzeClassifications() and derive the per-archetype vector
+// from its returned evidence array. classify.ts still isn't modified — analyzeClassifications
+// was already public — this just uses it instead of reimplementing what it does.
 
-export interface ClassifyPathELMModel {
-  elm: ELM;
-  encoder: UniversalEncoder;
-  /** Archetype IDs, in the index order used for training/prediction (matches `elm`'s categories). */
-  categories: string[];
+/**
+ * Build a fixed-length per-archetype score vector (one entry per archetype in `archetypes`,
+ * 0 if no signal matched) from a FileClassification's evidence array. Evidence can contain
+ * multiple entries for the same archetype (one per matched signal) — summed, matching how
+ * classifyFile accumulates archetypeScore internally (classify.ts:147-171).
+ */
+function evidenceToVector(evidence: FileClassification["evidence"], archetypeIndex: Map<string, number>): number[] {
+  const vector = new Array(archetypeIndex.size).fill(0);
+  for (const e of evidence ?? []) {
+    const idx = archetypeIndex.get(e.archetypeId);
+    if (idx !== undefined) vector[idx] += e.weight;
+  }
+  return vector;
+}
+
+export interface NumericArchetypeExample {
+  vector: number[];
+  archetype: string;
 }
 
 /**
- * Train a path-text ELM on this run's already-labeled files.
- * Returns null if there isn't enough labeled data yet to train a trustworthy model.
+ * Extract (score-vector, archetype) pairs by re-running the free, deterministic
+ * analyzeClassifications() against inventory.json/imports.json to get fresh evidence for
+ * every file, then joining it with classifications.json's FINAL label regardless of which
+ * stage resolved it. Recomputing from analyzeClassifications() (rather than reading
+ * classifications.json's own stored evidence field) sidesteps the evidence-leakage question
+ * entirely rather than working around it — nothing stored to leak, since source: "llm"
+ * entries' stored evidence (classify.ts:461-469) is never read here.
+ *
+ * Passes through any custom archetypes present in `classifications.archetypes` so a project
+ * with `.n-dx.json` archetype overrides gets a faithful re-score, not just the built-in set.
  */
-export function trainClassifyPathELM(
+export function extractNumericExamples(
   classifications: Classifications,
-): ClassifyPathELMModel | null {
-  const labeled = classifications.files.filter(
-    (f): f is FileClassification & { archetype: string } =>
-      f.archetype !== null && (f.source === "algorithmic" || f.source === "llm"),
-  );
+  inventory: Inventory,
+  imports: Imports,
+): NumericArchetypeExample[] {
+  const builtinIds = new Set(BUILTIN_ARCHETYPES.map((a) => a.id));
+  const customArchetypes = classifications.archetypes.filter((a) => !builtinIds.has(a.id));
 
-  if (labeled.length < MIN_TRAINING_EXAMPLES) return null;
-
-  const categories = classifications.archetypes.map((a) => a.id);
-  const encoder = new UniversalEncoder({
-    charSet: CHAR_SET,
-    maxLen: MAX_LEN,
-    useTokenizer: true,
-    tokenizerDelimiter: TOKENIZER_DELIMITER,
-    mode: "char",
+  const freshPass = analyzeClassifications(inventory, imports, {
+    customArchetypes: customArchetypes.length > 0 ? customArchetypes : undefined,
   });
+  const evidenceByPath = new Map(freshPass.files.map((f) => [f.path, f.evidence]));
+  const archetypeIndex = new Map(classifications.archetypes.map((a, i) => [a.id, i]));
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
 
-  const X = labeled.map((f) => encoder.normalize(encoder.encode(f.path)));
-  const y = labeled.map((f) => categories.indexOf(f.archetype));
+  const examples: NumericArchetypeExample[] = [];
+  for (const file of inventory.files) {
+    if (file.role !== "source") continue;
+    const fc = classificationByPath.get(file.path);
+    if (!fc?.archetype) continue;
+    if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
+    const vector = evidenceToVector(evidenceByPath.get(file.path), archetypeIndex);
+    examples.push({ vector, archetype: fc.archetype });
+  }
+  return examples;
+}
+
+export interface TrainedArchetypeELMNumeric {
+  elm: ELM;
+  categories: string[];
+}
+
+/** Train a base ELM on raw numeric score vectors (NumericConfig, no tokenizer) instead of text. */
+export function trainArchetypeELMNumeric(
+  examples: NumericArchetypeExample[],
+  categories: string[],
+  seed: number,
+): TrainedArchetypeELMNumeric {
+  const inputSize = examples[0]?.vector.length;
+  if (!inputSize) {
+    throw new Error("trainArchetypeELMNumeric: no examples to infer vector length from");
+  }
 
   const elm = new ELM({
     categories,
     hiddenUnits: HIDDEN_UNITS,
-    inputSize: encoder.getVectorSize(),
-    activation: "relu",
-    useTokenizer: false, // numeric mode — encoding is done manually above via UniversalEncoder
-    seed: SEED,
-    log: { modelName: "classify-elm", verbose: false },
+    useTokenizer: false,
+    inputSize,
+    seed,
   });
 
-  elm.trainFromData(X, y);
+  const categoryIndex = new Map(categories.map((c, i) => [c, i]));
+  const X: number[][] = [];
+  const y: number[] = [];
+  for (const ex of examples) {
+    const idx = categoryIndex.get(ex.archetype);
+    if (idx === undefined) continue;
+    X.push(ex.vector);
+    y.push(idx);
+  }
+  if (X.length === 0) {
+    throw new Error("trainArchetypeELMNumeric: no examples matched the given category set");
+  }
 
-  return { elm, encoder, categories };
+  elm.trainFromData(X, y);
+  return { elm, categories };
 }
 
-export interface ClassifyPathELMPrediction {
-  archetype: string;
-  /** Top-1 softmax probability, rounded to 2 decimals. */
-  confidence: number;
-  /** Top1 − top2 probability margin, rounded to 2 decimals. */
-  margin: number;
+/** Classify one file's precomputed score vector. Same confidence semantics as predictArchetype. */
+export function predictArchetypeNumeric(trained: TrainedArchetypeELMNumeric, vector: number[]): ELMPrediction {
+  const [top] = trained.elm.predictTopKFromVector(vector, 1);
+  return { archetype: top.label, confidence: top.prob };
+}
+
+// ── Model lifecycle (TJ-A2, option C: hybrid — confirmed by the user 2026-08-24) ────────
+//
+// Neither TJ-A1 nor TJ-K1's prototypes addressed how a trained model actually exists at
+// real `ndx analyze` runtime — the eval scripts train fresh inside a one-off invocation and
+// discard it. Production needs an actual answer:
+//
+// - A brand-new project's first `ndx analyze` run has no classification history to train
+//   on — falls back to a bundled baseline model, trained offline on a pooled 5-codebase
+//   corpus (`scripts/train-baseline-elm.ts`) and shipped with the npm package
+//   (`classify-elm-baseline-model.json`, copied into `dist/` by `copy-assets.mjs`).
+// - Once a project's own history clears a minimum size, train fresh on that project's own
+//   data instead — no persisted per-project model to version or go stale, consistent with
+//   how this codebase already treats zones/classifications (recomputed each run from
+//   cached inputs, not a trained artifact).
+
+const COLD_START_MIN_EXAMPLES = 30;
+const COLD_START_MIN_CATEGORIES = 3;
+// Found empirically 2026-08-27, not assumed: trained a fresh model on this repo's own
+// 423 purely-algorithmic examples (11 categories — clears the two thresholds above easily)
+// and found its confidence on the actual unclassified population sits right at a cliff
+// (0% resolved at t=0.10, ~all-or-nothing at 0.11) that the validated 0.11-0.15 default
+// was never calibrated against — that default came from a training set that included 94
+// source: "llm" examples (see ADR Evidence, "Numeric feature representation"). A model
+// trained on algorithmic-only data generalizes to genuinely novel files differently than
+// one that's also seen some of the "hard" (LLM-resolved) population during training — the
+// confidence threshold isn't just data-*volume*-sensitive, it's sensitive to whether the
+// training set includes examples of the population it's meant to generalize to. Requiring
+// a minimum of LLM-sourced examples specifically, not just any-source volume, keeps fresh
+// training gated on the kind of data the validated threshold actually applies to; below
+// that, the bundled baseline (trained on a corpus that does include LLM-sourced examples)
+// is the safer choice even if the project's own algorithmic-only history is large.
+const COLD_START_MIN_LLM_EXAMPLES = 20;
+
+/**
+ * Whether a project's own classification history is large/diverse enough to train a fresh
+ * ELM on, rather than falling back to the bundled baseline. Thresholds are deliberately
+ * conservative (IMPL-2026-08-23's Design decision) — training on too few examples, too few
+ * categories, or without enough LLM-sourced ("hard case") examples specifically risks a
+ * confidently-wrong model, which has no safety net once wired in ahead of the LLM fallback.
+ */
+export function hasEnoughHistoryForFreshTraining(classifications: Classifications): boolean {
+  const labeled = classifications.files.filter(
+    (fc): fc is FileClassification & { archetype: string } =>
+      !!fc.archetype && (fc.source === "algorithmic" || fc.source === "llm"),
+  );
+  const categories = new Set(labeled.map((fc) => fc.archetype));
+  const llmSourcedCount = labeled.filter((fc) => fc.source === "llm").length;
+  return (
+    labeled.length >= COLD_START_MIN_EXAMPLES &&
+    categories.size >= COLD_START_MIN_CATEGORIES &&
+    llmSourcedCount >= COLD_START_MIN_LLM_EXAMPLES
+  );
 }
 
 /**
- * Predict an archetype for a single file path. Returns null when the model isn't confident
- * enough (top1/top2 margin below `MARGIN_THRESHOLD`) — callers should treat null the same as "no
- * ELM opinion," not as a low-confidence label.
+ * Whether the bundled baseline model is usable for this project's archetype catalog. The
+ * baseline was trained on the built-in archetype set only (see `train-baseline-elm.ts`) — a
+ * project with `.n-dx.json` custom archetypes has categories the baseline has never seen
+ * and whose input-vector dimensionality won't match, so it's excluded rather than silently
+ * mismatched.
  */
-export function predictWithClassifyPathELM(
-  path: string,
-  model: ClassifyPathELMModel,
-): ClassifyPathELMPrediction | null {
-  const vec = model.encoder.normalize(model.encoder.encode(path));
-  const probs = model.elm.predictProbaFromVector(vec);
+export function canUseBaselineModel(classifications: Classifications): boolean {
+  const builtinIds = new Set(BUILTIN_ARCHETYPES.map((a) => a.id));
+  return (
+    classifications.archetypes.length === BUILTIN_ARCHETYPES.length &&
+    classifications.archetypes.every((a) => builtinIds.has(a.id))
+  );
+}
 
-  let topIdx = 0;
-  let secondIdx = -1;
-  for (let i = 1; i < probs.length; i++) {
-    if (probs[i] > probs[topIdx]) {
-      secondIdx = topIdx;
-      topIdx = i;
-    } else if (secondIdx === -1 || probs[i] > probs[secondIdx]) {
-      secondIdx = i;
+interface BaselineModelArtifact {
+  schemaVersion: number;
+  trainedAt: string;
+  seed: number;
+  categories: string[];
+  catalogSize: number;
+  trainingExampleCount: number;
+  trainingSources: string[];
+  model: unknown; // ELM's own serialized {config, W, b, B} shape — opaque here, see ELM.loadModelFromJSON
+}
+
+// Resolved relative to this module's own location (not process.cwd()) so it works
+// regardless of where `ndx analyze` is invoked from — same reasoning as any other
+// package-bundled asset.
+const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
+const BASELINE_MODEL_PATH = join(MODULE_DIR, "classify-elm-baseline-model.json");
+
+let cachedBaselineArtifact: BaselineModelArtifact | undefined;
+
+function loadBaselineModelArtifact(): BaselineModelArtifact {
+  if (!cachedBaselineArtifact) {
+    const parsed: BaselineModelArtifact = JSON.parse(readFileSync(BASELINE_MODEL_PATH, "utf-8"));
+    cachedBaselineArtifact = parsed;
+  }
+  return cachedBaselineArtifact;
+}
+
+/** Load the bundled cold-start baseline model. Caller should check `canUseBaselineModel` first. */
+export function loadBaselineArchetypeELM(): TrainedArchetypeELMNumeric {
+  const artifact = loadBaselineModelArtifact();
+  const elm = new ELM({
+    categories: artifact.categories,
+    hiddenUnits: HIDDEN_UNITS,
+    useTokenizer: false,
+    inputSize: artifact.catalogSize,
+  });
+  elm.loadModelFromJSON(JSON.stringify(artifact.model));
+  return { elm, categories: artifact.categories };
+}
+
+/**
+ * Single entry point for production wiring: returns a trained model, choosing fresh
+ * per-project training or the bundled baseline per the hybrid lifecycle above, or
+ * `undefined` if neither is usable (too little project history *and* custom archetypes
+ * present) — callers should skip the ELM stage entirely in that case and fall through to
+ * the LLM exactly as if this module didn't exist.
+ */
+export function getArchetypeELM(
+  classifications: Classifications,
+  inventory: Inventory,
+  imports: Imports,
+  seed: number,
+): TrainedArchetypeELMNumeric | undefined {
+  if (hasEnoughHistoryForFreshTraining(classifications)) {
+    const examples = extractNumericExamples(classifications, inventory, imports);
+    const categories = [...new Set(examples.map((e) => e.archetype))].sort();
+    if (categories.length > 0) {
+      return trainArchetypeELMNumeric(examples, categories, seed);
     }
   }
+  if (canUseBaselineModel(classifications)) {
+    return loadBaselineArchetypeELM();
+  }
+  return undefined;
+}
 
-  const top = probs[topIdx];
-  const second = secondIdx >= 0 ? probs[secondIdx] : 0;
-  const margin = top - second;
+export interface ELMClassifyResult {
+  updatedFiles: FileClassification[];
+}
 
-  if (margin < MARGIN_THRESHOLD) return null;
+/**
+ * Classify the currently-unclassified population with a trained ELM. Mirrors
+ * `enrichClassificationsWithLLM`'s `{ updatedFiles }` return shape so `runClassificationsPhase`
+ * can merge the result via `mergeClassificationResults` exactly the same way it already merges
+ * LLM results. Targets the same population `enrichClassificationsWithLLM` does
+ * (`archetype === null && source === "algorithmic"`) — files this resolves never reach the
+ * LLM; everything below `confidenceThreshold` (or predicting a category outside what the
+ * model was trained on) is left untouched for the LLM fallback to handle as it does today.
+ */
+export function classifyWithELM(
+  classifications: Classifications,
+  inventory: Inventory,
+  imports: Imports,
+  trained: TrainedArchetypeELMNumeric,
+  confidenceThreshold: number,
+): ELMClassifyResult {
+  const builtinIds = new Set(BUILTIN_ARCHETYPES.map((a) => a.id));
+  const customArchetypes = classifications.archetypes.filter((a) => !builtinIds.has(a.id));
+  const freshPass = analyzeClassifications(inventory, imports, {
+    customArchetypes: customArchetypes.length > 0 ? customArchetypes : undefined,
+  });
+  const evidenceByPath = new Map(freshPass.files.map((f) => [f.path, f.evidence]));
+  const archetypeIndex = new Map(classifications.archetypes.map((a, i) => [a.id, i]));
+  const trainedCategorySet = new Set(trained.categories);
 
-  return {
-    archetype: model.categories[topIdx],
-    confidence: Math.round(top * 100) / 100,
-    margin: Math.round(margin * 100) / 100,
-  };
+  const updatedFiles: FileClassification[] = [];
+  for (const fc of classifications.files) {
+    if (fc.archetype !== null || fc.source !== "algorithmic") continue;
+    const vector = evidenceToVector(evidenceByPath.get(fc.path), archetypeIndex);
+    // Zero-evidence guard (found 2026-08-27, see ADR "Zero-evidence population"): a file
+    // with no matched algorithmic signal at all has an all-zero vector, which the ELM can't
+    // discriminate on — any prediction it makes reflects the training set's class prior, not
+    // this file's content. Skip unconditionally, independent of confidenceThreshold, so a
+    // future low/zero threshold override can't turn "no signal" into a false-confidence
+    // resolution.
+    if (!vector.some((v) => v > 0)) continue;
+    const prediction = predictArchetypeNumeric(trained, vector);
+    if (prediction.confidence < confidenceThreshold) continue;
+    if (!trainedCategorySet.has(prediction.archetype)) continue; // defensive — shouldn't happen
+    updatedFiles.push({
+      path: fc.path,
+      archetype: prediction.archetype,
+      confidence: prediction.confidence,
+      source: "elm",
+    });
+  }
+  return { updatedFiles };
 }

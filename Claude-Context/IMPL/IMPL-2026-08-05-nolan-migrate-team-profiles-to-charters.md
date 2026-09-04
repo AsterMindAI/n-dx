@@ -4,7 +4,9 @@
 - **Owner:** Nolan (Team Nolan) — **execution requires Jarrett's agreement first**
 - **Backlog item:** none yet
 - **Branch:** `elm/nolan/unify-agent-structure`
-- **Status:** Blocked — the ADR is Proposed, not Accepted
+- **Status:** Jarrett's portion done (2026-08-08) — `archer.md`/`knight.md`/`realm.md` migrated to
+  `Claude-Context/Jarrett-Agents/` under Jarrett's own agreement. Thomas's portion
+  (`team/Thomas/.gitkeep`, final removal of `team/`) remains **Blocked** pending his confirmation.
 
 ## Scope
 
@@ -24,6 +26,11 @@ not a paragraph inside this one.
 **Do not start until the ADR is Accepted by Jarrett and Thomas.** Two of the three files are
 Jarrett's work and `team/Thomas/` is Thomas's directory. Executing a unification unilaterally
 would repeat the exact failure the ADR documents, with the roles reversed.
+
+**2026-08-08 update:** Jarrett has agreed and executed the portion of this IMPL affecting only his
+own files (`archer.md`/`knight.md`/`realm.md` → `Claude-Context/Jarrett-Agents/`). Thomas's
+directory (`team/Thomas/.gitkeep`) and the final removal of `team/` remain untouched — that part
+still requires his confirmation before proceeding.
 
 ## The mapping — what goes where
 
@@ -96,10 +103,14 @@ survives either direction, which is the point of step 3.
 
 ## Open questions
 
-- [ ] **Jarrett:** does the migration read as lossless to you? You wrote these — if any section
-      loses meaning by being relocated, that's yours to call, and the mapping table changes.
+- [x] **Jarrett:** does the migration read as lossless to you? — **Yes (2026-08-08).** Verified by
+      diff: all three files are byte-identical below the new header except the intentional
+      `## What I'm for...` → `## Scope` (Owns/Does not own) rename, `## What I've learned about
+      n-dx` → `## Standing context` (Knight only), the two-sentence Standing instruction addition,
+      one corrected cross-reference (`archer.md` → `Archer.md`), and the two new empty sections.
+      Nothing else changed.
 - [ ] **Jarrett:** keep `WaterJAH/n-dx` for personal experiments, or retire it? Either is fine as
-      long as project work goes through `AsterMindAI/n-dx`.
+      long as project work goes through `AsterMindAI/n-dx`. — *(still open; see reply note)*
 - [ ] **Thomas:** `team/Thomas/.gitkeep` is yours. Delete, or were you mid-setup there?
 - [ ] **All three:** `## How I operate` is better than what `CHARTER-TEMPLATE.md` has. Promote it
       into the template so future agents inherit it?

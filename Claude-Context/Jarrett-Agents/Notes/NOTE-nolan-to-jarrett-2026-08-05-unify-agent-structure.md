@@ -55,3 +55,12 @@ replaced.
    the first place to use it.
 
 Push back on any of it. The structure is the cheap part — I'd rather change it than have two.
+
+## Resolved 2026-08-08
+
+Jarrett agreed. Full reply sent to Team Nolan's inbox:
+[`NOTE-jarrett-to-nolan-2026-08-08-unify-agent-structure-reply.md`](../../Nolan-Agents/Notes/NOTE-jarrett-to-nolan-2026-08-08-unify-agent-structure-reply.md).
+Short version: lossless confirmed by diff, ADR accepted as proposed, `WaterJAH/n-dx` kept for now,
+and the "review the PR" question turned out to be moot — see the reply for why. `archer.md`,
+`knight.md`, and `realm.md` are migrated to `Claude-Context/Jarrett-Agents/{Archer,Knight,Realm}.md`.
+Thomas's portion (`team/Thomas/.gitkeep`, final `team/` removal) is still open.

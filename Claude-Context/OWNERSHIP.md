@@ -66,7 +66,8 @@ No numbered sequences anywhere. Numbers require coordination we don't have, and 
 |---|---|---|
 | ADR | `ADR-YYYY-MM-DD-<author>-<slug>.md` | `ADR-2026-08-05-nolan-elm-as-registered-vendor.md` |
 | IMPL | `IMPL-YYYY-MM-DD-<author>-<slug>.md` | `IMPL-2026-08-05-jarrett-classify-elm-swap.md` |
-| Note | `NOTE-<from>-to-<to>-YYYY-MM-DD-<slug>.md` | `NOTE-jarrett-to-nolan-2026-08-05-provider-config-shape.md` |
+| Note | `NOTE-<from-lead>-to-<to-lead>-YYYY-MM-DD-<slug>.md` — intern names only, **never** an agent name; name the drafting agent in the body | `NOTE-jarrett-to-nolan-2026-08-05-provider-config-shape.md` |
+| Note (within a team) | `NOTE-<lead>-internal-YYYY-MM-DD-<slug>.md` | `NOTE-nolan-internal-2026-08-11-note-rename.md` |
 | Sync | `SYNC-<NNN>-YYYY-MM-DD-<slug>.md` (per-team, so `<NNN>` is safe) | `SYNC-001-2026-08-05-kickoff.md` |
 | Charter | `<AGENT>.md` in the team folder | `Nolan-Agents/Atlas.md` |
 | Branch | `elm/<lead>/<short-topic>` — lead's name, not the agent's | `elm/nolan/provider-registry` |
