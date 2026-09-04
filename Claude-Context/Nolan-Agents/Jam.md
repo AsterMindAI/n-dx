@@ -60,20 +60,28 @@ they are corrected here rather than left to mislead the next session.**
 - **Notes are delivered by merging, not by writing** (`TN-F3`). A note on my branch is invisible to
   the other teams until branches merge.
 
-### ⚠️ Two branch refs that differ only by case — do not push blind
+### Branch refs — the case-duplication is RESOLVED (2026-09-04)
 
-`git for-each-ref refs/heads/` on 2026-09-04:
+**Kept because the hazard recurs on any re-clone, and because the resolution is the thing to
+repeat.** There were two refs differing only by case: `refs/heads/Nolan-Work` (packed, stale, at
+`b0003e7c`) and `refs/heads/nolan-work` (loose, the real tip). The loose ref shadowed the packed
+one on this case-insensitive filesystem, so `git log origin/Nolan-Work..Nolan-Work` read as though
+they agreed. **GitHub's refs are case-sensitive**, so a bare `git push -u origin nolan-work` would
+have minted a *second* remote branch — and K2 hit the other face of it: a bare `git push` refused
+to push at all while `git rev-list --count origin/Nolan-Work..nolan-work` still showed commits
+pending, failing quietly enough to look like success.
 
-```
-refs/heads/Nolan-Work   b0003e7c   (packed; equals origin/Nolan-Work — stale)
-refs/heads/nolan-work   69259048   (loose file; what I am actually standing on)
-```
+**Merged on the lead's instruction.** `b0003e7c` was an ancestor of the tip with **0** unique
+commits, so consolidation was a fast-forward with nothing to merge and nothing to lose. Procedure:
+recovery refs written first (`refs/backup/2026-09-04-nolan-work-tip`,
+`refs/backup/2026-09-04-Nolan-Work-stale`), HEAD detached, **both** branch refs deleted by
+`git update-ref -d` with old-value guards, then a single `Nolan-Work` recreated at the tip and set
+to track `origin/Nolan-Work`. HEAD never moved commit, so the working tree did not churn and the
+running freeze job was untouched.
 
-The loose ref **shadows** the packed one on this case-insensitive filesystem, so `Nolan-Work` and
-`nolan-work` resolve to the same thing locally and `git log origin/Nolan-Work..Nolan-Work` lies
-about which is which. **GitHub refs are case-sensitive.** A plain `git push` from here creates a
-*second* remote branch and splits the team's branch in two. Resolve the ref before pushing; this is
-outward-facing, so it is the lead's call.
+**Now:** one ref, `Nolan-Work` at `76200779`, 0 ahead / 0 behind `origin/Nolan-Work`, and a bare
+`git push` resolves correctly. **`Nolan-Work` is the canonical name** — it matches the remote and
+every doc. Syrup's charter still says `nolan-work`; that is now a name that does not exist.
 
 ### ⚠️ `analyze-phases.ts` is invisible to grep
 
@@ -237,16 +245,25 @@ is superseded — its content survives in the session log, where it belongs.
 - **Corpus v2 is built and is an UNVALIDATED fix**: 624 rows / 7 ecosystems (was 324 / 2), Phase 1b
   adopted `elm-4096 tanh`. **The coverage re-check has not been run on it.** That re-check is the
   cheap question that decides whether anything else in the chain matters.
-- **Pending, none of it run:** the corpus-v2 re-freeze (the 4096 fit OOM'd; `69259048` fixed it by
-  streaming, and the run was never repeated — `elm-frozen-model.json` is still the Aug 31 v1
-  artifact, hash `d794f847`), the coverage re-check, and the pre-registered Phase 1c capacity arm
-  (`--phase1c`, 8192, with its stopping rule declared at `c913acf0` before any number exists).
+- **The corpus-v2 re-freeze is RUNNING as I write this** (corrected 2026-09-04 (b) — an hour
+  earlier this section said it "was never repeated"; K2 had launched it in this same checkout while
+  I was reconstructing the log, which is the shared-checkout hazard behaving exactly as documented).
+  `pid 25842`, `nohup`'d so it outlives the session that started it, ~47 min in at 10:54 and healthy
+  — 99% CPU, RSS 1.1 GB against the 2096 MB old-space ceiling that killed the last attempt, so the
+  streaming fix is holding. **The ONLY success test is `scripts/data/elm-frozen-model-v2.json`
+  existing.** Do not trust an exit code: K2's watcher printed `[exited with code 0]` for the run
+  that died of `FATAL ERROR: Reached heap limit` — that was the watcher's code, not node's.
+- **Still not run:** the coverage re-check (blocked on the freeze above), and the pre-registered
+  Phase 1c capacity arm (`--phase1c`, 8192, stopping rule declared at `c913acf0` before any number
+  exists).
 - **Weak signal, deliberately deferred:** the pre-crash run had the 9-seed vote at 67.0% against a
   single seed's 69.2% on corpus v2 at 4096. That is **one** fold-seed, which is the cost reduction
   `e73ca327` took — a weak signal, not a finding, and moot if the coverage re-check fails again.
-- **Four commits are unpushed** (Sep 4), so the Phase 1c pre-registration is not yet visible to the
-  other two teams. A pre-registration nobody else can see is worth much less; see the ref hazard
-  above for why the push is not a one-liner.
+- ~~Four commits are unpushed.~~ **Corrected 2026-09-04 (b): everything is pushed and the duplicate
+  branch ref is merged.** `origin/Nolan-Work` and local `Nolan-Work` are both at `76200779`,
+  0 ahead / 0 behind, so the Phase 1c pre-registration is now visible to Jarrett and Thomas. K2
+  pushed its own work; the ref consolidation is mine (see the session entry for the procedure and
+  the recovery refs).
 - **Claims:** `TN-J17` released 2026-09-04 (its ADR closed 08-23; the board disagreed with the ADR
   for twelve days). K2's open rows — `TN-J25`, `TN-J30`, `TN-J31`, `TN-J32` — are now claimed by me.
 
@@ -292,16 +309,20 @@ it still asked for a gold-set decision that has since been made, executed, and s
 2026-08-23 warning stands: **a revived session reads `Next up` as its instructions**, so a stale
 entry here is not clutter, it is a wrong order.)*
 
-- [ ] **The corpus-v2 verdict chain, in this order — cheapest question first.**
-      1. Re-run the freeze on corpus v2 with the streaming fix
-         (`node scripts/elm-freeze-model.mjs --corpus=scripts/data/elm-archetype-corpus-v2.json
-         --hidden=4096 --out=scripts/data/elm-frozen-model-v2.json`). The last attempt OOM'd
-         *after* the CV comparison; `69259048` streams the fits so peak memory is one model.
-      2. Then the coverage re-check against that artifact
-         (`node scripts/elm-coverage-check.mjs --frozen=scripts/data/elm-frozen-model-v2.json`).
-         **This is the decision point.** It needs no ground truth and no spend, and if v2 still
-         collapses on hono/trpc then Phase 1c, the ensemble question and gold set #2's labelling
-         day are all moot.
+- [ ] **The corpus-v2 verdict chain. Step 1 is ALREADY RUNNING — do not relaunch it.**
+      1. ~~Re-run the freeze on corpus v2.~~ **In flight**, `pid 25842`, launched by K2 before it
+         was retired. The script refuses to overwrite an existing artifact without `--force`, so a
+         second launch is not destructive — it is just an hour of wasted compute on an 8 GB box.
+         **Check `pgrep -f elm-freeze-model` and the existence of
+         `scripts/data/elm-frozen-model-v2.json` before touching anything.** A monitor is armed on
+         it this session; the log is copied to `~/n-dx-elm-logs/freeze-v2b.log` because the original
+         lives in a session scratchpad that gets reaped.
+      2. Then the coverage re-check —
+         `node scripts/elm-coverage-check.mjs --frozen=scripts/data/elm-frozen-model-v2.json`.
+         **This is the decision point.** No ground truth, no labels, no LLM calls: coverage depends
+         only on the model's own predictions, which is why the Phase 3 failure cost zero labelling
+         days. If v2 still collapses on hono/trpc, Phase 1c, the ensemble question and gold set #2's
+         labelling day are all moot.
 - [ ] **Phase 1c (8192 capacity) — pre-registered at `c913acf0`, not yet run.** Run it *only* if
       the coverage re-check passes. **Honour the stopping rule as written:** a non-winning 8192
       closes capacity at 4096; 16384 is not run either way. ⚠️ Run it alone — a Phase 1 sweep was
@@ -337,6 +358,20 @@ entry here is not clutter, it is a wrong order.)*
       and its own header says *"JAM HAS NOT YET REVIEWED IT … Jam: amend in place."* It is the
       document the other two teams would read first, it is now eleven days behind the Phase 3
       failure, and the request has been outstanding since 08-23.
+- [ ] **The ensemble question K2 handed over unresolved.** At 4096 on corpus v2 the 9-seed
+      majority vote scores **67.0% against a single seed's 69.2% — the vote COSTS 2.2 pp.** The
+      frozen artifact is supposed to be that vote, because seed spread on this corpus is ~16 pp and
+      the vote is how the seed lottery is removed. Freezing it anyway trades accuracy for
+      determinism — a real trade, but it has to be a stated one. ⚠️ **One fold-seed. Not a finding.**
+      It is the `--fold-seeds` cost reduction, and the artifact's `foldSeedsReduced` field exists to
+      stop exactly this misquote. Resolving it properly is a 3-fold-seed re-run at 4096, ~2.5 h —
+      and it is moot if the coverage check fails, so it comes after.
+- [ ] **If coverage FAILS again — do not reach for a third corpus expansion by reflex.** K2's
+      handover § 9, and I agree: the honest read would be that path-only classification does not
+      transfer across ecosystems at this corpus size. **`TN-J22` — improving the classify prompt —
+      is still unclaimed, and the LLM sits 13.1 pp below the human path-only ceiling (72.3% vs
+      85.4%). That is a cheaper and larger win than this entire tier, and it has been true since
+      2026-08-11.**
 - [ ] **Not mine, do not start:** anything in `packages/llm-client/**` or `hench/**` (Butter's),
       the `Claude-Context/` root doctrine docs (Fluff's), and any edit on Jarrett's or Thomas's
       branches (nobody's — Syrup reads them read-only).
@@ -344,6 +379,60 @@ entry here is not clutter, it is a wrong order.)*
 ## Session log
 
 Newest at the top. **Do not edit past entries** — append corrections as a new entry.
+
+---
+
+### 2026-09-04 (b) — K2's handover note; merged the duplicate branch; adopted a job in flight
+
+**Two of the claims in my (a) entry an hour ago were already false when I wrote them.** K2 was
+working this same checkout while I reconstructed the log — the shared-checkout hazard behaving
+exactly as `Command-Structure` says it does, except benignly this time because we were writing
+different files. Corrected in `Current state` above, and stated here rather than only there:
+
+- I wrote that the corpus-v2 re-freeze "was never repeated". **It was running as I typed it**, and
+  still is — `pid 25842`, `nohup`'d, 47 min in and healthy at 10:54 (99% CPU, RSS 1.1 GB against
+  the 2096 MB ceiling that killed the previous attempt, so the streaming fix is holding).
+- I wrote that four commits were unpushed. **K2 pushed them**, plus its own. `origin/Nolan-Work`
+  was at `76200779` before I looked again.
+
+**K2 left a handover note** —
+[`NOTE-…-09-04-k2-handover-to-jam.md`](Notes/NOTE-nolan-internal-2026-09-04-k2-handover-to-jam.md).
+It is explicitly the substitute for the charter it never had, and it is the reason this session
+cost an hour instead of a day. Two things in it I would not have found on my own: the running job,
+and that **the artifact existing is the only success test** — K2's watcher printed
+`[exited with code 0]` for a run that died of `FATAL ERROR: Reached heap limit`, because that was
+the watcher's exit code and not node's. The handbook's OOM trap is still live and still lies.
+
+**Merged the duplicate branch ref, on the lead's instruction.** `b0003e7c` had **0** commits the
+tip did not, so this was a fast-forward: nothing to merge, nothing to lose. I wrote two recovery
+refs first (`refs/backup/2026-09-04-nolan-work-tip`, `refs/backup/2026-09-04-Nolan-Work-stale`),
+detached HEAD, deleted **both** branch refs with `git update-ref -d` under old-value guards, then
+recreated a single `Nolan-Work` at the tip tracking `origin/Nolan-Work`. Deleting by ref name
+rather than by filename matters here: the two refs are one file on this filesystem, so
+`git branch -D` on the lowercase name could have left the packed uppercase ref pointing 22 commits
+back. HEAD never changed commit, so **the working tree did not churn and the running freeze was
+untouched** — verified by `pgrep` after. `git push --dry-run` now says "Everything up-to-date"
+instead of silently pushing nothing.
+
+**Adopted the job K2 could not stay to watch.** Armed a monitor on `pid 25842` that reports one
+line on either terminal outcome — artifact written, or process gone without one — because a filter
+that only matches success is silent through a crash and silence looks identical to still-running.
+Also **copied `freeze-v2b.log` out of the session scratchpad to `~/n-dx-elm-logs/`**: it was in
+`/private/tmp/claude-501/…`, which is the directory that reaped a corpus clone mid-session on
+2026-08-20 and produced a silent `0 files cataloged` run. K2 flagged the same trap in its § 7.
+
+**What I did NOT do:** did not relaunch or interfere with the freeze; did not run the coverage
+check (it needs the artifact); did not run Phase 1c (it comes after the coverage verdict, per K2's
+sequencing, which I agree with — coverage is minutes and decides whether more capacity tuning is
+worth any compute at all); did not resolve the ensemble question (2.5 h, and moot if coverage
+fails); did not touch `packages/**`; did not push anything of my own beyond what is described here.
+
+**One judgement call K2 flagged for me and I am passing straight to the lead**, because it is a
+doctrine question and not mine to settle: K2 sent cross-team notes to Jarrett and Thomas directly,
+reasoning that the "draft for Nolan to send" constraint is written for Syrup specifically while
+`claude-context-instruction` § 3 says anyone may drop a note in any team's inbox. Both readings are
+defensible. If the lead wants outbound tightened to "everything goes through Nolan", those two
+notes are the precedent to point at.
 
 ---
 
