@@ -26,14 +26,29 @@
  * Usage:
  *   node scripts/elm-coverage-check.mjs                 # gold sets #1 and #2
  *   node scripts/elm-coverage-check.mjs <repo-path>...  # any analyzed repo
+ *   node scripts/elm-coverage-check.mjs --frozen=scripts/data/elm-frozen-model-v2.json
+ *
+ * `--frozen` selects which frozen model to measure. The training corpus is NOT a
+ * separate flag — it is read from that artifact's `trainedOn.corpus`, because the
+ * vectorizer has to be fitted on the rows the model actually saw.
  */
 
 import { existsSync, readFileSync } from "node:fs";
 import { ELM, TFIDFVectorizer, tokenize } from "@astermind/astermind-community";
 
-const CORPUS1 = "scripts/data/elm-archetype-corpus.json";
-const FROZEN = "scripts/data/elm-frozen-model.json";
+const argStr = (k, d) => {
+  const a = process.argv.find((x) => x.startsWith(`--${k}=`));
+  return a ? a.slice(k.length + 3) : d;
+};
+const FROZEN = argStr("frozen", "scripts/data/elm-frozen-model.json");
 const GOLD2_LABELS = "scripts/data/k2-goldset2-llm-labels.json";
+
+/**
+ * The corpus is DERIVED from the frozen artifact's `trainedOn.corpus`, never passed
+ * separately. The vectorizer must be fitted on the same rows the model was trained
+ * on; pairing a v2 model with a v1 vectorizer would silently score a different
+ * feature space and still print a plausible number. Not a knob.
+ */
 
 const docOf = (p) => tokenize(p).join(" ");
 const oneHot = (l, cs) => cs.map((c) => (c === l ? 1 : 0));
@@ -41,7 +56,10 @@ const pct = (x) => `${(x * 100).toFixed(1)}%`;
 
 function loadFrozenTier() {
   const frozen = JSON.parse(readFileSync(FROZEN, "utf-8"));
-  const c1 = JSON.parse(readFileSync(CORPUS1, "utf-8"));
+  const corpusPath = frozen.trainedOn?.corpus;
+  if (!corpusPath) throw new Error(`${FROZEN} has no trainedOn.corpus — cannot fit the vectorizer on the rows the model saw.`);
+  if (!existsSync(corpusPath)) throw new Error(`${FROZEN} was trained on ${corpusPath}, which is missing. Coverage cannot be measured without it.`);
+  const c1 = JSON.parse(readFileSync(corpusPath, "utf-8"));
   const { hiddenUnits, activation, ridgeLambda, vocabCap, ensembleSeeds, operatingPoint } = frozen.spec;
   const cats = frozen.categories;
   const v = new TFIDFVectorizer(c1.train.map((r) => docOf(r.text)), vocabCap);
@@ -67,7 +85,7 @@ function loadFrozenTier() {
       return { label: best.label, prob: best.t.n / models.length };
     });
   };
-  return { frozen, operatingPoint, vote, c1 };
+  return { frozen, operatingPoint, vote, c1, corpusPath };
 }
 
 function report(name, items, tier) {
@@ -100,6 +118,8 @@ function main() {
   const tier = loadFrozenTier();
   console.log("Frozen-tier coverage check — no ground truth required");
   console.log(`  model ${tier.frozen.contentHash.slice(0, 16)}…  operating point ${tier.operatingPoint.design}`);
+  console.log(`  spec  ELM ${tier.frozen.spec.hiddenUnits} / ${tier.frozen.spec.activation}`);
+  console.log(`  trained on ${tier.corpusPath}  (${tier.c1.train.length} rows)`);
 
   const results = [];
   if (repoArgs.length) {
@@ -112,7 +132,12 @@ function main() {
     }
   } else {
     const held = tier.c1.heldOut.map((h) => ({ path: h.text, llmLabel: h.label }));
-    results.push(report("gold set #1 held-out — n-dx + AsterMind-CE  [DEV, trained-on ecosystems]", held, tier));
+    // Name the ecosystems from the corpus rather than hard-coding "n-dx + AsterMind-CE",
+    // which is only true of corpus v1. The comparison this script exists to make is
+    // trained-on vs fresh, so the trained-on side has to say which repos it actually is.
+    const repos = (tier.c1.provenance?.repos ?? []).map((r) => r.repo);
+    const ecosystems = repos.length ? repos.join(" + ") : "(repos not recorded in corpus provenance)";
+    results.push(report(`held-out split — ${ecosystems}  [DEV, trained-on ecosystems]`, held, tier));
     if (existsSync(GOLD2_LABELS)) {
       const g2 = JSON.parse(readFileSync(GOLD2_LABELS, "utf-8"));
       results.push(report("gold set #2 packet — hono + trpc  [FRESH ecosystems]", g2.labels, tier));
@@ -122,7 +147,7 @@ function main() {
     }
   }
 
-  const trained = results.find((r) => r.name.includes("gold set #1"));
+  const trained = results.find((r) => r.name.startsWith("held-out split"));
   const fresh = results.find((r) => r.name.includes("gold set #2"));
   if (trained && fresh) {
     console.log("\n  ── The finding ────────────────────────────────────────────────────");
