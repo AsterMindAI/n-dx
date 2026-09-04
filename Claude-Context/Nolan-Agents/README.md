@@ -75,6 +75,13 @@ Fill in as scopes and dependencies become clear.
 
 ## Handbooks
 
+- [`ELM-CORPUS.md`](ELM-CORPUS.md) — **the labelled archetype corpus, documented as a shared
+  asset.** Written for the other teams, not just this one: it is a general path-string → label
+  dataset, so it is reusable by any ELM work whether or not Team Nolan's tier is the design that
+  ships. Schema, the seeded split, per-repo provenance and teacher composition, the contamination
+  boundary between training rows and the two gold sets, the rebuild procedure, and an inventory of
+  the un-versioned staging tree. **Read § 6 before training on it — v1 has a measured
+  generalisation failure and v2's fix is unvalidated.**
 - [`K2-HANDBOOK.md`](K2-HANDBOOK.md) — **onboarding for whoever builds the ELM classification tier.**
   Self-contained: the five numbers that define the problem, what is already settled (capacity,
   features, corpus size, the `TN-J24` merge), the adopted abstention design, the contamination rule
