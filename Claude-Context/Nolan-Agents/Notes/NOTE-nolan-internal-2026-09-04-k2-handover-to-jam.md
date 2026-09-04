@@ -60,7 +60,7 @@ No ground truth, no labels, no LLM calls. Coverage depends only on the model's o
 That property is why the Phase 3 failure cost zero labelling days, and it is the most valuable
 thing I found.
 
-## 3. What I did this session (all committed, 5 unpushed at time of writing)
+## 3. What I did this session (all committed and pushed)
 
 | Commit | What |
 |---|---|
