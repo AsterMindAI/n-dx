@@ -109,6 +109,24 @@ direction changes. Link the ADR; don't restate it here.
     § *One agent, one worktree* calls not-optional. The ADR proposes amending the rule to match
     practice and name the mitigation. Notes sent to Teams Jarrett and Thomas.
 - <date> — <what changed, who to ask>
+- 2026-08-31 — Team Thomas: new ADR/IMPL for a text-encoded ELM classifier in sourcevision's
+  `classify.ts`, replacing an earlier (unmerged, different-branch) evidence-vector design that
+  measured zero signal on real unclassified files. Adds `@astermind/astermind-community` to
+  `packages/sourcevision/package.json` only (not root). See
+  `Claude-Context/ADR/ADR-2026-08-31-nala-classify-elm-rewrite.md`. Ask Nala (Team Thomas) with
+  questions.
+- 2026-08-31 — Team Thomas: **`scripts/elm-hello-world.mjs` (and the root `elm:hello` script) don't
+  test what their names claim.** `ELM.train()`'s only parameter is `augmentationOptions`, not a
+  training set — passed `elm-hello-world.mjs`'s `TRAINING_SET` array, every property it reads is
+  `undefined`, so the model trains only on character-augmented variants of the category label
+  strings, never on the example paths the script provides. Confirmed empirically (three models —
+  real/contradictory/no training data — produced byte-identical weights and predictions). The
+  script's 83%-accuracy claim isn't evidence the library learns from labeled examples; don't cite
+  it as such. The API that does work — `UniversalEncoder` → `ELM.trainFromData(X, y)` — is used
+  correctly in the new `scripts/classify-elm-eval.mjs` (90.6% on real n-dx path/archetype data).
+  Full write-up: `scripts/classify-elm-eval-results.md` and the ADR above. Not fixed in
+  `elm-hello-world.mjs` itself — not this team's file; flagged as an open question in the IMPL for
+  whoever owns it.
 
 ---
 
