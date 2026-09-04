@@ -26,6 +26,18 @@ export const BUILTIN_ARCHETYPES: ArchetypeDefinition[] = [
       { kind: "filename", pattern: "^mod\\.[tj]sx?$", weight: 0.7 },
       { kind: "filename", pattern: "^main\\.go$", weight: 0.9, languages: ["go"] },
       { kind: "directory", pattern: "/cmd/", weight: 0.7, languages: ["go"] },
+      // Added TJ-A3 (2026-09-04), evidenced by mining real LLM classification reasoning
+      // across 4 corpora (22 examples, e.g. "standalone runnable demo script",
+      // "directly-loaded web worker script") — see
+      // IMPL-2026-09-03-knight-tj-a3-execution-and-tj-r2-gate.md. Verified against all 5
+      // corpora's existing labels: 14 true-positive matches, 0 false positives. Deliberately
+      // NOT a bare "path contains examples/" signal — that matched 19 files that are actually
+      // models/routes/components/services living *inside* a nested example sub-project
+      // (express, zustand), not entrypoints themselves. Restricted to files that are direct
+      // children of an examples-like directory, or whose name says "demo" outright.
+      { kind: "path", pattern: "/(examples?|demos?|experiments?|node_examples)/[^/]+$", weight: 0.7 },
+      { kind: "filename", pattern: "demo", weight: 0.6 },
+      { kind: "filename", pattern: "worker\\.[tj]sx?$", weight: 0.6 },
     ],
     analysisHints: {
       deadExports: "skip",
@@ -158,6 +170,27 @@ export const BUILTIN_ARCHETYPES: ArchetypeDefinition[] = [
     ],
     analysisHints: {
       description: "Data model definitions",
+    },
+  },
+  {
+    // Added TJ-A3 (2026-09-04). Real gap found by direct inspection of AsterMind-Community-
+    // Edition's actual unclassified population (not LLM-reasoning-mined — no LLM label
+    // existed for these, by definition): 21 of its 52 unclassified files are self-contained
+    // ELM/ML algorithm implementations under src/elm/, src/ml/, src/pro/elm/, with zero
+    // algorithmic signal today. Verified before adding: 28 currently-unclassified files newly
+    // resolve; the only 2 path matches on already-labeled files are src/elm/index.ts and
+    // src/pro/elm/index.ts, which correctly stay "entrypoint" (weight 0.8 there vs. 0.6 here).
+    // Matches Archer's independently-authored ADR-2026-08-24-jarrett-archetype-taxonomy-redesign.md
+    // proposal for this archetype — same conclusion, reached from fresh data.
+    id: "algorithm",
+    name: "Algorithm",
+    description: "Self-contained computational/ML algorithm implementations.",
+    signals: [
+      { kind: "directory", pattern: "/elm/", weight: 0.6 },
+      { kind: "directory", pattern: "/ml/", weight: 0.6 },
+    ],
+    analysisHints: {
+      description: "Self-contained algorithm implementations, not orchestration or plumbing code",
     },
   },
   {
