@@ -9,8 +9,9 @@
  * If you edit either after a run, the run is void.
  *
  * ── What this measures ────────────────────────────────────────────────────
- * 5-fold CV accuracy against LLM labels on the 241-row TRAIN split ONLY.
- * The 83-row held-out split and gold set #1 are never read by this file —
+ * 5-fold CV accuracy against LLM labels on the TRAIN split ONLY — 241 rows for
+ * corpus v1 (Phase 1), 464 for corpus v2 (Phase 1b/1c, via --corpus).
+ * The held-out split and gold set #1 are never read by this file —
  * grep it: `corpus.heldOut` does not appear. Model selection that touches
  * either would be tuning toward the test set, which is the error this project
  * has already corrected twice.
@@ -37,7 +38,9 @@ const arg = (k, d) => {
   return a ? a.slice(k.length + 3) : d;
 };
 const CORPUS = arg("corpus", "scripts/data/elm-archetype-corpus.json");
-const OUT = arg("out", CORPUS.includes("-v2") ? "scripts/data/elm-architecture-sweep-v2.json" : "scripts/data/elm-architecture-sweep.json");
+const OUT = arg("out", process.argv.includes("--phase1c")
+  ? "scripts/data/elm-architecture-sweep-v2-capacity.json"
+  : CORPUS.includes("-v2") ? "scripts/data/elm-architecture-sweep-v2.json" : "scripts/data/elm-architecture-sweep.json");
 
 /** Pre-registered at f4a06175. A record, not a knob. */
 const ADOPTION = { meanMarginPp: 1.5, minPairedWins: 7, totalPairs: 9 };
@@ -299,8 +302,53 @@ const PHASE1B_CONFIGS = [
   { name: "elm-2048 relu", kind: "elm", activation: "relu", hidden: 2048 },
 ];
 
+/**
+ * Phase 1c grid — the capacity extension. Declared and committed BEFORE the run.
+ *
+ * ── Why this arm exists ───────────────────────────────────────────────────
+ * Phase 1b adopted `elm-4096 tanh` (+2.06 pp, 7 of 9). 4096 was the TOP EDGE of
+ * that grid, so the win is not evidence of a plateau — it is evidence that the
+ * grid stopped too early. Phase 1's 1024 plateau was measured on 241 rows; the
+ * corpus is now 624. Leaving capacity pinned at a boundary value would be the
+ * `hiddenUnits: 256` mistake in its third incarnation: a number nobody chose,
+ * carried forward because no one re-opened it.
+ *
+ * ── The stopping rule, fixed here so it cannot be chosen afterwards ────────
+ * Capacity is a one-dimensional sweep with an obvious failure mode: crawl the
+ * grid upward until something wins by chance. So:
+ *
+ *   If 8192 does NOT clear the adoption bar, capacity is CLOSED at 4096 and
+ *   16384 is not run. A non-winning 8192 is a plateau result, not an invitation.
+ *
+ *   If 8192 DOES clear it, capacity is still closed for this phase — the tier
+ *   ships at 8192 and any further extension needs its own pre-registration and
+ *   a stated reason beyond "the last one won."
+ *
+ * Either way this is the last capacity arm run against corpus v2. Recorded now,
+ * before the numbers exist, because that is the only time the rule is credible.
+ *
+ * ── Activation ────────────────────────────────────────────────────────────
+ * `tanh` only. It has now beaten `relu` at equal capacity on 3 of 3 comparisons
+ * and beaten or tied `gelu` throughout, so this arm tests ONE variable. `gelu`
+ * at 8192 is included solely as a tie-breaker guard: if tanh's lead came from
+ * capacity interacting with the activation, that shows up as gelu closing the
+ * gap, and it is better to see it than to assume it away.
+ *
+ * ⚠️ MEMORY. At 8192 units and a 2411-term vocabulary, W is ~158 MB per model
+ * and the sweep holds several at once, on an 8 GB box that already carries
+ * ~4.5 GB of swap. A Phase 1 sweep was OOM-killed on this machine and EXITED 0
+ * WITH AN EMPTY TABLE — indistinguishable from a clean run. Run this arm alone,
+ * and verify the results table is populated rather than trusting the exit code.
+ */
+const PHASE1C_CONFIGS = [
+  { name: "INCUMBENT elm-4096 tanh (phase 1b winner)", kind: "elm", activation: "tanh", hidden: 4096, incumbent: true },
+  { name: "elm-8192 tanh", kind: "elm", activation: "tanh", hidden: 8192 },
+  { name: "elm-8192 gelu", kind: "elm", activation: "gelu", hidden: 8192 },
+];
+
 function main() {
   const phase1b = process.argv.includes("--phase1b");
+  const phase1c = process.argv.includes("--phase1c");
   const only = (process.argv.find((a) => a.startsWith("--only=")) ?? "").slice(7);
   const quick = process.argv.includes("--quick");
   const foldSeeds = quick ? FOLD_SEEDS.slice(0, 1) : FOLD_SEEDS;
@@ -319,7 +367,8 @@ function main() {
   console.log(`  PRE-REGISTERED adoption (f4a06175): mean >= incumbent + ${ADOPTION.meanMarginPp} pp AND >= ${ADOPTION.minPairedWins} of ${ADOPTION.totalPairs} paired wins`);
   console.log("  held-out split and gold set #1 are NOT read by this script\n");
 
-  const configs = (phase1b ? PHASE1B_CONFIGS : CONFIGS).filter((c) => c.incumbent || !only || c.name.includes(only));
+  const grid = phase1c ? PHASE1C_CONFIGS : phase1b ? PHASE1B_CONFIGS : CONFIGS;
+  const configs = grid.filter((c) => c.incumbent || !only || c.name.includes(only));
   const results = [];
   for (const cfg of configs) {
     const t0 = Date.now();
