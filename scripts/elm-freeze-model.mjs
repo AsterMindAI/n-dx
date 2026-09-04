@@ -233,7 +233,14 @@ function main() {
       corpusProvenance: corpus.provenance ?? null,
     },
     selection: {
-      channel: "5-fold CV on the TRAIN split only, fold seeds [7,13,29]. Gold sets NOT consulted.",
+      // Derived, never hard-coded: --fold-seeds is reducible, and an artifact that
+      // states a fold-seed set it did not use is the exact "consistent with vs
+      // recorded" failure this project has already hit twice.
+      channel: `${FOLDS}-fold CV on the TRAIN split only, fold seeds [${FOLD_SEEDS.join(",")}]. Gold sets NOT consulted.`,
+      foldSeeds: FOLD_SEEDS,
+      foldSeedsReduced: FOLD_SEEDS.length < 3
+        ? `REDUCED from the default [7,13,29] to [${FOLD_SEEDS.join(",")}] for cost. Legitimate here because this CV only has to show the ensemble is not WORSE than a single seed — a determinism decision, not model selection. Do not quote these CV figures as a model-selection result.`
+        : null,
       singleSeedCv: cmp.single,
       ensembleCv: cmp.ensemble,
       deltaPp: delta,
