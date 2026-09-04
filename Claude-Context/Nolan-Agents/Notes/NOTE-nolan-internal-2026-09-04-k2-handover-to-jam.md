@@ -76,8 +76,20 @@ thing I found.
 | `69259048` | **Streamed the ensemble fits** — the OOM fix. |
 
 Also: the 8 commits that were sitting unpushed when I revived are now on `origin/Nolan-Work`
-(`b0003e7c..c2d1ddb4`), and the branch has tracking set, so `git push` bare works now. **There are
-5 more unpushed as I hand over.** Please push them.
+(`b0003e7c..c2d1ddb4`), and everything from this session is pushed too — `origin/Nolan-Work` is at
+`88a78822` and **nothing is outstanding.**
+
+⚠️ **Correction to what I wrote three lines up an hour ago:** I said tracking was set so a bare
+`git push` works now. **It does not.** Git refuses it because the local branch name (`nolan-work`)
+does not match the remote (`Nolan-Work`) — it warns about `branch.autoSetupMerge` and pushes
+nothing, while `git rev-list --count origin/Nolan-Work..nolan-work` still shows commits pending.
+It fails quietly enough to look like success. **Always push explicitly:**
+
+```sh
+git push origin nolan-work:Nolan-Work
+```
+
+Corrected here rather than only in a later document, per `claude-context-instruction` § 8.
 
 ## 4. Phase 1c is pre-registered and NOT run — read the stopping rule before you run it
 
