@@ -20,6 +20,7 @@ owner a note before assuming it's stale — don't just delete it.
 | Since | Who | Team | What | Paths / command | Expected release |
 |---|---|---|---|---|---|
 | 2026-08-11 | Fluff | Nolan | `TN-F1` — reconciling the branch-naming / `dev`-branch / base-branch mismatch across the doctrine docs. **This claims shared files:** everything in `Claude-Context/` root is on the "nobody edits unilaterally" list, and these four docs bind all three teams. No doc is edited until the ADR is accepted — this row is claiming the *ADR and the eventual single-pass edit*, so a second agent doesn't start the same reconciliation. | Writes `Claude-Context/Nolan-Agents/Fluff.md`, `Claude-Context/Nolan-Agents/{README,BACKLOG}.md`, one new `Claude-Context/ADR/ADR-2026-08-11-fluff-*.md`, and this row. **Pending leads' acceptance:** `GITHUB-WORKFLOW.md`, `OWNERSHIP.md`, `NEW-AGENT.md`, `claude-context-instruction`, `Command-Structure`. **No source files.** Fluff is on the **shared checkout**, branch `Nolan-Work`, alongside Jam (lead's decision 2026-08-11) — so any state-writing command gets its own claim row here first. This task runs none. | On the leads' decision + single-pass doc edit |
+| 2026-08-12 | Archer | Jarrett | Adding `@astermind/astermind-community` dependency for TJ-A1 (ELM pre-filter prototype) | `packages/sourcevision/package.json`, root `pnpm-lock.yaml` | On IMPL Step 4 completion (eval script working) or sooner if the gate fails and the dep is reverted |
 
 **Shared files — nobody edits unilaterally:**
 `package.json` · `pnpm-lock.yaml` · `CLAUDE.md` · `AGENTS.md` ·
@@ -38,7 +39,22 @@ One line per team, updated by that lead. This is the standing answer to "what is
 right now" so nobody has to ask.
 
 - **Team Nolan:** <in flight · shipped since last update · blockers>
-- **Team Jarrett:** <…>
+- **Team Jarrett:** three active threads as of 2026-08-24, all under `classify.ts`'s classification
+  system, all still pre-production (no `classify.ts`/`analyze-phases.ts` edits landed yet):
+  - `TJ-A2` (Archer, Knight supporting) — production-wiring the ELM pre-filter engine. Numeric
+    feature representation cleared the gate, independently confirmed by Knight and Realm's
+    from-scratch reproduction. In progress on `elm/jarrett/classify-elm-prefilter` /
+    `../n-dx-jarrett`.
+  - `TJ-A3` (Archer, new today) — extending/tightening `BUILTIN_ARCHETYPES` itself (the archetype
+    *catalog*, orthogonal to which engine classifies against it). Corrects a same-day mix-up where
+    Knight's urgent note described a different pivot (ELM-derived taxonomy discovery) that turned
+    out not to be the confirmed direction — see
+    `Notes/NOTE-archer-to-knight-and-realm-2026-08-24-taxonomy-direction-confirmed.md`. New
+    worktree/branch (`../n-dx-jarrett-taxonomy`, `elm/jarrett/archetype-taxonomy-redesign`),
+    deliberately separate from `TJ-A2`.
+  - `TJ-R1` (Realm) — ELM-as-primary-classifier decision, verified by independently reproducing
+    both `TJ-A1`'s and `TJ-K1`'s real committed code. Its threshold-default finding is provisional
+    pending re-verification once `TJ-A3`'s catalog changes land.
 - **Team Thomas:** <…>
 
 **Fork sync:** last `upstream/main` → `origin/main` fast-forward: _<date, by whom>_

@@ -23,6 +23,9 @@ import {
   analyzeClassifications,
   enrichClassificationsWithLLM,
   mergeClassificationResults,
+  getArchetypeELM,
+  classifyWithELM,
+  DEFAULT_ELM_CONFIDENCE_THRESHOLD,
   analyzeZones,
   type ZoneAnchor,
   analyzeComponents,
@@ -48,6 +51,7 @@ import type {
   CallGraph,
   Classifications,
   ConvergenceReport,
+  FileClassification,
   ImportEdge,
   Inventory,
   InventoryResult,
@@ -214,6 +218,39 @@ export async function runClassificationsPhase(ctx: AnalyzeContext): Promise<void
       projectLanguage,
       projectLanguages,
     });
+
+    // ELM pre-filter (TJ-A2) — kill switch: sourcevision.classification.elmPrefilter.enabled
+    // in .n-dx.json. DEFAULTS TO FALSE (opt-in), found necessary 2026-08-27: every prior
+    // validation (this ADR's, Knight's, Realm's) measured precision/coverage against
+    // held-out files that already had *some* algorithmic evidence signal. Direct testing on
+    // the real target population found that 100% of unclassified files, across all 5
+    // gathered corpora with no exception, have ZERO evidence signal — meaning the
+    // per-archetype score vector is identically all-zero for every file this stage is
+    // actually meant to help with, so the model cannot discriminate between them at all and
+    // produces the same prediction for all of them regardless of confidence threshold. This
+    // is a feature-representation gap, not a calibration one — see
+    // ADR-2026-08-11-jarrett-elm-prefilter-classify.md's "Zero-evidence population" finding.
+    // Opt-in until a representation that doesn't degenerate to an all-zero vector for this
+    // population is validated.
+    const elmConfig = (svOverrides as Record<string, unknown>).classification as
+      | Record<string, unknown>
+      | undefined;
+    const elmPrefilterConfig = elmConfig?.elmPrefilter as
+      | { enabled?: boolean; confidenceThreshold?: number }
+      | undefined;
+    const elmEnabled = elmPrefilterConfig?.enabled ?? false;
+    const elmConfidenceThreshold = elmPrefilterConfig?.confidenceThreshold ?? DEFAULT_ELM_CONFIDENCE_THRESHOLD;
+
+    if (!ctx.fastMode && elmEnabled && classifications.summary.totalUnclassified > 0) {
+      const trained = getArchetypeELM(classifications, inventory, importsData, 20260812);
+      if (trained) {
+        const elmResult = classifyWithELM(classifications, inventory, importsData, trained, elmConfidenceThreshold);
+        if (elmResult.updatedFiles.length > 0) {
+          classifications = mergeClassificationResults(classifications, elmResult.updatedFiles);
+          info(`  ${cyan("ELM pre-filter resolved")} ${bold(String(elmResult.updatedFiles.length))} additional files`);
+        }
+      }
+    }
 
     // LLM enrichment (skip in --fast mode)
     if (!ctx.fastMode && classifications.summary.totalUnclassified > 0) {
