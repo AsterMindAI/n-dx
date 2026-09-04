@@ -43,13 +43,17 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { ELM, TFIDFVectorizer, tokenize } from "@astermind/astermind-community";
 
-const CORPUS = "scripts/data/elm-archetype-corpus.json";
-const OUT = "scripts/data/elm-frozen-model.json";
+const argStr = (k, d) => {
+  const a = process.argv.find((x) => x.startsWith(`--${k}=`));
+  return a ? a.slice(k.length + 3) : d;
+};
+const CORPUS = argStr("corpus", "scripts/data/elm-archetype-corpus.json");
+const OUT = argStr("out", "scripts/data/elm-frozen-model.json");
 
 /** Phase 1's adopted configuration. See IMPL § Phase 1 RESULT; adopted at 5c5b87b0. */
 const SPEC = {
-  hiddenUnits: 1024,
-  activation: "tanh",
+  hiddenUnits: Number(argStr("hidden", "1024")),
+  activation: argStr("activation", "tanh"),
   ridgeLambda: 1e-2,
   vocabCap: 4000,
   /** Fixed and odd, so majority vote never ties on a two-way split. */
@@ -58,7 +62,11 @@ const SPEC = {
   operatingPoint: { design: "B+su", abstainOn: ["service", "utility"], suAdmitFraction: 0.10 },
 };
 
-const FOLD_SEEDS = [7, 13, 29];
+// Reducible for cost: the ensemble-vs-single check at 4096 units costs 135 fits
+// across 3 fold-seeds (~2.3 h). The check only has to show the ensemble is not
+// WORSE — it is a determinism decision, not a model selection — so one fold-seed
+// is sufficient and the reduction is stated rather than silently taken.
+const FOLD_SEEDS = argStr("fold-seeds", "7,13,29").split(",").map(Number);
 const FOLDS = 5;
 
 const docOf = (p) => tokenize(p).join(" ");
