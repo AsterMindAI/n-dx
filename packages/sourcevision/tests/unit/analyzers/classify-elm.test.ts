@@ -10,6 +10,7 @@ import {
   loadBaselineArchetypeELM,
   getArchetypeELM,
   classifyWithELM,
+  runELMGate,
 } from "../../../src/analyzers/classify-elm.js";
 import { analyzeClassifications } from "../../../src/analyzers/classify.js";
 import { BUILTIN_ARCHETYPES } from "../../../src/analyzers/archetypes.js";
@@ -378,5 +379,37 @@ describe("classifyWithELM", () => {
     // The 30 training files all already have a real (non-null) archetype — none should
     // reappear in the ELM's output, regardless of what the model would predict for them.
     expect(result.updatedFiles.every((f) => f.path === PROBE_PATH)).toBe(true);
+  });
+});
+
+// ── runELMGate (TJ-R3 stable interface) ──────────────────────────────────────
+// The thin wrapper classify.ts's gate calls — getArchetypeELM + classifyWithELM's own behavior
+// is already covered above; these just confirm the wrapper composes them correctly.
+
+describe("runELMGate", () => {
+  it("returns an empty updatedFiles array (not undefined) when no usable model exists", () => {
+    const custom: ArchetypeDefinition[] = [
+      {
+        id: "totally-custom",
+        name: "Custom",
+        description: "Custom",
+        signals: [{ kind: "directory", pattern: "/custom/", weight: 0.9 }],
+      },
+    ];
+    const inv = makeInventory([{ path: "src/custom/thing.ts" }]);
+    const classifications = analyzeClassifications(inv, emptyImports, { customArchetypes: custom });
+
+    const result = runELMGate(classifications, inv, emptyImports, { confidenceThreshold: 0, seed: 1 });
+    expect(result.updatedFiles).toEqual([]);
+  });
+
+  it("resolves confident predictions using the bundled baseline when history is insufficient", () => {
+    const inv = makeInventory([{ path: "src/index.ts" }, { path: "src/random9000.ts" }]);
+    const classifications = analyzeClassifications(inv, emptyImports);
+
+    const result = runELMGate(classifications, inv, emptyImports, { confidenceThreshold: 0, seed: 1 });
+    // Whatever it resolves (if anything, given the baseline's own confidence on this tiny
+    // fixture), it must never include the zero-evidence file — same guard as classifyWithELM.
+    expect(result.updatedFiles.some((f) => f.path === "src/random9000.ts")).toBe(false);
   });
 });

@@ -3,19 +3,18 @@ import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-// Partial mock: keep every real export from the gateway (analyzeClassifications,
-// enrichClassificationsWithLLM, mergeClassificationResults, DEFAULT_ELM_CONFIDENCE_THRESHOLD,
-// etc.) but replace the two ELM entry points so the wiring in runClassificationsPhase can be
-// exercised without depending on the ELM's actual numeric behavior (that's covered by
-// tests/unit/analyzers/classify-elm.test.ts).
-vi.mock("../../src/cli/sourcevision-core.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../src/cli/sourcevision-core.js")>();
-  return {
-    ...actual,
-    getArchetypeELM: vi.fn(),
-    classifyWithELM: vi.fn(),
-  };
-});
+// classify.ts's gate (runClassificationGate) is the only thing that calls either classifier —
+// mock the two classifier modules directly so analyze-phases.ts's real config-reading and
+// classify.ts's real ELM-then-LLM routing both run for real. This is stronger than mocking
+// runClassificationGate itself: it proves the gate's own sequencing (not just that
+// analyze-phases.ts calls something) end to end.
+vi.mock("../../src/analyzers/classify-elm.js", () => ({
+  runELMGate: vi.fn(),
+}));
+
+vi.mock("../../src/analyzers/classify-llm.js", () => ({
+  classifyUnclassifiedWithLLM: vi.fn(),
+}));
 
 vi.mock("../../src/analyzers/claude-client.js", async () => {
   const actual = await import("@n-dx/llm-client");
@@ -29,13 +28,13 @@ vi.mock("../../src/analyzers/claude-client.js", async () => {
 });
 
 import { runClassificationsPhase, type AnalyzeContext } from "../../src/cli/commands/analyze-phases.js";
-import { getArchetypeELM, classifyWithELM, DEFAULT_ELM_CONFIDENCE_THRESHOLD, DATA_FILES } from "../../src/cli/sourcevision-core.js";
-import { callClaude } from "../../src/analyzers/claude-client.js";
+import { runELMGate } from "../../src/analyzers/classify-elm.js";
+import { classifyUnclassifiedWithLLM } from "../../src/analyzers/classify-llm.js";
+import { DATA_FILES, DEFAULT_ELM_CONFIDENCE_THRESHOLD } from "../../src/cli/sourcevision-core.js";
 import type { Inventory, Imports } from "../../src/schema/index.js";
 
-const mockedGetArchetypeELM = vi.mocked(getArchetypeELM);
-const mockedClassifyWithELM = vi.mocked(classifyWithELM);
-const mockedCallClaude = vi.mocked(callClaude);
+const mockedRunELMGate = vi.mocked(runELMGate);
+const mockedClassifyUnclassifiedWithLLM = vi.mocked(classifyUnclassifiedWithLLM);
 
 function makeInventory(paths: string[]): Inventory {
   return {
@@ -72,7 +71,7 @@ const emptyImports: Imports = {
 };
 
 // "src/index.ts" resolves via the algorithmic pass (entrypoint); "src/mystery.ts" matches no
-// signal and reaches the LLM fallback (or the ELM pre-filter, when enabled) unclassified.
+// signal and reaches the ELM/LLM gate unclassified.
 const MIXED_INVENTORY = makeInventory(["src/index.ts", "src/mystery.ts"]);
 // Every file here resolves algorithmically — used to test the "no unclassified files" skip.
 const FULLY_CLASSIFIED_INVENTORY = makeInventory(["src/index.ts"]);
@@ -100,14 +99,14 @@ async function readClassifications(ctx: AnalyzeContext) {
   return JSON.parse(raw);
 }
 
-describe("ELM pre-filter wiring in runClassificationsPhase", () => {
+describe("classification gate wiring in runClassificationsPhase", () => {
   let tmpDir: string;
 
   beforeEach(async () => {
     tmpDir = await mkdtemp(join(tmpdir(), "sv-elm-wiring-"));
-    mockedGetArchetypeELM.mockReset();
-    mockedClassifyWithELM.mockReset();
-    mockedCallClaude.mockReset();
+    mockedRunELMGate.mockReset();
+    mockedClassifyUnclassifiedWithLLM.mockReset();
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValue({ updatedFiles: [], tokenUsage: { calls: 0, inputTokens: 0, outputTokens: 0 } });
   });
 
   afterEach(async () => {
@@ -116,15 +115,15 @@ describe("ELM pre-filter wiring in runClassificationsPhase", () => {
 
   it("skips the ELM stage entirely when elmPrefilter.enabled is unset (opt-in default)", async () => {
     const ctx = await setupProject(tmpDir, MIXED_INVENTORY); // no .n-dx.json at all
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([{ path: "src/mystery.ts", archetype: "service", reason: "Looks like a service" }]),
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValueOnce({
+      updatedFiles: [{ path: "src/mystery.ts", archetype: "service", confidence: 0.7, source: "llm" }],
+      tokenUsage: { calls: 1, inputTokens: 10, outputTokens: 5 },
     });
 
     await runClassificationsPhase(ctx);
 
-    expect(mockedGetArchetypeELM).not.toHaveBeenCalled();
-    expect(mockedClassifyWithELM).not.toHaveBeenCalled();
-    expect(mockedCallClaude).toHaveBeenCalledTimes(1);
+    expect(mockedRunELMGate).not.toHaveBeenCalled();
+    expect(mockedClassifyUnclassifiedWithLLM).toHaveBeenCalledTimes(1);
 
     const classifications = await readClassifications(ctx);
     const mystery = classifications.files.find((f: any) => f.path === "src/mystery.ts");
@@ -136,18 +135,16 @@ describe("ELM pre-filter wiring in runClassificationsPhase", () => {
     const ctx = await setupProject(tmpDir, MIXED_INVENTORY, {
       sourcevision: { classification: { elmPrefilter: { enabled: true } } },
     });
-    mockedGetArchetypeELM.mockReturnValueOnce({ elm: {} as any, categories: ["service"] });
-    mockedClassifyWithELM.mockReturnValueOnce({
+    mockedRunELMGate.mockReturnValueOnce({
       updatedFiles: [{ path: "src/mystery.ts", archetype: "service", confidence: 0.5, source: "elm" }],
     });
 
     await runClassificationsPhase(ctx);
 
-    expect(mockedGetArchetypeELM).toHaveBeenCalledTimes(1);
-    expect(mockedClassifyWithELM).toHaveBeenCalledTimes(1);
-    expect(mockedClassifyWithELM.mock.calls[0][4]).toBe(DEFAULT_ELM_CONFIDENCE_THRESHOLD);
+    expect(mockedRunELMGate).toHaveBeenCalledTimes(1);
+    expect(mockedRunELMGate.mock.calls[0][3]).toEqual({ confidenceThreshold: DEFAULT_ELM_CONFIDENCE_THRESHOLD, seed: 20260812 });
     // Nothing left unclassified — the LLM fallback must not run at all.
-    expect(mockedCallClaude).not.toHaveBeenCalled();
+    expect(mockedClassifyUnclassifiedWithLLM).not.toHaveBeenCalled();
 
     const classifications = await readClassifications(ctx);
     const mystery = classifications.files.find((f: any) => f.path === "src/mystery.ts");
@@ -159,15 +156,15 @@ describe("ELM pre-filter wiring in runClassificationsPhase", () => {
     const ctx = await setupProject(tmpDir, MIXED_INVENTORY, {
       sourcevision: { classification: { elmPrefilter: { enabled: true, confidenceThreshold: 0.5 } } },
     });
-    mockedGetArchetypeELM.mockReturnValueOnce({ elm: {} as any, categories: ["service"] });
-    mockedClassifyWithELM.mockReturnValueOnce({ updatedFiles: [] });
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([{ path: "src/mystery.ts", archetype: "service", reason: "Looks like a service" }]),
+    mockedRunELMGate.mockReturnValueOnce({ updatedFiles: [] });
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValueOnce({
+      updatedFiles: [{ path: "src/mystery.ts", archetype: "service", confidence: 0.7, source: "llm" }],
+      tokenUsage: { calls: 1, inputTokens: 10, outputTokens: 5 },
     });
 
     await runClassificationsPhase(ctx);
 
-    expect(mockedClassifyWithELM.mock.calls[0][4]).toBe(0.5);
+    expect(mockedRunELMGate.mock.calls[0][3]).toEqual({ confidenceThreshold: 0.5, seed: 20260812 });
   });
 
   it("skips the ELM stage when there are no unclassified files", async () => {
@@ -177,8 +174,8 @@ describe("ELM pre-filter wiring in runClassificationsPhase", () => {
 
     await runClassificationsPhase(ctx);
 
-    expect(mockedGetArchetypeELM).not.toHaveBeenCalled();
-    expect(mockedCallClaude).not.toHaveBeenCalled();
+    expect(mockedRunELMGate).not.toHaveBeenCalled();
+    expect(mockedClassifyUnclassifiedWithLLM).not.toHaveBeenCalled();
   });
 
   it("skips both the ELM stage and the LLM fallback in fast mode", async () => {
@@ -189,25 +186,24 @@ describe("ELM pre-filter wiring in runClassificationsPhase", () => {
 
     await runClassificationsPhase(ctx);
 
-    expect(mockedGetArchetypeELM).not.toHaveBeenCalled();
-    expect(mockedClassifyWithELM).not.toHaveBeenCalled();
-    expect(mockedCallClaude).not.toHaveBeenCalled();
+    expect(mockedRunELMGate).not.toHaveBeenCalled();
+    expect(mockedClassifyUnclassifiedWithLLM).not.toHaveBeenCalled();
   });
 
-  it("falls through to the LLM when no usable ELM model is available", async () => {
+  it("falls through to the LLM when the ELM stage resolves nothing", async () => {
     const ctx = await setupProject(tmpDir, MIXED_INVENTORY, {
       sourcevision: { classification: { elmPrefilter: { enabled: true } } },
     });
-    mockedGetArchetypeELM.mockReturnValueOnce(undefined);
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([{ path: "src/mystery.ts", archetype: "service", reason: "Looks like a service" }]),
+    mockedRunELMGate.mockReturnValueOnce({ updatedFiles: [] });
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValueOnce({
+      updatedFiles: [{ path: "src/mystery.ts", archetype: "service", confidence: 0.7, source: "llm" }],
+      tokenUsage: { calls: 1, inputTokens: 10, outputTokens: 5 },
     });
 
     await runClassificationsPhase(ctx);
 
-    expect(mockedGetArchetypeELM).toHaveBeenCalledTimes(1);
-    expect(mockedClassifyWithELM).not.toHaveBeenCalled();
-    expect(mockedCallClaude).toHaveBeenCalledTimes(1);
+    expect(mockedRunELMGate).toHaveBeenCalledTimes(1);
+    expect(mockedClassifyUnclassifiedWithLLM).toHaveBeenCalledTimes(1);
 
     const classifications = await readClassifications(ctx);
     const mystery = classifications.files.find((f: any) => f.path === "src/mystery.ts");
