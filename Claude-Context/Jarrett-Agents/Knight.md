@@ -3,8 +3,8 @@
 - **Team:** Team Jarrett
 - **Lead:** Jarrett
 - **Backlog prefix:** `TJ-K`
-- **Branch:** _(none yet — no active task claimed)_
-- **Worktree:** _(none — shared checkout; worktree-vs-shared-checkout choice still open, see `OWNERSHIP.md`)_
+- **Branch:** `elm/jarrett/archetype-taxonomy-redesign` (TJ-A3, in progress) and `elm/jarrett/classify-gate-split` (TJ-R3, committed)
+- **Worktree:** `../n-dx-jarrett-taxonomy` (TJ-A3) and `../n-dx-classify-gate-split` (TJ-R3)
 - **Inbox:** `Claude-Context/Jarrett-Agents/Notes/`
 
 ## Who I am
@@ -117,8 +117,20 @@ For handoff to Archer — full technical picture of the current classifier befor
 
 ## Current state
 
-_(Not yet filled in — this charter was migrated from `team/Jarrett/knight.md` on 2026-08-08 per `IMPL-2026-08-05-nolan-migrate-team-profiles-to-charters.md`. Fill in at the start of the next working session.)_
+Two tracks in flight, both mine:
+
+**TJ-A3 (archetype-catalog redesign, claimed from Archer's original) — in progress.** Added an `algorithm` archetype and three new `entrypoint` signals to `archetypes.ts` in `../n-dx-jarrett-taxonomy`, verified zero-regression against all 5 test corpora with a corrected apples-to-apples methodology (caught and fixed my own first-pass measurement bug — was comparing new algorithmic-only output against old LLM-assisted output). Real, measured win on AsterMind (63.8%→31.5% unclassified). n-dx's own unclassified population hasn't moved yet (still 0% improvement there — no n-dx-specific signal patterns found so far). Committed as `cb7f30de`. Remaining: n-dx-specific signals, `analysisHints` for the new archetype, test fixtures, an audit for hardcoded archetype-ID references elsewhere in the codebase, full typecheck/test, then Step 6a's final re-measurement to unblock Archer's TJ-R2.
+
+**TJ-R3 (classify.ts gate split, Realm's ADR) — implemented and committed, 2026-09-07.** User scoped my piece explicitly: focus on `classify.ts`, leave the ELM/LLM internals alone. Before writing any code, found the `dev`-branch merge (PR #7) had left `classify.ts` on `Jarrett` with a genuinely broken build — it imported `ELM_GATE_ENABLED`/`trainClassifyPathELM`/`predictWithClassifyPathELM` from `classify-elm.js`, but that file's actual body (Team Jarrett's TJ-A2 numeric implementation) never exported any of them. Also found `analyze-phases.ts` already had a working, tested, config-driven ELM-then-LLM gate sitting above the broken inline attempt. Built `runClassificationGate()` in `classify.ts` as the sole caller of either classifier; wrapped the existing TJ-A2 implementation behind a stable `runELMGate()` in `classify-elm.ts` (no representation decision made — TJ-A2's numeric approach is the only one actually present in the file); extracted `classify-llm.ts` verbatim from the old `enrichClassificationsWithLLM`. Rewrote the relevant tests, including new real ELM-then-LLM sequencing coverage the old "shadow mode" tests could never exercise. Verified clean: full monorepo build/typecheck, sourcevision's 1728 tests, `architecture-policy.test.js`/`domain-isolation.test.js` (108/108, one `KNOWN_VIOLATIONS` entry relocated to match code that moved), both CLAUDE.md-required tests. Root `pnpm test` has 4 failures, confirmed pre-existing on unmodified `Jarrett` too (unrelated — pnpm-not-on-PATH and directory-detection issues in this sandbox). Committed as `7ecf69f3` on `elm/jarrett/classify-gate-split`.
+
+**Explicit note on process:** the IMPL for TJ-R3 states real edits shouldn't start before Thomas/Nala sign off on the ADR (it reorganizes code Team Thomas has merged). That sign-off hadn't happened when I did this work — the user directly authorized proceeding anyway ("You're overriding the gate — proceed now"), which is their call to make, not mine to have assumed. I did not update TT-N1/TJ-R2's ADR statuses or close the cross-team collision notes (IMPL step 10) — that's a real cross-team declaration that still needs Realm/Archer/Thomas's actual involvement, not something to backfill unilaterally just because the code landed.
+
+**Also found, not acted on:** `analyze-phases.ts` has two literal NUL bytes embedded in a template-literal string around line 410 (the `--full` convergence fingerprint). Cosmetic, not a build-breaker, unrelated to either track above — flagged to the user, not fixed.
 
 ## Next up
 
-- [ ] _(none claimed yet — see `BACKLOG.md`)_
+- [ ] TJ-A3: find n-dx-specific signal patterns (the repo's own 260 unclassified files still haven't moved)
+- [ ] TJ-A3: `analysisHints` for the new `algorithm` archetype, test fixtures, hardcoded-archetype-ID audit, typecheck/test
+- [ ] TJ-A3 Step 6a: final zero-evidence re-measurement, hand off to Archer to unblock TJ-R2
+- [ ] TJ-R3: flag the committed gate-split branch to Realm/Archer for review; ADR status updates (TT-N1/TJ-R2) and collision-note closures still need real sign-off, not just code landing
+- [ ] (minor, unclaimed) the NUL-byte artifact in `analyze-phases.ts` — worth a one-line fix whenever someone's touching that file next
