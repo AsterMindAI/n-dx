@@ -360,3 +360,37 @@ export function classifyWithELM(
   }
   return { updatedFiles };
 }
+
+// ── Stable gate interface (TJ-R3, ADR-2026-09-07-realm-classify-gate-split.md) ─────────────
+//
+// classify.ts's gate is the only caller of this function — it owns the ELM-vs-LLM routing
+// decision, this module just answers "given the current run's data, what can ELM resolve
+// right now" and hands back whatever it's confident about (possibly nothing). Wraps
+// getArchetypeELM + classifyWithELM (unchanged above, TJ-A2) rather than reimplementing the
+// model-lifecycle logic — this is a routing-shape change, not a representation change; see the
+// ADR's explicit "which representation fills classify-ELM.ts" out-of-scope note.
+
+export interface ELMGateOptions {
+  /** Minimum prediction confidence to accept a result (`.n-dx.json`'s elmPrefilter.confidenceThreshold). */
+  confidenceThreshold: number;
+  /** Seed for fresh per-project training — irrelevant when the bundled baseline is used instead. */
+  seed: number;
+}
+
+/**
+ * Single entry point classify.ts's gate calls for the ELM stage. Resolves whatever the current
+ * model lifecycle (fresh-trained or bundled baseline, see `getArchetypeELM`) is confident about
+ * in the file's unclassified population; returns an empty `updatedFiles` array — never
+ * `undefined` — when no usable model exists, so callers can treat "no model" and "model found
+ * nothing confident" identically and fall through to `classify-LLM.ts` either way.
+ */
+export function runELMGate(
+  classifications: Classifications,
+  inventory: Inventory,
+  imports: Imports,
+  options: ELMGateOptions,
+): ELMClassifyResult {
+  const trained = getArchetypeELM(classifications, inventory, imports, options.seed);
+  if (!trained) return { updatedFiles: [] };
+  return classifyWithELM(classifications, inventory, imports, trained, options.confidenceThreshold);
+}

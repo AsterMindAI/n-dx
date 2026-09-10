@@ -21,10 +21,8 @@ import {
   mergeLanguageConfigs,
   analyzeImports,
   analyzeClassifications,
-  enrichClassificationsWithLLM,
+  runClassificationGate,
   mergeClassificationResults,
-  getArchetypeELM,
-  classifyWithELM,
   DEFAULT_ELM_CONFIDENCE_THRESHOLD,
   analyzeZones,
   type ZoneAnchor,
@@ -219,9 +217,10 @@ export async function runClassificationsPhase(ctx: AnalyzeContext): Promise<void
       projectLanguages,
     });
 
-    // ELM pre-filter (TJ-A2) — kill switch: sourcevision.classification.elmPrefilter.enabled
-    // in .n-dx.json. DEFAULTS TO FALSE (opt-in), found necessary 2026-08-27: every prior
-    // validation (this ADR's, Knight's, Realm's) measured precision/coverage against
+    // Classification gate (TJ-R3) — classify.ts's runClassificationGate is the only place that
+    // decides ELM-vs-LLM routing; this phase just reads the kill switch from .n-dx.json and
+    // hands it in as an option. DEFAULTS TO FALSE (opt-in), found necessary 2026-08-27: every
+    // prior validation (this ADR's, Knight's, Realm's) measured precision/coverage against
     // held-out files that already had *some* algorithmic evidence signal. Direct testing on
     // the real target population found that 100% of unclassified files, across all 5
     // gathered corpora with no exception, have ZERO evidence signal — meaning the
@@ -241,26 +240,20 @@ export async function runClassificationsPhase(ctx: AnalyzeContext): Promise<void
     const elmEnabled = elmPrefilterConfig?.enabled ?? false;
     const elmConfidenceThreshold = elmPrefilterConfig?.confidenceThreshold ?? DEFAULT_ELM_CONFIDENCE_THRESHOLD;
 
-    if (!ctx.fastMode && elmEnabled && classifications.summary.totalUnclassified > 0) {
-      const trained = getArchetypeELM(classifications, inventory, importsData, 20260812);
-      if (trained) {
-        const elmResult = classifyWithELM(classifications, inventory, importsData, trained, elmConfidenceThreshold);
-        if (elmResult.updatedFiles.length > 0) {
-          classifications = mergeClassificationResults(classifications, elmResult.updatedFiles);
-          info(`  ${cyan("ELM pre-filter resolved")} ${bold(String(elmResult.updatedFiles.length))} additional files`);
-        }
-      }
-    }
-
-    // LLM enrichment (skip in --fast mode)
     if (!ctx.fastMode && classifications.summary.totalUnclassified > 0) {
-      info(`  ${bold(String(classifications.summary.totalClassified))} classified, ${bold(String(classifications.summary.totalUnclassified))} unclassified — ${cyan("enriching with LLM...")}`)
-      const llmResult = await enrichClassificationsWithLLM(classifications, inventory, importsData);
-      if (llmResult.updatedFiles.length > 0) {
-        classifications = mergeClassificationResults(classifications, llmResult.updatedFiles);
-        info(`  ${cyan("LLM classified")} ${bold(String(llmResult.updatedFiles.length))} additional files`);
+      info(`  ${bold(String(classifications.summary.totalClassified))} classified, ${bold(String(classifications.summary.totalUnclassified))} unclassified — ${cyan("resolving remaining files...")}`)
+      const gateResult = await runClassificationGate(classifications, inventory, importsData, {
+        elmEnabled,
+        elm: { confidenceThreshold: elmConfidenceThreshold, seed: 20260812 },
+      });
+      if (gateResult.updatedFiles.length > 0) {
+        const elmCount = gateResult.updatedFiles.filter((f) => f.source === "elm").length;
+        const llmCount = gateResult.updatedFiles.filter((f) => f.source === "llm").length;
+        classifications = mergeClassificationResults(classifications, gateResult.updatedFiles);
+        if (elmCount > 0) info(`  ${cyan("ELM pre-filter resolved")} ${bold(String(elmCount))} additional files`);
+        if (llmCount > 0) info(`  ${cyan("LLM classified")} ${bold(String(llmCount))} additional files`);
       }
-      accumulateFromAggregate(ctx.tokenUsage, llmResult.tokenUsage);
+      accumulateFromAggregate(ctx.tokenUsage, gateResult.tokenUsage);
     }
 
     const outPath = join(ctx.svDir, DATA_FILES.classifications);
