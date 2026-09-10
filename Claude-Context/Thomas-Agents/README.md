@@ -23,7 +23,7 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 
 | Agent | Charter | Scope | Worktree |
 |---|---|---|---|
-| _(none yet)_ | | | |
+| Baymax | [`Baymax.md`](Baymax.md) | `packages/sourcevision/src/analyzers/classify_elm.ts` (ELM half of the classify.ts split) | _(shared checkout)_ |
 
 > `(TBD)` and `(shared checkout)` are not valid worktree entries for an agent that works alongside
 > others. See [`../Command-Structure`](../Command-Structure) → *One agent, one worktree*.
