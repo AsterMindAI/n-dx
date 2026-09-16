@@ -360,6 +360,70 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-09-16 (c) — Both decisions taken; builder rebuilt to match; found a 15-day-red test
+
+**Did:**
+- Got the lead's two decisions: **ship two datasets** (`TN-N4`) and **add the free columns**
+  (`TN-N7`). Both recorded on the board with the reasoning, not just the verdict.
+- **Implemented `TN-N7` in `scripts/elm-corpus-build.mjs`** — joins `inventory.json`,
+  `imports.json` and `zones.json` by path; every row now carries `role`, `language`, `loc`,
+  `inDegree`, `outDegree`, `zone`. Provenance gains `rowColumns`, `featuresAvailable`, `bySource`.
+- **Landed `TN-N8(c)`** — per-repo LLM omission counts.
+- **Found and fixed a pre-existing red architecture test** (see below).
+- Ran the full root suite green.
+
+**Learned:**
+- **Verified, not assumed: 255/255 n-dx rows carry all six new columns.** Teacher provenance also
+  now populates on a fresh build (`claude-sonnet-4-6`, pinned) — confirming `TN-J31` needs only a
+  rebuild, which is what I claimed this morning from reading the code.
+- **Mixed-teacher detection works**: a 4-repo build reported `distinct: 2, mixed: true`
+  (`claude-sonnet-5` 281 rows / `claude-sonnet-4-6` 255).
+- ⚠️ **I wrote a fabricated zero and caught it only by checking against a known number.** My first
+  omission counter tested `fc.source === "llm" && !fc.archetype`. An LLM-omitted file is **not**
+  recorded that way — it is left exactly as the algorithmic pass left it, `{archetype: null,
+  confidence: 0, source: "algorithmic"}`, and there is no `llmAttempted` flag. So it returned **0 on
+  every repo**, and 0 is a plausible-looking answer. Jam's note said Vue core had 23; checking
+  against that is the only reason I found it. **The rewrite returns `null`, never 0, when the LLM
+  pass did not run** — svelte correctly reports `null` against 331 unclassified, because "not
+  measured" and "zero omissions" are different facts.
+- **`node --check` and a green test would both have passed the broken version.** The guard that
+  worked was an independently-known number to compare against.
+
+**Broke / still broken:**
+- **Found red, not caused by me:** `architecture-policy.test.js > no direct child_process imports
+  outside allowed files` has failed on `Nolan-Work` since **`d3da0603` (2026-09-01)** — 15 days.
+  `scripts/elm-goldset2-packet.mjs:29` imports `execFileSync` and K2 shipped it without the matching
+  `ALLOWED` entry, while both sibling scripts have one. Legitimate exception, identical category:
+  the only use is `execFileSync("git", ["-C", dir, …])` at `:65` for provenance.
+  **Claimed `tests/e2e/**` in `IN-FLIGHT.md` first** (shared file), watched it fail
+  (1 failed / 53 passed), added one line, re-ran **54/54**. Claim released.
+- **Full root suite green: 89 files, 1996 passed, 1 skipped** (`npx vitest run tests/` — `pnpm test`
+  still aborts in rex before reaching `tests/e2e/`, per K2's trap list).
+- Still broken, still not mine: `IN-FLIGHT.md` § 2's stale "freeze RUNNING"; `OWNERSHIP.md` and
+  `Command-Structure` scopes.
+
+**Left undone and why:**
+- **No corpus artifact regenerated and no LLM calls spent.** Existing committed corpora are
+  deliberately untouched — v1/v2 reproducibility depends on them, and every number in
+  `ELM-FINDINGS.txt` is measured against them. The richer rows appear on the next harvest.
+- **`TN-N8(a)` and `(b)` still open** — `promptLevel` persistence and batch-composition
+  reproducibility. (a) is what would let omission counting separate "teacher declined" from "batch
+  never reached"; the caveat is recorded in the code rather than glossed.
+- **`ELM-CORPUS.md` not yet amended** (`TN-N6`). It is the warranty document and it is next.
+- **The two-dataset split is decided but not built** — the sanity corpus needs its own document
+  before it ships as a dataset rather than a debugging artifact.
+
+**Notes sent / received:**
+- Sent: `NOTE-nolan-internal-2026-09-16-nutella-decisions-and-a-red-test.md`.
+
+**Handoff:**
+- Next: amend `ELM-CORPUS.md` (`TN-N6`) — residue-only harvest, the `role: "source"` ceiling, the
+  `[partial signals]` teacher caveat, and the new columns. Then stage `nest`/`remix`/`payload`.
+- **Still do not harvest the 105 gold-set-#2 rows.**
+- **The deliverable repo is still private, personal-account, one collaborator.**
+
+---
+
 ### 2026-09-16 (b) — Jam's handover. I retract the "105 free rows"; the mission is a harvest-design problem
 
 **Did:**

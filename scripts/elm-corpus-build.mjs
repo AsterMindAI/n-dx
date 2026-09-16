@@ -144,6 +144,115 @@ function teacherOf(abs) {
   return { model: null, pinned: false, via: "unpinned and UNRESOLVED — run from the monorepo root to resolve" };
 }
 
+/**
+ * Free measured columns, joined by path.
+ *
+ * TN-N7 (lead's decision 2026-09-16): rows carry the measurements sourcevision
+ * ALREADY computed before classification, at zero extra cost. The point is
+ * transfer: in-degree means the same thing in hono as it does here, whereas the
+ * token "rex" means nothing outside this repo — and a TF-IDF vocabulary fitted on
+ * the training split gives a fresh repo's distinctive tokens no slot at all, which
+ * is the mechanical reading of why corpus v1 collapsed to the class prior.
+ *
+ * This is NOT consumer-driven curation, which the lead's steer forbids. No row is
+ * added, dropped, weighted or relabelled. We record more of what was measured and
+ * every consumer stays free to ignore the columns.
+ *
+ * Every column is optional: a repo analyzed before these artifacts existed, or with
+ * a partial analyze, still builds — the fields are simply absent. Never fabricate a
+ * zero, because a real in-degree of 0 (nothing imports this file) is a meaningful
+ * signal and must not be confused with "not measured".
+ */
+/**
+ * TN-N8(c): how many files the teacher was shown and declined to label.
+ *
+ * The classify prompt ends "Omit files with no clear fit" (classify.ts:509), so
+ * abstention is invited. Until now it was visible only as a smaller `harvested`
+ * count, which is indistinguishable from a file the rules had already caught —
+ * so the evidence was thrown away at harvest time. Omission rate is both a
+ * label-quality signal and a coverage gap, and it belongs in provenance.
+ *
+ * ⚠️ How this is actually derived, because the obvious implementation is wrong.
+ * An LLM-omitted file is NOT recorded as `source: "llm"` — it is left exactly as
+ * the algorithmic pass left it: `{archetype: null, confidence: 0, source:
+ * "algorithmic"}`. There is no `llmAttempted` flag. So counting rows with
+ * `source === "llm" && !archetype` returns 0 on every repo ever analyzed, which
+ * is a fabricated zero, not a measurement. (Caught by checking against Vue core,
+ * where 23 omissions were already known.)
+ *
+ * What we can honestly say: the LLM pass consumes the unclassified residue, so
+ * once it has run, whatever is STILL unclassified is what it declined.
+ *
+ * Returns `null` — never 0 — when the LLM pass did not run, because there
+ * "unclassified" means "the rules could not, and nothing asked the teacher",
+ * which is a different fact. A real 0 and "not measured" must not collapse.
+ *
+ * Caveat, stated rather than smoothed over: this cannot separate a file the
+ * teacher saw and declined from one that a failed or truncated batch never
+ * reached. Both land here. Distinguishing them needs `promptLevel` persisted —
+ * TN-N8(a), same row, still open.
+ */
+function omissionCount(data) {
+  const llmRows = data.summary?.bySource?.llm ?? 0;
+  if (llmRows === 0) return null;
+  return data.summary?.totalUnclassified ?? null;
+}
+
+function loadFeatures(abs) {
+  const read = (name) => {
+    const f = join(abs, ".sourcevision", name);
+    if (!existsSync(f)) return null;
+    try {
+      return JSON.parse(readFileSync(f, "utf-8"));
+    } catch {
+      return null;
+    }
+  };
+
+  const byPath = new Map();
+  const touch = (pth) => {
+    let e = byPath.get(pth);
+    if (!e) byPath.set(pth, (e = {}));
+    return e;
+  };
+
+  const inventory = read("inventory.json");
+  for (const f of inventory?.files ?? []) {
+    const e = touch(f.path);
+    if (f.role != null) e.role = f.role;
+    if (f.language != null) e.language = f.language;
+    if (f.lineCount != null) e.loc = f.lineCount;
+  }
+
+  // Degrees are counted over the edge list, so a file with no edges gets an
+  // explicit 0 — but ONLY if the import graph was actually present.
+  const imports = read("imports.json");
+  if (imports?.edges) {
+    for (const e of byPath.values()) {
+      e.inDegree = 0;
+      e.outDegree = 0;
+    }
+    for (const edge of imports.edges) {
+      if (edge.from != null) touch(edge.from).outDegree = (touch(edge.from).outDegree ?? 0) + 1;
+      if (edge.to != null) touch(edge.to).inDegree = (touch(edge.to).inDegree ?? 0) + 1;
+    }
+  }
+
+  const zones = read("zones.json");
+  for (const z of zones?.zones ?? []) {
+    for (const pth of z.files ?? []) touch(pth).zone = z.id ?? z.name;
+  }
+
+  return {
+    byPath,
+    available: {
+      inventory: Boolean(inventory?.files),
+      imports: Boolean(imports?.edges),
+      zones: Boolean(zones?.zones),
+    },
+  };
+}
+
 function loadRepo(repoPath, sources) {
   const abs = resolve(repoPath);
   const file = join(abs, ".sourcevision", "classifications.json");
@@ -155,6 +264,7 @@ function loadRepo(repoPath, sources) {
     );
   }
   const data = JSON.parse(readFileSync(file, "utf-8"));
+  const features = loadFeatures(abs);
   const rows = [];
   for (const fc of data.files) {
     if (!fc.archetype) continue;
@@ -165,6 +275,7 @@ function loadRepo(repoPath, sources) {
       confidence: fc.confidence,
       source: fc.source,
       repo: basename(abs),
+      ...(features.byPath.get(fc.path) ?? {}),
     });
   }
   return {
@@ -177,6 +288,8 @@ function loadRepo(repoPath, sources) {
     unclassified: data.summary.totalUnclassified,
     bySource: data.summary.bySource,
     harvested: rows.length,
+    omittedByLlm: omissionCount(data),
+    featuresAvailable: features.available,
     rows,
   };
 }
@@ -325,10 +438,29 @@ function main() {
       sources: opts.sources,
       seed: opts.seed,
       holdout: opts.holdout,
-      repos: loaded.map(({ repo, path, git, teacher, totalFiles, classified, unclassified, harvested }) => ({
+      repos: loaded.map(({
         repo, path, git, teacher, totalFiles, classified, unclassified, harvested,
+        bySource, omittedByLlm, featuresAvailable,
+      }) => ({
+        repo, path, git, teacher, totalFiles, classified, unclassified, harvested,
+        bySource, omittedByLlm, featuresAvailable,
       })),
       teachers: teacherMix(loaded),
+      // Which optional columns actually appear on rows in THIS artifact.
+      //
+      // Deliberately a capability descriptor rather than a bumped `schema` string:
+      // the corpus generations are already called v1/v2, and a second, unrelated
+      // "v2" on the schema line is precisely the ambiguity ELM-CORPUS.md § 2 warns
+      // about. A consumer should read what is present, not infer it from a version.
+      //
+      // Columns are per-repo optional — a repo analyzed without the import graph
+      // contributes rows with no degree fields — so this reports the union actually
+      // observed, not what was requested.
+      rowColumns: (() => {
+        const seen = new Set();
+        for (const r of rows) for (const k of Object.keys(r)) seen.add(k);
+        return [...seen].sort();
+      })(),
     },
     stats: {
       total: rows.length,
