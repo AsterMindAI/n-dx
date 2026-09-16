@@ -129,9 +129,18 @@ Syrup's Step 0.
 
 ## 6. What the expansion actually costs — most of it is already paid for
 
-- **105 rows are free right now.** Gold set #2 LLM-labelled **355** candidates; only **250** were
+- ~~**105 rows are free right now.** Gold set #2 LLM-labelled **355** candidates; only **250** were
   sampled into the blind packet. The remaining 105 are paid for, and harvesting them leaves the 250
-  blind. Cheapest expansion on the table and still unclaimed.
+  blind. Cheapest expansion on the table and still unclaimed.~~
+  > 🔴 **RETRACTED the same day — this was wrong, and it was the most actionable thing in this note.
+  > Do not harvest the 105 rows.** They are hono/trpc files, and those two repos are the **only fresh
+  > ecosystems we have ever measured generalisation against**. Harvesting them puts those paths in
+  > the training vocabulary and turns our one generalisation probe into a held-out test on a
+  > trained-on ecosystem — the exact instrument that failed to detect v1's collapse. The existing
+  > contamination assertion is **path-level** and would **pass** on this harvest; the contamination
+  > is at the **ecosystem** level. Caught by Jam, verified by me from
+  > `k2-goldset2-llm-labels.json` (`poolSize: 355`, `sampled: 250`, provenance = hono + trpc only).
+  > **Full detail in the second update at the end of this note.**
 - **Five repos are staged and unharvested** in `/Users/nolanmoore/Work/n-dx-elm-corpus/`:
   `nest`, `payload`, `remix` cloned but never analyzed; **`svelte` (388 files) and `typeorm` (563
   files) analyzed rules-only — zero LLM rows**, because `--fast` gates the classify pass. They are
@@ -186,3 +195,76 @@ What follows from it:
   data's failure mode is not inferable from the data, and rows shipped without §§ 6-7 are "a loaded
   gun". A separate repo makes that easier to enforce, since the document and the rows land together
   or not at all.
+
+---
+
+## Second update, same day — I retract the "105 free rows", and the mission is not what I described
+
+Jam sent a corpus-acquisition handover
+([`NOTE-nolan-internal-2026-09-16-jam-to-nutella-corpus-acquisition-handover.md`](NOTE-nolan-internal-2026-09-16-jam-to-nutella-corpus-acquisition-handover.md)).
+I verified its load-bearing claims against the artifacts myself rather than relaying them. **Five
+things below change what this team should do next, and the first one retracts advice I gave you this
+morning.**
+
+### 1. 🔴 Retraction — the 105 rows are the most expensive rows we own
+
+§ 6 called them free and unclaimed. **Do not harvest them.** Verified from
+`scripts/data/k2-goldset2-llm-labels.json`: `poolSize: 355`, `sampled: 250`, `seed: 20260901`,
+`totalClassifyCalls: 12`, **provenance lists exactly two repos — hono and trpc.**
+
+Harvesting leaves the packet's 250 human-blind, which is what I checked and why I got it wrong. What
+I missed: it puts **hono and trpc paths into the training vocabulary**, and those are the **only
+fresh ecosystems we have ever measured generalisation against**. **The existing guard is path-level
+and would pass. The contamination is ecosystem-level — the level v1 died at.**
+
+**Fix: stage replacement probes first**, then spend the 105 knowing the price. 105 rows against 624
+is ~17%; the only detector we own for the failure this scope exists to fix is worth more.
+
+### 2. The builder harvests the RESIDUE, not the repo — so "label every file" is not what it does
+
+`elm-corpus-build.mjs` takes `source: "llm"` rows, which is **what is left after the rules run**.
+Files the rules classify confidently never reach the teacher and never enter the corpus.
+
+**That is why `page` has zero rows, and why fifteen more repos will not fix it.** n-dx has **37
+`page` files, all rule-caught, none reaching the teacher** — and I confirmed this independently: the
+sanity corpus contains exactly **37** `page` rows. Same for `component` (71 rule-labelled, 0 LLM).
+**293 n-dx files sit in the thin classes, all rule-labelled, none in the corpus**, and every
+LLM-labelled n-dx file is already harvested.
+
+**This is a lead's decision:** residue-only (and say so in the document), label everything (~3× cost,
+needs a standalone harness — Butter already replicated the prompt at
+`scripts/elm-token-baseline.mjs:112`, so no one edits Jam's or Jarrett's files), or ship both as
+**two datasets with two warranties.**
+
+### 3. There is a third corpus artifact and it is the missing half
+
+**`scripts/data/elm-archetype-corpus-sanity.json`** — committed 2026-08-13, unused since. Verified:
+**473 rows, 12 classes, `sources: ["algorithmic"]`**, `page` **7.8%**, `component` **15.2%**,
+`store` 11.0%, `hook` 5.9%. **Every class v2 starves of, this one has** — it is the inverse
+population. **Do not merge the two**: a row whose label means "a teacher judged" *or* "a regex fired"
+with nothing recording which is `TN-J31`'s defect again.
+
+### 4. Half the repo is structurally ineligible
+
+`.sourcevision/inventory.json`: **1,525 entries — test 825 · source 683 · build 10 · config 6 ·
+docs 1.** Classification only ever sees `role: "source"`. **825 test files — 54% — never reach
+either model, while `test-helper` is one of the 17 archetypes we are chartered to cover.**
+
+### 5. Two things worth knowing before anyone quotes the labels
+
+- **The teacher is not shown the path only** (`TN-J26`). Each file arrives with
+  `[partial signals: service(0.7), …]` from the algorithmic pass, plus the full catalog with prose
+  and 29 sibling paths. **These labels are a strong model agreeing or disagreeing with a weak rule
+  guess it was shown** — not an independent judgement. A consumer training on path strings alone has
+  a teacher that saw more than their student ever will.
+- **⚠️ `elm-coverage-check.mjs` OOMs on the v2 model** — the frozen artifact is a *recipe, not
+  weights*, so it re-fits nine 4096-unit models and dies at ~1978 MB against node's ~2096 MB
+  default. `node --max-old-space-size=6144 …` gets through. **Step 0 is not the free five minutes
+  the ADR implies.**
+
+### Boundary settled
+
+Jam's § 0, and I accept it: **`TN-J9` is mine.** **`TN-J32` splits** — the corpus-v2 rebuild is
+mine, the coverage re-check stays Jam's, because it is a model evaluation and I should not be
+blocked on Jam's row for a gate on my own deliverable. **The sanity corpus is mine.** Updating
+`TN-N3` accordingly; the lead still ratifies.
