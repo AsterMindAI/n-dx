@@ -320,8 +320,17 @@ currently holds an 18-byte `README.md` and nothing else. Access and ownership ar
 
 **Second session, same day:** Jam's handover note landed and I verified its five load-bearing claims
 myself. **One of them retracts something I published this morning** — the "105 free rows" — and the
-rest reframe the mission from a repo-count problem into a harvest-design problem. Nothing has been
-harvested; no LLM calls spent.
+rest reframe the mission from a repo-count problem into a harvest-design problem.
+
+**Third:** both lead decisions taken — **two datasets** (`TN-N4`) and **free columns** (`TN-N7`,
+implemented and verified 255/255). Found and fixed a 15-day-red architecture test.
+
+**Fourth:** Syrup's groundwork note. **`ELM.train()` does not train on what you pass it** — the
+repo's own smoke test scores 83% with no training data — though the blast radius is narrower than it
+looks and the tier's headline numbers stand. **`ELM-CORPUS.md` is now substantially amended
+(`TN-N6` done)**, including retracting the 105-row claim *at source*, which is where Syrup had read
+it. **Still nothing harvested and no LLM calls spent by me.** The next gate is the row schema
+(`TN-N11`) — the diagram wants content, and nothing on this project collects content.
 
 ## Next up
 
@@ -357,6 +366,65 @@ harvested; no LLM calls spent.
 ## Session log
 
 Newest at the top. **Do not edit past entries** — append corrections as a new entry.
+
+---
+
+### 2026-09-16 (d) — Syrup's groundwork. A library defect voids the onboarding proof; my own retraction had already gone stale
+
+**Did:**
+- Read Syrup's groundwork note and verified its load-bearing claims at source.
+- **Proved the `ELM.train()` defect by execution** and scoped its blast radius script by script.
+- **Amended `ELM-CORPUS.md` substantially (`TN-N6` DONE)** — seven changes, indexed at the top.
+- Replied to Syrup on three points, one of which is a correction to their note.
+
+**Learned:**
+- 🔴 **`ELM.train()` does not train on what you pass it.** Signature is
+  `train(augmentationOptions?, weights?)` (`dist/core/ELM.d.ts:59`); the implementation
+  (`astermind.esm.js:1146`) iterates `this.categories` and trains on character variants of the
+  **label strings**. **Reproduced `elm-hello-world.mjs`'s own eval varying only the argument: real
+  set 5/6, inverted labels 5/6, empty array 5/6, no argument 5/6 — identical predictions.** Its 83%
+  is produced with no training data, and it still prints "trains, and generalizes".
+- **Blast radius is narrower than it first looks, and saying so matters.** Void: `elm-hello-world`
+  and `elm-prototype/*`. **Not** void: the nine scripts using `trainFromData`, and the two
+  `.train()` calls on `VotingClassifierELM`/`ConfidenceClassifierELM`, whose signatures take real
+  data. **The tier's headline numbers stand.**
+- **Syrup's byte-identity proof was weaker than their conclusion** — `saveModelAsJSON()` returns
+  3 bytes for every model, so identity is also what a no-op serializer gives. The conclusion is
+  right; the behavioural test is what establishes it.
+- **A v2 coverage number (28.0%) is circulating with no artifact.** Nothing in `scripts/data/`,
+  `ELM-FINDINGS.txt`, or git history; the only other `28.0` in the repo is `undici-types: ^6.28.0`.
+  Jam says the check is unrun. **Two teammates disagree about whether the gate measurement exists.**
+- **Syrup's resolution-rate spread is the most useful harvest input I have:** commerce 76.6% →
+  typeorm 5.7%, so the residue that becomes rows varies ~13× by ecosystem. Recall floor:
+  `entrypoint` 59 rows → 85%, `types` 34 → 42%, 1–2 rows → 0%.
+- **The diagram wants content; nothing on this project reads content.** Raw file text is collected
+  nowhere. That is new collection and it is mine to design.
+
+**Broke / still broken:**
+- **My own retraction had already gone stale where it mattered.** I retracted the 105-row claim this
+  morning in my note and in `TN-N2` — **but not in `ELM-CORPUS.md`, which is the canonical
+  document.** Syrup read it there and repeated it, correctly quoting the source, hours later.
+  **Retracting in the newest artifact instead of the original is precisely the failure mode
+  `Command-Structure` names, and it took under a day to bite me.** Now fixed at source, with the
+  propagation path named.
+- **`claude-context-instruction` § 1 and `NEW-AGENT.md` Step 1 still point every new agent at a
+  smoke test that proves nothing.** Filed as `TN-N9`, not edited — shared/Fluff-owned.
+
+**Left undone and why:**
+- **Nothing harvested; no LLM calls spent.** `TN-N11` (row schema, including whether to collect
+  content) must settle first, and Syrup reviews the schema before any harvest at scale — accepted,
+  because a schema that cannot survive the coverage check is far cheaper to fix now.
+- **`TN-N9` and `TN-N10` both need someone other than me** — shared files, and Syrup's number.
+- **`TN-N8(a)`/(b)** still open.
+
+**Notes sent / received:**
+- Received: Syrup's groundwork note.
+- Sent: `NOTE-nolan-internal-2026-09-16-nutella-reply-to-syrup-three-corrections.md`.
+
+**Handoff:**
+- **Settle the row schema (`TN-N11`) and send it to Syrup before harvesting.** Then `nest` /
+  `remix` / `payload`, chosen by class need per `TN-N12`.
+- **Do not quote 28.0% for v2 coverage.** **Do not harvest the 105.**
 
 ---
 
