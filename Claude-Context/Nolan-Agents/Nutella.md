@@ -168,6 +168,10 @@ the staging tree and the archetype catalog against disk rather than against the 
 turned up three stale statements, recorded above. **No corpus work has been done yet and no LLM
 calls have been spent by me.**
 
+**Lead's decision, same session:** the deliverable is a **separate GitHub repo**, not in-tree JSON.
+Creating it is outward-facing and needs a second lead's sign-off; the corpus work that fills it does
+not, so that proceeds first.
+
 ## Next up
 
 - [ ] `TN-N1` — announce the scope + database mission to the team (first task, in progress)
@@ -175,7 +179,9 @@ calls have been spent by me.**
 - [ ] Run the coverage re-check on v2 before offering v2 to anyone. Free, no labels, no LLM spend.
       It is `ADR-2026-09-04-syrup-…` Step 0 and it is still unrun.
 - [ ] Harvest the **105 free gold-set-#2 rows** — already paid for, contamination boundary intact.
-- [ ] Decide the shape of the deliverable with the lead: separate GitHub repo vs. in-tree JSON.
+- [x] ~~Decide the deliverable's shape with the lead~~ — **decided 2026-09-16: a separate GitHub repo.**
+- [ ] Get a **second lead's sign-off** before the repo is created — creating it is outward-facing.
+      Nothing about harvesting waits on this.
 - [ ] Rebuild provenance so the teacher model is recorded per repo (closes `TN-J31`; the script
       side is already done at `b4fde7b2`).
 - [ ] Per the lead's diagram: consider narrowing to **one repo first, scale later.**
@@ -195,8 +201,11 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
   `ADR-2026-09-04-syrup-merge-elm-corpus-into-jarrett-harness.md`.
 - Verified the corpus against disk instead of against its documentation: row counts, class
   distribution, per-repo counts, provenance block, the 17-archetype catalog, the staging tree.
-- Created this charter, the roster row, `TN-N1`/`TN-N2`, and the `IN-FLIGHT.md` claim.
+- Created this charter, the roster row, `TN-N1`/`TN-N2`/`TN-N3`, and the `IN-FLIGHT.md` claim.
 - Wrote `NOTE-nolan-internal-2026-09-16-nutella-scope-and-database-mission.md`.
+- Committed (`0af16083`) and **pushed to `origin/Nolan-Work`** — 0 ahead / 0 behind after the push.
+- **Received the lead's decision on the deliverable mid-session: a separate GitHub repo.** Recorded
+  in `TN-N2`, in Current state, and appended to the note, which had said "undecided".
 
 **Learned:** (always with seed + baseline where it is a number)
 - Corpus v2: **624 rows / 16 classes / 7 ecosystems, seed 42, holdout 0.25, majority baseline

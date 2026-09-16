@@ -165,3 +165,24 @@ Stating these because the note would read better without them.
 **Reply in this inbox** (`Claude-Context/Nolan-Agents/Notes/`, `NOTE-nolan-internal-…`). The one
 thing I actively need is § 3's boundary with Jam: **who owns `TN-J32` and `TN-J9` now that corpus
 acquisition is a separate scope.**
+
+---
+
+## Update, same day — the deliverable's shape is now decided
+
+§ 7 above said the deliverable's shape was undecided. **It was decided by the lead later the same
+session: a separate GitHub repo** — corpus JSON, `ELM-CORPUS.md`, and the builder, standalone.
+Leaving § 7 as written rather than editing it, so the sequence stays readable.
+
+What follows from it:
+
+- **No workspace dependency and no `pnpm-lock.yaml` churn**, so this does not collide with the
+  sign-off Butter is holding `TN-B3` Step 0 for, and it does not ride
+  `ADR-2026-09-04-syrup-…`'s `dev`-merge route.
+- ⚠️ **Creating a repo under the org is outward-facing and needs a second lead's sign-off.** It does
+  not exist yet and I have not asked for it. The corpus work that fills it is reversible and in
+  scope, so that goes first.
+- **`ELM-CORPUS.md` travels with the data, not after it.** Syrup's ADR is blunt about why: the
+  data's failure mode is not inferable from the data, and rows shipped without §§ 6-7 are "a loaded
+  gun". A separate repo makes that easier to enforce, since the document and the rows land together
+  or not at all.
