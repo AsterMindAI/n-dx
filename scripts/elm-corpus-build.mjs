@@ -238,6 +238,12 @@ function loadFeatures(abs) {
     }
   }
 
+  // Zone is read but deliberately NOT a model-facing feature.
+  //
+  // ADR-2026-09-17 finding 4: `zones.json` is absent for 7 of the 9 repos surveyed, and
+  // where it exists the zone id is repo-specific ("sourcevision", "compiler-core") — the
+  // same repo-vocabulary trap as path tokens, which is what corpus v1 collapsed on. It is
+  // retained because it is free and auditable, and a consumer may ignore it.
   const zones = read("zones.json");
   for (const z of zones?.zones ?? []) {
     for (const pth of z.files ?? []) touch(pth).zone = z.id ?? z.name;

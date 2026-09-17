@@ -369,6 +369,64 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-09-17 — The construction ADR; re-validation contradicted me twice
+
+**Did:**
+- Wrote [`ADR-2026-09-17-nutella-elm-training-database-construction.md`](../ADR/ADR-2026-09-17-nutella-elm-training-database-construction.md)
+  — how the database is made, its contents, how it is made usable, how the import graph and
+  inventory get in, and the hiccups to expect.
+- **Measured transferability across nine repos before deciding anything**, then committed the
+  measurements as `scripts/elm-feature-survey.mjs` (claimed in `IN-FLIGHT.md` first, per the
+  shared-`scripts/` rule).
+- Re-ran everything against the committed script and **corrected the ADR twice**.
+- Annotated `elm-corpus-build.mjs` so `zone` is explicitly raw-only, not model-facing.
+- Note to Jam explaining the reasoning.
+
+**Learned:** (all via `scripts/elm-feature-survey.mjs`, deterministic — no seed, no sampling)
+- **Mean in-degree spans 0.59 (commerce) → 6.04 (n-dx): a 10.2× spread.** `inDegree: 5` is
+  below-average in n-dx and impossible in commerce, whose max is 3. **The raw degree columns I
+  shipped yesterday would have rebuilt the v1 repo-prior in new coordinates.**
+- **305 of 341 external packages appear in exactly one repo**; only 11 appear in ≥3 of 9, all
+  generic. Per-file external coverage swings 5.0% (hono) → 78.1% (commerce). **My prior that
+  "imports express → route-handler" would transfer was wrong at the vocabulary level.**
+- **A fifth edge type exists — `require`.** express 100%, fastify 91.6%, n-dx 0%. Edge-type mix
+  separates CommonJS from ESM, not archetypes. I built a table without it first; **the only reason
+  I caught it is that the percentages did not sum to 100.**
+- **`zones.json` absent for 7 of 9 repos**; `category` repo-specific (n-dx 11 values, Vue core 16).
+- **Isolated source files: 1.2% (n-dx) → 42.2% (commerce).** In commerce nearly half the files have
+  no graph signal at all.
+
+**Broke / still broken:**
+- **Re-validation contradicted the ADR twice, and both were mine.** (1) I wrote "`zones.json`
+  present for 1 of 10 repos (AsterMind-CE only)" — it is **2 of 9**; I had omitted **n-dx itself**
+  from the check. (2) I proposed **feeding `role`** as a small closed vocabulary; the survey showed
+  it **constant `source` on 536 of 536 harvested rows**, so it is a dead input dimension — the same
+  waste as `TN-B7`'s dead `charSet` slots. Moved to withheld. **I reasoned about `role` from the
+  inventory population, where it varies, and never checked it on the harvested population, where it
+  cannot.**
+- Full root suite green: **89 files, 1996 passed, 1 skipped**; architecture policy **54/54**. The
+  new script needs no `ALLOWED` entry — it shells out to nothing.
+
+**Left undone and why:**
+- **Nothing harvested, no LLM calls spent, no model trained, no accuracy claimed.** The ADR
+  deliberately contains no coverage number for v2 — `TN-N10` is still open.
+- **Schema not yet sent to Syrup**, which I agreed would precede any harvest at scale.
+- **No note to Jarrett or Thomas.** The ADR affects Jarrett directly — their numeric
+  evidence-vector model is closer to a structural dataset than our path corpus ever was, and
+  `TJ-A3` is moving the taxonomy under us. Drafting is mine; sending is Nolan's.
+- **`pkgFamily` map does not exist yet**; percentile normalisation is reasoned, not validated; the
+  single-file runtime fallback is untested. All three are named in the ADR as not-evidence.
+
+**Notes sent / received:**
+- Sent: `NOTE-nolan-internal-2026-09-17-nutella-to-jam-database-adr-reasoning.md`.
+
+**Handoff:**
+- **The ADR needs the lead.** Then: send the schema to Syrup, then harvest `nest`/`remix`/`payload`
+  by class need (`TN-N12`), pinning the teacher per repo first.
+- **Still: do not harvest the 105. Do not quote 28.0%. Use `trainFromData`, never `train()`.**
+
+---
+
 ### 2026-09-16 (d) — Syrup's groundwork. A library defect voids the onboarding proof; my own retraction had already gone stale
 
 **Did:**
