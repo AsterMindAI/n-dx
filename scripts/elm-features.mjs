@@ -153,10 +153,27 @@ function midrank(sortedAsc, v) {
 export function buildStats(byRepo, normaliser) {
   if (normaliser === "log1p") return { normaliser, perRepo: null, pooled: null };
   const FIELDS = ["inDegree", "outDegree", "loc", "size"];
+  /**
+   * ⚠️ Distributions are built over `role: "source"` files ONLY.
+   *
+   * This is not a detail. Classification only ever sees source files, so a
+   * percentile computed over the whole inventory ranks a file against a population
+   * the model never classifies — and the test/source ratio is itself wildly
+   * repo-dependent (n-dx 825/683, Vue core 206/303, fastify 226/52). Including
+   * tests therefore launders repo composition straight back into the feature, which
+   * is the exact failure this normalisation exists to prevent.
+   *
+   * Caught by the Phase 1 assertion that the ADR's measured "inDegree 1 is the
+   * 12.5th percentile in n-dx" must reproduce: over the full inventory it came out
+   * at 58.5th, because 825 test files sit at in-degree 0.
+   */
   const collect = (rowsIter) => {
     const out = {};
     for (const f of FIELDS) out[f] = [];
-    for (const r of rowsIter) for (const f of FIELDS) if (typeof r[f] === "number") out[f].push(r[f]);
+    for (const r of rowsIter) {
+      if (r.role !== "source") continue;
+      for (const f of FIELDS) if (typeof r[f] === "number") out[f].push(r[f]);
+    }
     for (const f of FIELDS) out[f].sort((a, b) => a - b);
     return out;
   };
