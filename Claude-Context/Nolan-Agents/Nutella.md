@@ -369,6 +369,63 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-09-17 (b) — Jam's review: six corrections taken, three changed a decision
+
+**Did:**
+- Read Jam's review of the ADR and **re-verified every claim it made before adopting any of them**,
+  including reproducing their block-energy measurement against the real pipeline.
+- Revised the ADR — six changes, indexed in a revision block at the top.
+- Recorded the lead's authorisation for Jam's v2 coverage run on `TN-N10`.
+
+**Learned:** (reproduced by me unless marked)
+- **Block scale was undeclared and it decides which signal dominates.** Reproduced Jam's numbers
+  exactly (`docOf`/`vocabCap: 4000` per `elm-certify.mjs:50,144`): path block **2,890 dims, squared
+  L2 energy mean 1.464, p10 0.963, nonzero 16.0/3/27**. Twelve structural scalars in `[0,1]` have
+  expected energy **4.000** — **2.73× the entire path block.** `TFIDFVectorizer.vectorize()` does
+  **not** normalise; `l2normalize` is opt-in (`dist/ml/TFIDF.d.ts:35`) and never called by us.
+  *Refinement to Jam's summary:* the "4–5×" figure includes the one-hots; the scalars alone are
+  2.73×, and since `language` is now withheld the realistic figure is ~2.7× rising per family.
+- **Percentile normalisation imports repo composition — larger than Jam estimated.** A file with
+  `inDegree: 1` is at the **12.5th percentile in n-dx** and the **72.7th in commerce**: a 60-point
+  swing for an identical property. 57.8% of commerce source files are at in-degree 0.
+- **`language` is leakage, not signal.** All **11 `Vue` rows are from one repo and all 11 are
+  labelled `component`** — a perfect repo fingerprint *and* a perfect in-sample label predictor.
+- `symbols[]` is plausibly the most transferable signal in the graph and I had dropped it without
+  listing it — the one gap in the ADR's best table.
+
+**Broke / still broken:**
+- **A correction of mine failed to reach every site for the second day running.** Jam found two
+  stale "9 of 10" zone counts in the same document where I had already corrected that number
+  elsewhere. Yesterday the same failure let Syrup quote the retracted 105-row claim. **Fixed, and I
+  am now treating "grep the document for the old value" as part of making a correction**, not as
+  tidying afterwards. I then wrote "three stale counts" in the revision note when it was two, and
+  had to correct that as well.
+- **I contradicted myself inside the ADR**: `depthFromRoot` was "scale-free" in the fed table and
+  the opposite in hiccup 8. Withheld.
+- `pnpm test` untouched here; no code changed this session beyond documents.
+
+**Left undone and why:**
+- **Nothing harvested, no LLM calls spent, no model trained, no accuracy claimed.** The ADR still
+  quotes **no v2 coverage figure** and will not until Jam's artifact lands.
+- **The normaliser is deliberately left open** — promoted from the not-evidence list into the
+  Decision, to be settled by measurement (`log1p`, pooled global quantiles) before any published
+  number. `raw` is what makes that free.
+- **Schema still not sent to Syrup**; **no note to Jarrett or Thomas** though the ADR affects
+  Jarrett directly.
+- **`TN-J22` raised for the third time and still unclaimed** — the only lever on label quality.
+
+**Notes sent / received:**
+- Received: Jam's ADR review.
+- Sent: `NOTE-nolan-internal-2026-09-17-nutella-to-jam-adr-revised-and-coverage-authorised.md`.
+
+**Handoff:**
+- **Jam's v2 coverage run is lead-authorised and unblocked** — it decides whether § 5 step 1 of the
+  ADR is choosing repos against a confirmed problem shape or a presumed one.
+- Then: ADR to the lead, schema to Syrup, then harvest `nest`/`remix`/`payload` by class need.
+- **Still: do not harvest the 105. Do not quote 28.0%. Use `trainFromData`, never `train()`.**
+
+---
+
 ### 2026-09-17 — The construction ADR; re-validation contradicted me twice
 
 **Did:**

@@ -7,7 +7,27 @@
 - **Supersedes:** none. **Amends** `ADR-2026-09-04-syrup-merge-elm-corpus-into-jarrett-harness.md`
   — that ADR decided the corpus is the merge unit; this one decides what the corpus *is* once it
   stops being path-only.
-- **Backlog item:** `TN-N2`, `TN-N11`, `TN-N12`
+- **Backlog item:** `TN-N2`, `TN-N11`, `TN-N12`, `TN-N13`
+- **Revised 2026-09-17** after Jam's review
+  ([`NOTE-…-jam-review-of-the-database-adr.md`](../Nolan-Agents/Notes/NOTE-nolan-internal-2026-09-17-jam-review-of-the-database-adr.md)).
+  Every claim below that the review touched was re-verified before adoption. **Six changes, three
+  of which alter a decision:**
+  1. **§ 3a is new — block scale is now a declared contract.** The structural block carries ~2.7×
+     the energy of the entire path block; without a declaration the first consumer gets a
+     structure-dominated model by accident.
+  2. **The normaliser is no longer presented as settled.** Percentile imports repo composition —
+     `inDegree: 1` is the 12.5th percentile in n-dx and the **72.7th** in commerce. `log1p` and
+     pooled global quantiles are named as live alternatives, decided by measurement.
+  3. **`language` and `depthFromRoot` moved to withheld.** `language` fails this ADR's own test
+     twice; `depthFromRoot` was called "scale-free" in one section and the opposite in another.
+  4. **`symbols[]` added to the withheld table** as explicitly deferred — its absence was the one
+     gap in that table.
+  5. **Hiccups 1, 2 and 5 corrected** — `catalogVersion` cannot script a class *split*; the
+     rank problem is two stacked ranks, not one; `resolved` buys catalog coverage but no
+     capability at our own call site.
+  6. **Two stale "9 of 10" zone counts fixed** — the withheld table and the alternatives table had
+     both survived my own correction of that number elsewhere in the same document. Caught by Jam,
+     and it is the same propagation failure that bit me the day before.
 
 ---
 
@@ -126,10 +146,9 @@ Every row carries three layers, and **the layer boundary is the contract**:
   "raw":       { "role": "source", "language": "TypeScript", "loc": 47, "size": 1620,
                  "inDegree": 2, "outDegree": 5, "edgeTypes": {"static": 4, "type": 1},
                  "externalPackages": ["hono/utils"], "isolated": false, "inCycle": false },
-  "features":  { "inDegreePct": 0.61, "outDegreePct": 0.74, "locPct": 0.33,
-                 "language": "TypeScript",
+  "features":  { "inDegreeNorm": 0.61, "outDegreeNorm": 0.74, "locNorm": 0.33,
                  "typeImportRatio": 0.2, "reexportRatio": 0.0, "valueImportRatio": 0.8,
-                 "isolated": 0, "inCycle": 0, "depthFromRoot": 3, "pkgFamily": ["runtime-http"] }
+                 "isolated": 0, "inCycle": 0, "pkgFamily": ["runtime-http"] }
 }
 ```
 
@@ -140,8 +159,39 @@ Every row carries three layers, and **the layer boundary is the contract**:
   `TN-J31` and `TN-N8` exist because we did not have.**
 - **`raw`** — measurements exactly as `sourcevision` reported them. **Auditable, never fed to a
   model.** This is what makes a re-derivation possible when we change our minds about features.
-- **`features`** — the model-facing vector. **Every scale quantity is a within-repo percentile in
-  `[0,1]`**, which is what makes finding 1 survive.
+- **`features`** — the model-facing vector. **Every scale quantity is normalised so that finding 1
+  cannot reappear.** Within-repo percentile is the *default*, **not a settled choice** — see below,
+  which is a correction made on review.
+
+#### ⚠️ The normaliser is an open question, and it is the one the whole transfer argument rests on
+
+The first draft of this ADR treated within-repo percentile as decided. **Jam's review showed it has
+the same disease as finding 1, one level up**, and re-measuring made the case stronger than theirs:
+
+| a file with `inDegree: 1` sits at… | percentile | source files at in-degree 0 |
+|---|---:|---:|
+| n-dx | **12.5th** | 3.8% |
+| Vue core | 31.4th | 21.5% |
+| express | 60.4th | 29.2% |
+| **commerce** | **72.7th** | **57.8%** |
+
+**A 60-point swing for an identical file property.** A percentile is a rank within the repo's own
+population, so it assumes repos have comparable composition — and this ADR's own finding (isolated
+files 1.2% → 42.2%) measures that they do not. **The repo's shape is still in the feature, merely
+laundered through a rank.**
+
+Two alternatives, **both testable offline from `raw` at zero cost and zero LLM spend**:
+
+- **`log1p(raw)`** — compresses the 10.2× spread (0 → 0, 3 → 1.39, 249 → 5.52) while remaining a
+  property of the *file* rather than of its neighbours. Repo-independent by construction.
+- **Global pooled quantiles** — rank against the pooled distribution across all repos, so the scale
+  is fixed once and a fresh repo is scored against the same yardstick. **This also supplies a
+  single-file runtime definition, which percentile does not have.**
+
+**Decision: percentile is the default, the manifest records which normaliser produced a given
+release, and the choice is settled by measurement before the first published accuracy number — not
+by this ADR.** `raw` is what makes that an afternoon's arithmetic rather than a re-harvest, which is
+the strongest single argument for keeping the layer.
 
 **Why `raw` and `features` are both present, when one is derived from the other:** we have already
 changed our minds about the feature space twice, and each time the corpus had to be re-harvested at
@@ -154,14 +204,13 @@ re-harvest. The LLM labels are the expensive part; the arithmetic is free.
 
 | feature | form | rationale |
 |---|---|---|
-| `inDegreePct` / `outDegreePct` | within-repo percentile | "more depended-upon than most of this repo" transfers; a raw count does not (finding 1) |
-| `locPct`, `size` percentile | within-repo percentile | same reason |
+| `inDegree` / `outDegree` | **normalised** — percentile by default; `log1p` and pooled quantile are live alternatives | a raw count does not transfer (finding 1); *which* normaliser is open, see above |
+| `loc`, `size` | same normaliser as degrees | same reason |
 | `typeImportRatio` | ratio of `type` edges to all out-edges | a types file is type-heavy in **any** module system |
 | `valueImportRatio` | `static` + **`require`** collapsed | deliberately collapsed so CJS/ESM does not leak (finding 3) |
 | `reexportRatio` | reexports / out-edges | the barrel/gateway signature; language-level |
 | `isolated`, `inCycle` | boolean | structural, scale-free |
-| `depthFromRoot` | directory depth | scale-free; weak but free |
-| `language` | small closed vocabulary | fixed across repos unlike `category`; does vary on real rows (TypeScript 491 · JavaScript 33 · Vue 11 · Python 1) though heavily skewed |
+
 | `pkgFamily` | **curated** package→family map | see below |
 
 **Withheld, with the reason recorded so nobody re-adds them by reflex:**
@@ -169,11 +218,14 @@ re-harvest. The LLM labels are the expensive part; the arithmetic is free.
 | withheld | why |
 |---|---|
 | `category` | repo-specific — n-dx's values are its own package names (finding 4) |
-| `zone` id | repo-specific **and** absent in 9 of 10 staged repos (finding 4). **The builder currently emits this; this ADR removes it from `features`.** It stays in `raw` when present. |
+| `zone` id | repo-specific **and** absent for 7 of the 9 repos surveyed (finding 4). **The builder currently emits this; this ADR removes it from `features`.** It stays in `raw` when present. |
 | raw external package one-hot | 305 of 341 packages are single-repo (finding 2) |
 | raw `inDegree`/`outDegree`/`loc` as model input | 10× cross-repo scale spread (finding 1). Retained in `raw`. |
 | raw edge-type counts | CommonJS/ESM confound (finding 3). Retained in `raw`. |
 | `role` | **constant (`source`) on 536 of 536 harvested rows** — a dead input dimension. Retained in `raw`; becomes informative only if the population widens beyond source. |
+| `language` | **Withheld on review (Jam, 2026-09-17), and it fails this table's own test twice.** It is **91.6% one value** (TypeScript 491 · JavaScript 33 · Vue 11 · Python 1), and its minority values are repo fingerprints: **all 11 `Vue` rows come from one repo, and all 11 are labelled `component`** — simultaneously a perfect repo identifier and a perfect in-sample label predictor, which is leakage, not signal. Retained in `raw`. A collapsed `typed-js` / `untyped-js` / `other` family is a defensible future variant and is re-derivable from `raw` without a harvest. |
+| `depthFromRoot` | **Withheld on review.** The first draft called it "scale-free" while hiccup 8 said the opposite; both cannot be true. n-dx paths begin `packages/rex/src/…` before any content-bearing segment and express is flat, so raw depth encodes monorepo layout. A depth measured relative to the file's **package root** would be defensible, but it is unmeasured, and this ADR withholds unmeasured features by its own rule. Re-derivable from `raw`. |
+| `symbols[]` on every edge | **Deferred, not dismissed — and its omission from this table was the gap in the first draft (Jam, 2026-09-17).** All 4,266 n-dx edges carry them, and they are plausibly the *most* transferable signal in the graph: importing `{describe, it, expect}` means *test* in any repo, `{useState}` means *component* anywhere — exactly the shape the curated `pkgFamily` map already handles. Not fed now because no symbol→family map exists and none has been measured. **Nothing is lost: the graph ships whole, so this is recoverable from committed data without a re-harvest.** It is the first feature to add after the schema settles. |
 | `hash`, `lastModified` | no archetype signal; `lastModified` actively invites leakage by harvest order |
 
 **`pkgFamily` is a small hand-written map, not a learned vocabulary** — roughly a dozen entries over
@@ -181,6 +233,49 @@ the 11 packages measured to transfer, e.g. `react`/`react-dom` → `ui-view`, `z
 `vitest` → `test`, `fs`/`path`/`os`/`url` → `node-builtin`. It is capped deliberately: **an
 open-ended package vocabulary is the trap finding 2 identifies.** Adding a family is a reviewed
 edit, and the map ships with the dataset so a consumer can audit or ignore it.
+
+### 3a. ⚠️ Block scale is a declared contract, not an emergent constant
+
+**Added on review (Jam, 2026-09-17). Measured by Jam, reproduced independently by me against the
+real pipeline before adopting it.**
+
+The `features` layer is presented as the model-facing vector, so the first consumer will concatenate
+it with the path block. **On measured magnitudes that concatenation silently decides which signal
+dominates**, and nobody has chosen it.
+
+`TFIDFVectorizer.vectorize()` **does not normalise** — `l2normalize` is an opt-in static utility
+(`dist/ml/TFIDF.d.ts:35`, documented "Optional L2 normalization utility") and **nothing in our
+scripts calls it.** Measured over all 464 corpus-v2 train rows, using the frozen spec's own
+`vocabCap: 4000` and `docOf = tokenize(p).join(" ")` exactly as `elm-certify.mjs:50,144` does:
+
+| block | dims | squared L2 energy |
+|---|---:|---|
+| **path (TF-IDF)** | 2,890 | **mean 1.464** · p10 0.963 · p90 2.44 · nonzero entries mean 16.0 (min 3, max 27) |
+| **structural** (12 scalars ~ U[0,1]) | 12 | **expected 4.000** — each additional one-hot family adds ~1.0 |
+
+**The twelve-scalar structural block alone carries ~2.7× the energy of the entire 2,890-dimension
+path block**, and each one-hot family pushes it toward 4–5×. An ELM's hidden layer is a random
+projection, so what each unit sees is driven by the relative energy of the input blocks: **the path
+signal becomes a minority contributor to its own classifier.**
+
+That may be the right outcome. **The point is that it would happen by accident**, falling out of an
+unstated constant — twelve values that look innocuous because they live in `[0,1]`, against a sparse
+block that happens to sit near unit norm. **And the path is not a weak signal to down-weight by
+default: the human path-only ceiling is 85.4%.**
+
+**Decision:** block scaling is the **consumer's** choice and the dataset states it rather than
+implying one.
+
+- `FEATURES.md` carries the measured energies above and names the decision explicitly.
+- **`manifest.json` carries a `blockEnergy` record** — the measured path-block energy for that
+  release and the structural block's dimension count — so a consumer can compute a scale factor
+  without re-deriving anything.
+- **No schema change and no harvest change**, and if a scale factor is later needed, `raw` is what
+  makes it re-derivable.
+
+*Reproduction note: my figures match Jam's to three decimals on mean and p10 (1.464 / 0.963) and on
+nonzero counts (16.0 / 3 / 27); p90 differs trivially at 2.44 vs 2.393, which is percentile
+indexing, not disagreement.*
 
 ### 4. The import graph ships whole, not only as features
 
@@ -248,11 +343,20 @@ correctly?** Six commitments:
 4. **A ~50-line dependency-free loader** in the repo — read JSONL, select a layer, materialise a
    feature matrix in declared column order. **Column order is part of the contract**, because a
    silently reordered matrix is a bug nobody sees.
-5. **`FEATURES.md` and the warranty travel with the data.** Every caveat in `ELM-CORPUS.md` §§ 3a,
+5. **`FEATURES.md` states the envelope, not just the caveats.** Two sentences are required rather
+   than implied: **percentile features are defined only relative to a population, and a single-file
+   consumer is outside the tested envelope** — the manifest fallback is a convenience, not a
+   demonstration that it works. This is stronger than "the fallback is untested", and deliberately
+   so: `TN-J19`'s operating point is *also* rank-based (a 13-class softmax caps confidence at 0.245,
+   so B+su admits "the top 10% most confident" — a rank within a batch). **Under this ADR there
+   would be two stacked rank-based normalisations and no absolute anchor anywhere in the stack, and
+   for one file at runtime neither rank exists.** Jam records the single-file gap as theirs, on the
+   operating-point side; it is named here because this is where it became visible.
+6. **`FEATURES.md` and the warranty travel with the data.** Every caveat in `ELM-CORPUS.md` §§ 3a,
    5a, 6, 7 — the teacher is 72.3% against truth and is **not shown the path only**; the residue
    population; the `role: "source"` ceiling; the contamination boundary. **Rows shipped without
    these invite exactly the mistake we already made.**
-6. **Nothing is required from `n-dx` to consume it.** No workspace dependency, no `sourcevision`
+7. **Nothing is required from `n-dx` to consume it.** No workspace dependency, no `sourcevision`
    install, no `@n-dx/*` import. The dataset is plain data plus one loader.
 
 ### 7. The blind set stays blind
@@ -275,7 +379,7 @@ just path, and refuses to build otherwise.
 | **Ship only `features`; drop `raw` and the graph** | Smaller, and wrong. Every feature revision would cost another LLM harvest. The graph is the collected asset; the vector is a derivative that an hour of CPU reproduces. |
 | **Merge `residue` and `resolved` into one corpus** | A label that means "teacher judged" *or* "regex fired", unrecorded, is `TN-J31` again. Rejected by the lead 2026-09-16 and re-confirmed here. |
 | **Include file content now** | The lead has deferred it, and it is genuinely separate work: raw text is collected **nowhere** today, so it is new collection with its own storage, licensing and cost profile. The three-layer schema leaves room for a `content` layer without a re-harvest. |
-| **Emit `zone` as a feature (status quo in the builder)** | Absent in 9 of 10 staged repos, and repo-specific where present. This ADR removes it from `features` and keeps it in `raw`. |
+| **Emit `zone` as a feature (status quo in the builder)** | Absent for 7 of the 9 repos surveyed, and repo-specific where present. This ADR removes it from `features` and keeps it in `raw`. |
 
 ---
 
@@ -314,10 +418,20 @@ Per Team Nolan's convention an agent drafts and Nolan sends.
 Named now because each is cheaper to design around than to discover.
 
 1. **The taxonomy moves under us.** `TJ-A3` is live and unpushed. Any corpus keyed to today's 17
-   labels needs remapping. *Mitigation:* `catalogVersion` per row; relabel is a script.
-2. **Within-repo normalisation needs the repo.** A runtime consumer classifying one file has no
-   repo statistics. *Mitigation:* ship per-repo statistics in the manifest and a documented fallback
-   (global medians) — and **state plainly that the fallback is untested**, because it is.
+   labels needs remapping. *Mitigation:* `catalogVersion` per row — **and that mitigation is
+   weaker than the first draft claimed (Jam, 2026-09-17).** Renames and merges are scriptable from
+   a version stamp. **A class split is not.** `TJ-A3` adds a *new* class (`algorithm`), so a row
+   labelled `utility` under `17-2026-09` may be `algorithm` under the next catalog and **nothing in
+   the row says which** — resolving it needs a human or the teacher, i.e. spend. Stated plainly
+   because "relabel is a script" will otherwise be quoted as though the taxonomy risk were handled.
+   It is handled for renames and merges only.
+2. **Rank-based features need a population, and at runtime there is not one.** A consumer
+   classifying a single file has no repo statistics. **Sharper than the first draft framed it:**
+   `TN-J19`'s operating point is *also* rank-based, so the stack would carry **two rank
+   normalisations and no absolute anchor**, and for one file neither rank is defined — independent
+   of features. *Mitigation:* per-repo statistics in the manifest, a documented global-median
+   fallback stated as **outside the tested envelope**, and **pooled global quantiles as the live
+   alternative that would dissolve most of this** (see § 3's normaliser subsection).
 3. **Isolated files: 1.2% → 42.2% of source files by repo.** In commerce, 42% of files have no
    graph signal at all, so the whole structural half of the vector is absent. *Mitigation:* an
    explicit `isolated` flag rather than a silent zero vector — **the same distinction as `null` vs
@@ -325,9 +439,14 @@ Named now because each is cheaper to design around than to discover.
 4. **Zero-vs-missing, everywhere.** A real `inDegree: 0` and an unmeasured one must never collapse.
    Already enforced in the builder: `featuresAvailable` per repo, and omission counts that return
    `null` rather than 0 when the LLM pass did not run.
-5. **`resolved` teaches the regex.** Its labels *are* the rules' output, so a model trained on it
-   learns `archetypes.ts`. That is legitimate for coverage of classes the teacher never sees, and
-   **illegitimate as evidence the model is good.** It must be labelled that way everywhere.
+5. **`resolved` teaches the regex — and buys coverage, not capability at our own call site.** Its
+   labels *are* the rules' output, so a model trained on it learns `archetypes.ts`: legitimate for
+   covering classes the teacher never sees, **illegitimate as evidence the model is good.** The
+   second half matters as much (Jam, 2026-09-17): **in production the rules run first and catch
+   every `page` file, so no `page` file ever reaches the residue tier.** The coverage is real for a
+   whole-repo consumer (Jarrett's prefilter) and **worth nothing at our own call site.** "Between
+   them they cover all 17 archetypes" is the sentence a reader carries away, so it never travels
+   without this qualification.
 6. **Class imbalance is not fixed by any of this.** Eight classes are under 10 rows today. Recall
    floor from our own data: `entrypoint` 59 rows → 85%, `types` 34 → 42%, 1–2 rows → **0%**.
    Target **30 rows/class floor, 50 ideal**.
@@ -368,6 +487,10 @@ deliberate.** No model has been trained on this schema. What follows is the meas
 | `role` is constant (`source`) on 536 of 536 harvested rows | `Counter` over `role` on a 4-repo build | `scripts/elm-corpus-build.mjs` output |
 | inventory 1,525 = test 825 / source 683 / build 10 / config 6 / docs 1 | `Counter` over `role` | same |
 | isolated source files 1.2% → 42.2% | source files absent from every edge endpoint, 9 repos | staging tree |
+| path block 2,890 dims, squared L2 energy mean 1.464 / p10 0.963 / nonzero 16.0; structural 12 scalars → expected 4.000, ~2.7× | measured by Jam; **reproduced independently by me** using the frozen spec's `vocabCap: 4000` and `docOf` exactly as `elm-certify.mjs:50,144` | `scripts/data/elm-archetype-corpus-v2.json` + `elm-frozen-model-v2.json` |
+| `TFIDFVectorizer.vectorize()` does not normalise; `l2normalize` is opt-in and never called | `dist/ml/TFIDF.d.ts:35` + grep over `scripts/` | library + repo |
+| `inDegree: 1` sits at the 12.5th percentile in n-dx and the 72.7th in commerce | midrank percentile over `role: "source"` files, 4 repos | `.sourcevision/` artifacts |
+| all 11 `Vue` rows come from one repo and are all labelled `component` | `Counter` over language × repo × label on a 4-repo build | `scripts/elm-corpus-build.mjs` output |
 | all 4,266 n-dx edges carry `symbols` | count of edges with non-empty `symbols` | `.sourcevision/imports.json` |
 | resolution rates 76.6% (commerce) → 5.7% (typeorm) | Syrup, `TN-S1` — **relayed, not re-measured by me** | Syrup's groundwork note § 7 |
 | recall floor: `entrypoint` 59 rows → 85%, `types` 34 → 42%, 1–2 rows → 0% | Syrup — **relayed, not re-measured by me** | same, § 7 |
@@ -398,8 +521,10 @@ in the text above rather than only here.
 1. **No model has been trained on this schema.** Every transfer argument above is mechanical or
    measured about the *data*, not demonstrated about a *model*. The coverage check on a held-out
    ecosystem is what would demonstrate it, and it has not been run.
-2. **Percentile normalisation is reasoned, not validated.** It follows from the 10× spread; nobody
-   has shown it beats raw degrees on this task.
+2. **The normaliser is unresolved, and this is now stated in the Decision rather than buried here.**
+   Percentile follows from the 10.2× spread but imports repo composition; `log1p` and pooled
+   quantiles are untested alternatives. **No accuracy number is published before this is settled by
+   measurement** — which `raw` makes free.
 3. **The `pkgFamily` map does not exist yet**, and its 11 transferable packages are a thin base.
 4. **The single-file runtime fallback is untested** (hiccup 2).
 5. **Two cited figures are Syrup's, relayed and not independently re-measured by me** — marked as
