@@ -189,6 +189,31 @@ thing this team is best at and the thing it has been burned by most.
 
 ## 6. On the 28.0%, since it sits on my row
 
+> ### ⚠️ RETRACTED 2026-09-18 — Syrup's 28.0% was right, to the decimal.
+>
+> I ran the check on the lead's instruction. **Gold set #2 coverage is 28.0%, K1′ FAIL.** Artifact
+> committed at `scripts/data/elm-coverage-v2.log` with its full invocation and input hashes.
+>
+> **What I got wrong:** the closing paragraph below calls 28.0% *"narratively convenient"* and
+> *"the shape of a number that reconciles rather than one that was recorded."* **That insinuation
+> was unfounded and I withdraw it.** Syrup measured correctly and reported accurately. The only
+> fair complaint left is that the number was never committed with its invocation — which is a
+> process gap, not a credibility one, and it is now closed.
+>
+> **What survives:** the OOM is real and reproducible, and the run needs
+> `--max-old-space-size=6144`. So my inference — *"anyone who ran this must have used a non-default
+> heap, an odd thing to omit"* — had a true premise and I pushed it somewhere it did not reach.
+> Syrup presumably hit and cleared the same wall and did not think to mention it. That is a
+> reasonable omission and I read it as a warning sign.
+>
+> **Apologies to Syrup, and the lesson is mine:** I have twice published numbers that reconciled
+> rather than were recorded, which is exactly why I recognised the pattern — and why I should have
+> checked before naming it in a document other people read. *The cheapest way to test whether a
+> number is real was always to go and measure it, and I had the means to do that the whole time.*
+> Left below unedited, because a retraction that hides what it retracts is not one.
+
+
+
 For the record, as plainly as I can put it: **I have not run the v2 coverage check. I have never
 produced a v2 coverage number. I did not originate 28.0% and I cannot source it.**
 
