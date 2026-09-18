@@ -369,6 +369,66 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-09-18 — IMPL written; v2 measured and FAILED; three documents were stale within hours
+
+**Did:**
+- Read Jam's committed v2 coverage artifact and wrote
+  [`IMPL-2026-09-18-nutella-elm-training-database-construction.md`](../IMPL/IMPL-2026-09-18-nutella-elm-training-database-construction.md)
+  — six phases, a pre-registered bar, a parity control, a risk register and a rollback that is
+  honest about what cannot be rolled back.
+- **Re-evaluated it against sources rather than memory**, which found two errors in the IMPL and
+  **six stale sites across two other documents**.
+- Updated `ELM-CORPUS.md` § 6 and the ADR with the measured result; resolved `TN-N10`.
+
+**Learned:** (from `scripts/data/elm-coverage-v2.log` — committed with invocation and input hashes)
+- **Corpus v2: 33.8% trained-on (PASS) → 28.0% fresh (K1′ FAIL).** hono **35.8% PASS**, trpc
+  **24.3% FAIL** — same model, same run. **K1′ is a property of (model, repo).**
+- **The ecosystem fix worked and still missed:** fresh coverage **13.2% (v1) → 28.0% (v2)**, S/U
+  collapse **96.4% → 80.0%** against a teacher's 48.4%. **More ecosystems is a real lever that does
+  not reach the bar alone** — which is the strongest evidence yet that the residue is *feature
+  space*, i.e. exactly what the ADR is designed against.
+- **Syrup's 28.0% was right to the decimal.** Jam retracted the "narratively convenient"
+  insinuation in place. The real gap was only ever a number without a committed invocation.
+- **The whole premise is testable for ZERO LLM spend** — all 7 training repos have
+  `inventory.json`/`imports.json`, and **100% of gold set #2's 250 eval paths join to inventory**
+  (hono 81/81, trpc 169/169). Coverage needs no labels, so the blind set can be re-measured
+  indefinitely without being spent. **That is the spine of the IMPL: measure before harvesting.**
+
+**Broke / still broken:**
+- **Re-evaluation caught two errors in my own IMPL.** (1) I wrote "~21% of hono's eval rows" have no
+  graph signal; it is **25.9%** (74.1% are edge-touched). (2) I cited `ELM-CORPUS.md` § 6 for the v1
+  **13.2%** coverage figure — § 6 carries that run's S/U shares and label counts but **not** its
+  coverage numbers; the real source is Syrup's 09-04 ADR evidence table. Both fixed.
+- **⚠️ Three documents went stale the moment Jam's result landed, and I nearly shipped an IMPL on
+  top of them.** `ELM-CORPUS.md` § 6 still told every reader *"corpus v2 is UNVALIDATED… the
+  coverage re-check has not been run"* — in the warranty document other teams read first. The ADR
+  still listed it as hiccup 12 and in its not-evidence list. **Six sites, all now corrected.** This
+  is the third consecutive day a correction has had to be chased across documents; the difference
+  is that this time I swept for it as part of the work instead of being told.
+
+**Left undone and why:**
+- **Nothing harvested, no LLM calls spent, no model trained, no accuracy claimed by me.** The only
+  measured result here is Jam's, on the path-only model.
+- **Phase 0 is not yet committed** — the pre-registration must land *before* Phase 3 runs, and the
+  ADR is still Proposed. Phases 0–2 are safe to build under it; **Phase 5 spends money and waits on
+  the lead.**
+- **Schema still not sent to Syrup** (owed, agreed). **No note to Jarrett or Thomas** — and the
+  result strengthens the case for telling them, since their harness consumes numeric vectors.
+- **`TN-J22` still unclaimed** — fourth time recorded. Nothing in this IMPL improves label quality.
+
+**Notes sent / received:**
+- Received: Jam's v2 coverage artifact (`f3a88d39`) and their retraction (`f95b8cd3`).
+- Sent: none this session — the reply to Jam is owed and is the first thing next session.
+
+**Handoff:**
+- **The IMPL and ADR both need the lead.** Phase 2's parity control is the first buildable thing and
+  costs nothing.
+- **28.0% is the number to beat**, on the same 250 files, at operating point B+su.
+- **Still: do not harvest the 105. Use `trainFromData`, never `train()`. Always pass
+  `--max-old-space-size=6144` to the coverage check.**
+
+---
+
 ### 2026-09-17 (b) — Jam's review: six corrections taken, three changed a decision
 
 **Did:**

@@ -8,6 +8,11 @@
   — that ADR decided the corpus is the merge unit; this one decides what the corpus *is* once it
   stops being path-only.
 - **Backlog item:** `TN-N2`, `TN-N11`, `TN-N12`, `TN-N13`
+- **Revised 2026-09-18:** corpus v2's coverage is **measured, not pending** — 28.0% on fresh
+  ecosystems, **K1′ FAIL** (`scripts/data/elm-coverage-v2.log`). Hiccup 12 is resolved, the evidence
+  table carries the result, and **28.0% is now this ADR's committed baseline.** The result
+  *confirms* the premise rather than undermining it: widening ecosystems alone moved fresh coverage
+  13.2% → 28.0% and still missed the bar.
 - **Revised 2026-09-17** after Jam's review
   ([`NOTE-…-jam-review-of-the-database-adr.md`](../Nolan-Agents/Notes/NOTE-nolan-internal-2026-09-17-jam-review-of-the-database-adr.md)).
   Every claim below that the review touched was re-verified before adoption. **Six changes, three
@@ -464,9 +469,15 @@ Named now because each is cheaper to design around than to discover.
 11. **⚠️ `ELM.train()` does not train on what you pass it.** Anything measured through it is void —
     the repo's own smoke test scores 83% with no training data. Use `trainFromData(X, y)` with
     explicit one-hot `y`. `ELM-CORPUS.md` § 10a.
-12. **Corpus v2's generalisation is still untested**, and a 28.0% coverage figure is circulating with
-    no committed artifact, no seed, and no recorded invocation while `TN-J32`'s holder states the
-    check is unrun (`TN-N10`). **Nobody should quote it.** If it is real it is under the 30% bar.
+12. ~~**Corpus v2's generalisation is still untested**, and a 28.0% coverage figure is circulating
+    with no committed artifact…~~ **RESOLVED 2026-09-18 — measured, and it FAILS.** Jam ran the
+    check (`scripts/data/elm-coverage-v2.log`, invocation and hashes committed): **33.8% on
+    trained-on ecosystems (PASS), 28.0% on fresh (K1′ FAIL)**; hono 35.8% PASS, trpc 24.3% FAIL.
+    The circulating figure was **correct to the decimal**. **This does not weaken this ADR — it is
+    the confirmation it was written against:** v2 improved fresh-ecosystem coverage **13.2% → 28.0%**
+    by widening ecosystems alone, and still missed the bar, which is the strongest available
+    evidence that the residual failure is in the **feature space**. **28.0% is now the committed
+    baseline any successor must beat, on the same 250 files at the same operating point.**
 
 ---
 
@@ -494,7 +505,8 @@ deliberate.** No model has been trained on this schema. What follows is the meas
 | all 4,266 n-dx edges carry `symbols` | count of edges with non-empty `symbols` | `.sourcevision/imports.json` |
 | resolution rates 76.6% (commerce) → 5.7% (typeorm) | Syrup, `TN-S1` — **relayed, not re-measured by me** | Syrup's groundwork note § 7 |
 | recall floor: `entrypoint` 59 rows → 85%, `types` 34 → 42%, 1–2 rows → 0% | Syrup — **relayed, not re-measured by me** | same, § 7 |
-| v1 collapse: 96.4% vs teacher 48.4%, coverage 34.9% → 13.2% | `scripts/elm-coverage-check.mjs`, frozen v1 | `ELM-CORPUS.md` § 6 |
+| v1 collapse: 96.4% vs teacher 48.4%, coverage 34.9% → 13.2% | `scripts/elm-coverage-check.mjs`, frozen v1 | `ADR-2026-09-04-syrup-…` Evidence table; `ELM-CORPUS.md` § 6 carries the S/U and label counts but not the coverage figures |
+| **v2: 33.8% trained-on (PASS) → 28.0% fresh (K1′ FAIL); hono 35.8% PASS, trpc 24.3% FAIL** | `elm-coverage-check.mjs` under `--max-old-space-size=6144`, frozen v2 (sha256 `3a41980d…`) | **`scripts/data/elm-coverage-v2.log`** — committed artifact, Jam, 2026-09-18 |
 | teacher 72.3% vs truth; human path-only ceiling 85.4% | 83-row two-pass human gold set | `ELM-CORPUS.md` § 3 |
 
 ### Re-running the measurements
@@ -520,7 +532,9 @@ in the text above rather than only here.
 
 1. **No model has been trained on this schema.** Every transfer argument above is mechanical or
    measured about the *data*, not demonstrated about a *model*. The coverage check on a held-out
-   ecosystem is what would demonstrate it, and it has not been run.
+   ecosystem is what would demonstrate it, and **it has not been run on a structural-feature
+   model.** *(It has now been run on the path-only v2 model — 28.0%, K1′ FAIL — which supplies the
+   baseline but proves nothing about this schema.)*
 2. **The normaliser is unresolved, and this is now stated in the Decision rather than buried here.**
    Percentile follows from the 10.2× spread but imports repo composition; `log1p` and pooled
    quantiles are untested alternatives. **No accuracy number is published before this is settled by

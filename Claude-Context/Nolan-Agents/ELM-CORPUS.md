@@ -18,6 +18,13 @@
 >    83% with no training data.
 > 7. **§ 6 — the coverage check is not cheap to run, and a v2 coverage number is circulating with
 >    no artifact behind it.**
+>
+> **Amendment of 2026-09-18 (Nutella), and it supersedes item 7:**
+> 8. **§ 6 — CORPUS v2 HAS NOW BEEN MEASURED.** **33.8% on trained-on ecosystems (PASS), 28.0% on
+>    fresh ones (K1′ FAIL)**; hono passes at 35.8%, trpc fails at 24.3%. The circulating 28.0% was
+>    correct to the decimal and is now committed with its invocation. **Every "v2 is unvalidated"
+>    sentence in this document is superseded** — v2 improves on v1 substantially (13.2% → 28.0%)
+>    and still does not clear the bar.
 
 This documents the labelled path→archetype corpus so it survives Team Nolan. It was built for
 one specific task — the `sourcevision` ELM classification tier — but it is a general
@@ -308,10 +315,38 @@ repos it collapsed onto the majority class — 241 of 250 files predicted `servi
 This was predicted 19 days earlier by `TN-J9` ("the corpus needs ecosystem diversity, not more
 repos"), filed 2026-08-13 and left unclaimed.
 
-**Corpus v2 is the attempted fix for exactly this, and it is UNVALIDATED.** It widens the
-ecosystem count 2 → 7 and drops the `service`+`utility` share 73.8% → 63.6%, which is the right
-shape of intervention. **But the coverage re-check has not been run against v2.** Nobody has
-demonstrated that v2 generalises. Do not assume it does because it is bigger.
+### ⚠️ Corpus v2 HAS NOW BEEN MEASURED — it improves substantially and still FAILS
+
+**Measured 2026-09-18 by Jam, artifact committed at `scripts/data/elm-coverage-v2.log`** with its
+full invocation, input hashes and library version. This supersedes every "v2 is unvalidated"
+statement in earlier revisions of this document.
+
+| population | coverage | K1′ (≥30%) | ELM `service`/`utility` | teacher | distinct labels |
+|---|---:|---|---:|---:|---|
+| held-out, **trained-on** ecosystems (n=160) | **33.8%** | **PASS** | 73.8% | 62.5% | ELM 10 / teacher 15 |
+| **gold set #2, FRESH ecosystems (n=250)** | **28.0%** | **FAIL** | **80.0%** | **48.4%** | **ELM 7 / teacher 13** |
+| ↳ hono only (n=81) | 35.8% | PASS | 71.6% | 45.7% | ELM 6 / teacher 8 |
+| ↳ **trpc only (n=169)** | **24.3%** | **FAIL** | 84.0% | 49.7% | ELM 5 / teacher 12 |
+
+**Read this carefully, because it says two things and only one of them is bad news.**
+
+**The ecosystem-diversity fix worked, and worked substantially.** Fresh-ecosystem coverage went
+**13.2% (v1) → 28.0% (v2)** and the `service`/`utility` collapse eased from **96.4% → 80.0%**
+against a teacher's 48.4%. Widening 2 → 7 ecosystems was the right intervention and `TN-J9` was
+right. **It did not reach the 30% bar.** More ecosystems is a real lever that does not get there on
+its own.
+
+**K1′ is a property of (model, repo), not of the model.** hono **passes** at 35.8% and trpc
+**fails** at 24.3% — same model, same run. **Never quote a coverage number without naming its
+repo.** The script's own closing line says this, and it is the most transferable thing in the
+result.
+
+**What this means if you are about to train on v2:** it generalises *better* than v1 and *not well
+enough* to ship behind K1′. The residual failure is now the strongest available evidence that the
+problem is the **feature space** rather than the sample — which is what
+[`ADR-2026-09-17-nutella-elm-training-database-construction.md`](../ADR/ADR-2026-09-17-nutella-elm-training-database-construction.md)
+is designed against. **28.0% is the number any successor must beat, on these same 250 files, at
+this same operating point.**
 
 The way to check needs **no ground truth and no labels**: predictions alone tell you whether the
 class prior has collapsed. `scripts/elm-coverage-check.mjs`. Run it on a repo that is not in the
@@ -332,6 +367,20 @@ table above before you trust anything.
 > is unrun. It may well have been run locally; if so it needs committing with its seed and baseline
 > before it becomes a fact. This project's own rule applies: *if it isn't a committed, seeded script
 > another team can run, it didn't happen.* **Until then, v2's central property remains untested.**
+>
+> ### ✅ RESOLVED 2026-09-18 — the number was right, and it is now committed.
+>
+> Jam ran the check on the lead's authorisation. **Gold set #2 coverage is 28.0%, K1′ FAIL** —
+> matching the circulating figure **to the decimal**. The artifact is at
+> `scripts/data/elm-coverage-v2.log` with its invocation, input hashes and library version, so the
+> process gap (a number without a committed invocation) is closed and the number stands. Jam has
+> retracted, in place, the suggestion that it was "narratively convenient"; Syrup measured
+> correctly and reported accurately. **The only substantive lesson that survives is the cheap one:
+> the fastest way to test whether a number is real was always to go and measure it.**
+>
+> ⚠️ **The OOM is real and the flag is mandatory** — the run needs
+> `--max-old-space-size=6144`, because the frozen artifact stores a recipe rather than weights and
+> the script re-fits nine 4096-unit models.
 
 ## 7. The contamination boundary
 
