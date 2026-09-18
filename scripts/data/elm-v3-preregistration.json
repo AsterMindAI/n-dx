@@ -1,0 +1,120 @@
+{
+  "schema": "elm-v3-preregistration/v1",
+  "registeredAt": "2026-09-18",
+  "registeredBy": "Nutella (Team Nolan)",
+  "implements": "Claude-Context/IMPL/IMPL-2026-09-18-nutella-elm-training-database-construction.md",
+  "adr": "Claude-Context/ADR/ADR-2026-09-17-nutella-elm-training-database-construction.md",
+  "backlog": ["TN-N13", "TN-N14"],
+
+  "why_this_file_exists": [
+    "The bar is written down and committed BEFORE any structural-feature model is trained.",
+    "This project has had three wrong conclusions caught by pre-registration and at least two",
+    "numbers published that reconciled with a belief rather than being recorded. Declaring the",
+    "threshold in advance is the cheapest guard either failure has."
+  ],
+
+  "question": "Do structural features (import graph + file inventory) fix cross-ecosystem transfer, which more ecosystems alone did not?",
+
+  "population": {
+    "name": "gold set #2 packet",
+    "n": 250,
+    "repos": ["hono", "trpc"],
+    "file": "scripts/data/k2-goldset2-llm-labels.json",
+    "status": "FRESH ecosystems - never in any training corpus",
+    "human_labels_read": false,
+    "note": "Coverage needs no ground truth, so measuring here does NOT spend the blind set. The 250 human labels remain unread and reusable."
+  },
+
+  "operating_point": {
+    "design": "B+su",
+    "abstainOn": ["service", "utility"],
+    "suAdmitFraction": 0.1,
+    "source": "scripts/data/elm-frozen-model-v2.json spec.operatingPoint - unchanged"
+  },
+
+  "metric": {
+    "name": "coverage",
+    "definition": "(predictions not in abstainOn + round(abstained * suAdmitFraction)) / n",
+    "identical_to": "scripts/elm-coverage-check.mjs:98",
+    "must_not_change": true
+  },
+
+  "baseline": {
+    "value": 0.280,
+    "rendered": "28.0%",
+    "what": "frozen corpus-v2 model, PATH-ONLY features, K1' FAIL",
+    "artifact": "scripts/data/elm-coverage-v2.log",
+    "measured_by": "Jam (Team Nolan)",
+    "measured_on": "2026-09-18",
+    "frozen_sha256": "3a41980dbf1efb89843ca4a9a3a174206a2911044cbde41dd669d6781c9ba751",
+    "model_hash": "bbf076741c23703c66ac74008c9ffde282cb958d1eb779549bc64fc1ba31a95f",
+    "companion_figures": {
+      "trained_on_heldout": 0.338,
+      "hono_only": 0.358,
+      "trpc_only": 0.243,
+      "elm_su_share_fresh": 0.800,
+      "teacher_su_share_fresh": 0.484,
+      "distinct_labels_fresh": { "elm": 7, "teacher": 13 }
+    }
+  },
+
+  "criteria": {
+    "PRIMARY": {
+      "test": "coverage_fresh > 0.280",
+      "means": "structural features beat path-only on the same 250 files. The ADR's premise is supported."
+    },
+    "SECONDARY": {
+      "test": "coverage_fresh >= 0.300",
+      "means": "K1' passes. The tier is viable on fresh ecosystems."
+    },
+    "TERTIARY": {
+      "test": "distinct_labels_fresh > 7",
+      "means": "the class prior has not collapsed. Teacher uses 13."
+    },
+    "GUARD": {
+      "test": "coverage_trained_on >= 0.338 - 0.02",
+      "means": "improvement on fresh ecosystems was not bought by degrading the in-distribution case."
+    }
+  },
+
+  "always_report": [
+    "per-repo: hono and trpc separately - K1' is a property of (model, repo), not of the model",
+    "trained-on held-out coverage alongside fresh",
+    "distinct labels emitted vs teacher",
+    "coverage split by isolated vs connected files (25.9% of hono's and 8.9% of trpc's eval rows are touched by no import edge)"
+  ],
+
+  "stopping_rule": {
+    "selection": "Normaliser, block scale and any other choice are selected on TRAIN-CV ONLY (Phase 3).",
+    "evaluation": "Gold set #2 is touched ONCE per candidate configuration, in Phase 4, after selection is frozen and committed.",
+    "forbidden": "Selecting a configuration by its gold-set-#2 score. That is how a held-out number becomes a training signal.",
+    "model_config_fixed": {
+      "hiddenUnits": 4096,
+      "activation": "tanh",
+      "ridgeLambda": 0.01,
+      "vocabCap": 4000,
+      "ensembleSeeds": [42, 43, 44, 45, 46, 47, 48, 49, 50],
+      "why": "Identical to the frozen v2 spec, so Phase 4 measures the FEATURE SPACE and not a re-tune. Changing two things at once has already cost this project a result it had to discard."
+    }
+  },
+
+  "failure_action": {
+    "if_PRIMARY_fails": "Publish the negative. Do NOT harvest (Phase 5 does not run). Write the ADR amendment. The premise would be measured wrong, and 15 more repos would not fix a feature-space problem - which is exactly the mistake corpus v1 made.",
+    "if_PRIMARY_passes_SECONDARY_fails": "Premise supported, bar not reached. Harvest is then justified ON EVIDENCE: ecosystems and features are additive levers."
+  },
+
+  "parity_control": {
+    "requirement": "Before the new harness reports ANY number about ANY new model, it must reproduce the committed baseline on the frozen v2 model with path-only features.",
+    "expected": { "trained_on": "33.8%", "fresh": "28.0%", "hono": "35.8%", "trpc": "24.3%" },
+    "rationale": "A new instrument that cannot reproduce the old instrument's result on the old input is not measuring the same thing.",
+    "mandatory_flag": "--max-old-space-size=6144 (the frozen artifact stores a recipe, not weights; nine 4096-unit refits OOM at node's ~2096 MB default)"
+  },
+
+  "known_traps_that_invalidate_any_number_here": [
+    "ELM.train() does not train on what you pass it - the repo's smoke test scores 83% with no data. Use trainFromData(X, y) with explicit one-hot y.",
+    "An OOM exits 0 with an empty table. Assert the results table is populated; never trust the exit code.",
+    "Seed defaults to 1337 - pass it explicitly per repeat or 'independent' models are byte-identical.",
+    "A 13-class softmax caps confidence near 0.245, so absolute thresholds select nothing. Percentile only.",
+    "Coverage is agreement-shaped, not accuracy: the teacher is 72.3% against truth and is NOT shown the path only."
+  ]
+}
