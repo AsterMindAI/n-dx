@@ -167,6 +167,7 @@ trap it exists to avoid.**
 | raw edge-type counts | CommonJS-vs-ESM confound. Retained in `raw`. |
 | raw package one-hot | 305 of 341 single-repo (§ 7) |
 | `hash`, `lastModified` | no archetype signal; `lastModified` invites leakage by harvest order |
+| **`callgraph.json` / `components.json`** | **deferred, not dismissed.** Real and free — 6,277 functions with `isExported` and 180,237 call edges on n-dx — and the export ratio orders sensibly by archetype (route-handler 0.30 → schema 0.86; `gateway` files declare 0.0 functions). Withheld because they exist for only 2 of 9 repos: the harvest runs stopped after phase 3, so phases 5–6 never ran. Backfilling is CPU-only. |
 | **`symbols[]`** | **deferred, not dismissed.** Plausibly the most transferable signal in the graph — `{describe, it, expect}` means *test* anywhere — but no symbol→family map has been measured. **The full graph ships, so this is recoverable without a re-harvest.** |
 
 ---

@@ -106,11 +106,27 @@ function gitInfo(repoPath) {
       return null;
     }
   };
+  // `dirty` deliberately IGNORES .sourcevision/ — `sourcevision analyze` writes it
+  // into the target repo, so every analyzed clone is permanently "dirty" by that
+  // measure and the signal becomes noise nobody reads. What matters here is whether
+  // the SOURCE TREE the labels describe has uncommitted changes.
+  // Our own scaffolding, deliberately written into every target repo by the
+  // documented harvest procedure: .sourcevision/ is analyze's output and .n-dx.json
+  // is the teacher pin. Counting either as "dirty" makes the warning fire on every
+  // correctly-prepared repo, and a warning that always fires is one nobody reads.
+  const OURS = [".sourcevision/", ".sourcevision", ".n-dx.json"];
+  const porcelain = run(["status", "--porcelain"]) ?? "";
+  const meaningful = porcelain.split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => l.replace(/^\S+\s+/, ""))
+    .filter((pathPart) => !OURS.some((o) => pathPart === o || pathPart.startsWith(o)));
   return {
     commit: run(["rev-parse", "HEAD"]),
     branch: run(["rev-parse", "--abbrev-ref", "HEAD"]),
     remote: run(["config", "--get", "remote.origin.url"]),
-    dirty: run(["status", "--porcelain"]) ? true : false,
+    dirty: meaningful.length > 0,
+    dirtyPaths: meaningful.length ? meaningful.slice(0, 5) : undefined,
   };
 }
 
@@ -259,6 +275,39 @@ function loadFeatures(abs) {
   };
 }
 
+/**
+ * The commit the ANALYSIS ran at — which is not necessarily the commit the build
+ * runs at, and the difference is the whole point of this function.
+ *
+ * `gitInfo()` above records `git rev-parse HEAD` at BUILD time. The labels, though,
+ * come out of `.sourcevision/classifications.json`, which was written by an earlier
+ * `sourcevision analyze` run. In a repo nobody touches between the two, they agree.
+ * In the repo we all work in, they do not:
+ *
+ *   corpus v2 attributes n-dx's 255 rows (41% of the corpus) to commit 90e5bdb7,
+ *   but the analysis that produced those labels ran at b8770042 — twelve days
+ *   earlier. Verified 2026-09-18 against .sourcevision/manifest.json gitSha.
+ *
+ * Benign in that instance — none of the 255 labelled files changed between the two
+ * commits — but the recorded provenance points at a tree the labels do not describe,
+ * and nothing detected it. Since structural metadata (callgraph, components) is
+ * deliberately being collected LATER than the labels, a provenance field that
+ * identifies the wrong tree is exactly what makes a late join silently wrong: same
+ * path, different file, no error.
+ *
+ * So both commits are recorded, and a mismatch is reported rather than smoothed over.
+ */
+function analysisInfo(abs) {
+  const f = join(abs, ".sourcevision", "manifest.json");
+  if (!existsSync(f)) return { commit: null, analyzedAt: null, note: "no .sourcevision/manifest.json" };
+  try {
+    const m = JSON.parse(readFileSync(f, "utf-8"));
+    return { commit: m.gitSha ?? null, analyzedAt: m.analyzedAt ?? null, branch: m.gitBranch ?? null, toolVersion: m.toolVersion ?? null };
+  } catch {
+    return { commit: null, analyzedAt: null, note: "manifest.json unreadable" };
+  }
+}
+
 function loadRepo(repoPath, sources) {
   const abs = resolve(repoPath);
   const file = join(abs, ".sourcevision", "classifications.json");
@@ -288,6 +337,7 @@ function loadRepo(repoPath, sources) {
     repo: basename(abs),
     path: abs,
     git: gitInfo(abs),
+    analysis: analysisInfo(abs),
     teacher: teacherOf(abs),
     totalFiles: data.summary.totalClassified + data.summary.totalUnclassified,
     classified: data.summary.totalClassified,
@@ -382,6 +432,37 @@ function main() {
   }
 
   // TN-J31 went undetected for 19 days because nothing said this out loud at build time.
+  /**
+   * Provenance integrity gate (Jam's ask, 2026-09-18, keyed on the right commit).
+   *
+   * Deferring structural metadata — callgraph, components — is only safe while the
+   * metadata collected LATER still describes the tree the labels were collected
+   * from. Nothing enforces that: one `git pull` in the staging tree and a callgraph
+   * collected in October describes a different tree from labels collected in
+   * September, and the join STILL SUCCEEDS because the paths match. Same path,
+   * different file, no error, plausible numbers.
+   *
+   * Jam proposed asserting clone HEAD == recorded commit. That is necessary but not
+   * sufficient, and it misdiagnoses the case we actually have: for n-dx the recorded
+   * commit was NEVER the analysis commit, so the assertion would fire and blame
+   * "drift" for what is really a provenance bug. The authoritative commit is the one
+   * in .sourcevision/manifest.json — the tree the labels came out of.
+   */
+  const drift = [];
+  for (const l of loaded) {
+    const a = l.analysis?.commit, b = l.git?.commit;
+    if (!a) drift.push([l.repo, "NO ANALYSIS COMMIT", "manifest.json has no gitSha — cannot prove which tree these labels describe"]);
+    else if (a !== b) drift.push([l.repo, "ANALYSIS != BUILD", `labels from ${a.slice(0, 12)}, built at ${b ? b.slice(0, 12) : "(unknown)"}`]);
+    if (l.git?.dirty) drift.push([l.repo, "DIRTY WORKING TREE", "uncommitted changes — the recorded commit does not describe what was read"]);
+  }
+  if (drift.length) {
+    console.log("\n  ⚠️  PROVENANCE WARNINGS — the recorded commit may not describe the labelled tree:");
+    for (const [repo, kind, detail] of drift) console.log(`     ${repo.padEnd(28)} ${kind.padEnd(20)} ${detail}`);
+    console.log("     Both commits are recorded per repo, so this is visible rather than silent.");
+    console.log("     ⛔ Before collecting callgraph/components metadata LATER, re-check these:");
+    console.log("        a late join keyed on path will succeed against a different tree without erroring.");
+  }
+
   const mix = teacherMix(loaded);
   if (mix.mixed) {
     console.log("  WARNING: MIXED TEACHERS — this corpus was labelled by more than one model.");
@@ -445,10 +526,10 @@ function main() {
       seed: opts.seed,
       holdout: opts.holdout,
       repos: loaded.map(({
-        repo, path, git, teacher, totalFiles, classified, unclassified, harvested,
+        repo, path, git, analysis, teacher, totalFiles, classified, unclassified, harvested,
         bySource, omittedByLlm, featuresAvailable,
       }) => ({
-        repo, path, git, teacher, totalFiles, classified, unclassified, harvested,
+        repo, path, git, analysis, teacher, totalFiles, classified, unclassified, harvested,
         bySource, omittedByLlm, featuresAvailable,
       })),
       teachers: teacherMix(loaded),

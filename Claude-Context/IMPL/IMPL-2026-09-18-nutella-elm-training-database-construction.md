@@ -230,6 +230,77 @@ Report the full table: overall, hono, trpc, and trained-on held-out.
 | **beats 28.0%, under 30%** | Premise supported, bar not reached. Harvest (Phase 5) is now justified *on evidence*: ecosystems and features are additive levers. |
 | **does not beat 28.0%** | **Publish the negative. Do not harvest.** Write the ADR amendment. Recommend `TN-J22` (the classify prompt) instead — the teacher sits 13.1 pp below the human path-only ceiling and that has been true since 2026-08-11. |
 
+### The economics that decide sequencing generally
+
+Jam's framing, adopted because it settles the ordering question for every future addition rather
+than just for callgraph:
+
+| | **expensive · irreversible · one-shot** | **free · repeatable** |
+|---|---|---|
+| what | LLM labels · the teacher pin · the commit you analyzed at | callgraph · components · every derived feature · every normaliser |
+| when | **now, while the schema is boring** | **later, at leisure** |
+
+Labels cost money and **cannot be recovered** if the prompt, the teacher or the taxonomy moves under
+us. Structural metadata is arithmetic over files already on disk and can be recomputed any number of
+times for nothing. **So the sequencing is forced: spend the LLM while the frame is stable, add the
+arithmetic afterwards.** Adding features now inverts it — spending schema churn, which is the scarce
+thing, to buy something that will be just as free in a month.
+
+**The test for any proposed addition:** *if we add this in a month, does anything already collected
+have to be collected again?* If no, it waits. Callgraph is a clean no.
+
+### What "stable" means, and what is now frozen
+
+The lead's steer is a **rough but stable frame for the database to expand into**. Stable is not
+finished — it means **the shape stops moving while the contents keep arriving.**
+
+**Frozen — changing these breaks everything downstream:**
+- the layer boundary `identity` / `label` / `raw` / `features`
+- `identity.commit` mandatory; `repo@commit` keying
+- JSONL, one row per line; the split as an assignment column, seed 42, holdout 0.25
+- `manifest.json` as the entry point, with per-file checksums
+- **one derivation code path** (`scripts/elm-features.mjs`) and **a self-test pinning measured
+  invariants** (`scripts/elm-features-selftest.mjs`)
+
+**Deliberately fluid — the feature list itself.** Which columns land in `features` is a derivation
+over `raw`, which is why "should we add callgraph?" can be answered *later* rather than *re-harvest*.
+
+> **A framework is stable when adding a column cannot silently move an existing number.** The
+> self-test is what makes that true here: it caught a live normalisation bug by requiring two
+> independently measured percentiles to reproduce, and it would catch a column that perturbed them.
+
+### ⚠️ Provenance integrity — the price of deferring, and a defect it exposed
+
+Deferring metadata is safe **only while the metadata collected later still describes the tree the
+labels came from**. Nothing enforced that. A `git pull` in the staging tree, and a callgraph
+collected in October describes a different tree from September's labels — **and the join still
+succeeds, because paths match.** Same path, different file, no error.
+
+Jam asked for an assertion that a clone's `HEAD` equals its recorded commit. **Implemented, but
+keyed differently, because checking it surfaced a real defect:**
+
+- `elm-corpus-build.mjs` recorded `git rev-parse HEAD` **at build time**.
+- The labels come from `.sourcevision/classifications.json`, written by an **earlier `analyze` run**.
+- For the eight staged clones these agree. **For n-dx they never did:** corpus v2 attributes n-dx's
+  **255 rows — 41% of the corpus** — to commit `90e5bdb7`, while the analysis that produced those
+  labels ran at **`b8770042`**, twelve days earlier.
+
+So the recorded commit identified the tree *at harvest time*, not the tree the labels describe.
+Jam's assertion as proposed would have fired on n-dx and blamed "drift" — right alarm, wrong
+diagnosis. **The authoritative commit is `.sourcevision/manifest.json`'s `gitSha`.**
+
+**Now implemented:** every repo records **both** commits plus `analyzedAt`, and the builder reports
+`ANALYSIS != BUILD`, a missing analysis commit, or a genuinely dirty source tree. *(Dirtiness
+ignores `.sourcevision/` and `.n-dx.json` — our own scaffolding, written into every correctly
+prepared repo; counting them makes the warning fire always and so be ignored.)*
+
+**Benign in this instance and recorded anyway:** none of the 255 labelled n-dx files changed between
+those two commits — verified — so the corpus is sound. The provenance was wrong, not the data.
+
+**Standing rule, the other half of Jam's ask:** **never `git pull` a staged clone.** If one must
+move, re-clone to a new directory. The labels are pinned to a tree; moving the tree silently
+unpins them.
+
 ### Phase 5 — The dataset build, and the harvest (conditional on Phase 4)
 
 `scripts/elm-dataset-build.mjs` — the layered writer, superseding `elm-corpus-build.mjs`'s single
