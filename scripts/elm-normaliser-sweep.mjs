@@ -44,6 +44,12 @@ const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=
 const FROZEN = "scripts/data/elm-frozen-model-v2.json";
 const OUT = arg("out", "scripts/data/elm-normaliser-sweep.json");
 const FOLDS = Number(arg("folds", "3"));
+if (!Number.isInteger(FOLDS) || FOLDS < 2) {
+  // With one fold every row is in the test set and the training fold is empty,
+  // which surfaces deep inside the library as "trainFromData: X is empty".
+  console.error(`--folds must be an integer >= 2 (got ${arg("folds", "3")}). One fold leaves no training rows.`);
+  process.exit(1);
+}
 const SEED = Number(arg("seed", "42"));
 const STAGING = "/Users/nolanmoore/Work/n-dx-elm-corpus";
 
@@ -125,15 +131,21 @@ function main() {
       let correct = 0, total = 0;
       const labelsSeen = new Set();
 
+      process.stdout.write(`  ${normaliser.padEnd(11)} scale ${String(blockScale).padEnd(5)} `);
       for (let f = 0; f < FOLDS; f++) {
+        process.stdout.write(`.`);
         const trIdx = rows.map((_, i) => i).filter((i) => fold[i] !== f);
         const teIdx = rows.map((_, i) => i).filter((i) => fold[i] === f);
-        if (teIdx.length === 0) continue;
+        if (teIdx.length === 0 || trIdx.length === 0) continue;
 
         // The vectorizer is fitted on the TRAINING FOLD only. Fitting it on all rows
         // would leak the test fold's vocabulary into its own features.
         const v = new TFIDFVectorizer(trIdx.map((i) => docOf(rows[i].text)), vocabCap);
-        const Xtr = trIdx.map((i, k) => [...v.vectorizeAll()[k], ...struct[i].map((x) => x * blockScale)]);
+        // vectorizeAll() ONCE. Calling it inside the map ran a full corpus
+        // vectorization per row — O(n^2), and silent: the job simply never finished,
+        // which on this project looks exactly like "4096 units is slow".
+        const XtrPath = v.vectorizeAll();
+        const Xtr = trIdx.map((i, k) => [...XtrPath[k], ...struct[i].map((x) => x * blockScale)]);
         const Ytr = trIdx.map((i) => oneHot(rows[i].label, cats));
         const e = new ELM({ categories: cats, hiddenUnits, activation, ridgeLambda, seed: SEED, log: { modelName: "sweep", verbose: false } });
         e.trainFromData(Xtr, Ytr);
@@ -150,7 +162,7 @@ function main() {
       const acc = total ? correct / total : 0;
       const secs = (Date.now() - t0) / 1000;
       results.push({ normaliser, blockScale, cvAgreement: acc, distinctLabels: labelsSeen.size, n: total, seconds: Math.round(secs) });
-      console.log(`  ${normaliser.padEnd(11)} scale ${String(blockScale).padEnd(5)}  CV-agreement ${(acc * 100).toFixed(2)}%   labels ${String(labelsSeen.size).padStart(2)}   ${secs.toFixed(0)}s`);
+      console.log(` CV-agreement ${(acc * 100).toFixed(2)}%   labels ${String(labelsSeen.size).padStart(2)}   ${secs.toFixed(0)}s`);
       partial();
     }
   }
