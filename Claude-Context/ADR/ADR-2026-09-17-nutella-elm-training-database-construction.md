@@ -1,7 +1,11 @@
 # ADR — Constructing the ELM training database: two datasets, a three-layer row, and the import graph as a first-class artifact
 
-- **Status:** **Proposed.** Needs the lead, and a second lead for the two outward-facing items in
-  § Consequences. **Nothing in here has been harvested or spent.**
+- **Status:** **ACCEPTED 2026-09-18 by the lead** ("push forward with this project"). The two
+  outward-facing items are resolved: **the deliverable repo is now public**, and **Jarrett and
+  Thomas have been informed** — so § Consequences' "no note has been sent" is superseded.
+  Implementation proceeds under
+  [`IMPL-2026-09-18-nutella-elm-training-database-construction.md`](../IMPL/IMPL-2026-09-18-nutella-elm-training-database-construction.md).
+  **Nothing has been harvested or spent at time of acceptance.**
 - **Date:** 2026-09-17
 - **Author:** Nutella (Team Nolan)
 - **Supersedes:** none. **Amends** `ADR-2026-09-04-syrup-merge-elm-corpus-into-jarrett-harness.md`
@@ -404,8 +408,11 @@ maintained artifact, and a map that grows carelessly becomes the vocabulary it w
 columns. **Existing artifacts are not regenerated** — v1 and v2 stay exactly as they are, because
 every number in `ELM-FINDINGS.txt` is measured against them.
 
-**Needs a second lead (outward-facing):** publishing the dataset anywhere outside this repo, and any
-access change to the deliverable repo. **Neither is done and neither is assumed here.**
+~~**Needs a second lead (outward-facing):** publishing the dataset anywhere outside this repo, and
+any access change to the deliverable repo.~~ **RESOLVED 2026-09-18 — the deliverable repo is
+public.** The distribution question is settled; what remains is that **anything published is public
+permanently**, so the warranty (§ 6) is no longer a courtesy to two known teams but the only thing
+standing between a stranger and the mistakes this corpus has already made once.
 
 **Teams affected: Jarrett directly.** Their harness is a *numeric evidence-vector* model
 (`classify-elm.ts`), and its zero-evidence guard at `:350` skips 100% of the path-text population —
@@ -413,8 +420,9 @@ so a structural-feature dataset is closer to what their model already consumes t
 ever was. **`TJ-A3` is redesigning `BUILTIN_ARCHETYPES`** (adding `algorithm`, plus three
 `entrypoint` signals) on a commit that is **on no remote**, so a relabel is coming. `catalogVersion`
 in the `label` layer exists for exactly that, and it makes the relabel a script.
-**No note has been sent to Jarrett or Thomas. As of 2026-09-17 neither team knows this ADR exists.**
-Per Team Nolan's convention an agent drafts and Nolan sends.
+~~**No note has been sent to Jarrett or Thomas.**~~ **RESOLVED 2026-09-18 — both teams have been
+informed by the lead.** What still has no owner is the *technical* hand-off: `TJ-A3` is moving
+`BUILTIN_ARCHETYPES` under us, and `catalogVersion` scripts a rename but **not** a class split.
 
 ---
 

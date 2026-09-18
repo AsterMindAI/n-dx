@@ -7,8 +7,11 @@
   has never been used on any remote (`TN-F1`, ADR still Proposed). Recorded, not silently adopted.
 - **Worktree:** none — shared checkout `/Users/nolanmoore/Work/n-dx-1` (lead's decision 2026-09-16),
   so every state-writing command is claimed in `IN-FLIGHT.md` first.
-- **Status:** Not started. **Phase 0 is a pre-registration and must be committed before Phase 3
-  runs.**
+- **Status:** **In progress** (lead: "push forward", 2026-09-18).
+  **Phase 0 DONE** — bar committed at `scripts/data/elm-v3-preregistration.json` (`802d12c1`)
+  before any model existed. **Phase 1 DONE** — `scripts/elm-features.mjs`, 22 feature columns.
+  **Phase 2 in progress** — harness written; parity control running.
+  Phases 3–4 build next; **Phase 5's harvest stays gated on Phase 4.**
 
 ---
 
@@ -362,11 +365,12 @@ before it starts and released after. Two agents analyzing at once corrupt each o
 
 ## Open questions
 
-- **For the lead:** the ADR itself (`TN-N13`) is still **Proposed**. Phases 0–2 are safe to build
-  under it; **Phase 5 spends money and should not start until it is accepted.**
-- **For the lead:** repo access. `NMoore-Astermind/ELM-database-ndx` is private, personal-account,
-  one collaborator — **Jarrett and Thomas cannot see it**, which is the stated end goal. Publishing
-  anywhere is outward-facing and needs a second lead.
+- ~~ADR still Proposed~~ **ACCEPTED 2026-09-18.** Phase 5 is unblocked *procedurally*; it remains
+  gated *technically* on Phase 4's result, which is the point of the plan.
+- ~~repo access~~ **RESOLVED — the repo is public.** One consequence replaces it, and it is not
+  smaller: **public is permanent.** Anything shipped can be trained on by a stranger who will never
+  read a note, so `FEATURES.md` and the § 6 warranty stop being courtesy and become the deliverable's
+  load-bearing half.
 - **For Syrup:** the row schema, before any harvest at scale. **Agreed and owed** — they have
   measured three models against three populations and can say whether a schema survives the coverage
   check, which is far cheaper than discovering it after the spend.
@@ -377,6 +381,8 @@ before it starts and released after. Two agents analyzing at once corrupt each o
   numeric evidence vector and its zero-evidence guard (`classify-elm.ts:350`) skips 100% of the
   path-text population. **A structural dataset is closer to what they already consume than our path
   corpus ever was.** As of 2026-09-18 they do not know this ADR or IMPL exists.
-- **Unresolved and not mine:** `TN-J22` — improving the classify prompt — remains unclaimed and is
-  **the only lever on label quality**. The teacher is 13.1 pp below the human path-only ceiling.
-  Nothing in this IMPL changes that, and it may be a cheaper win than the whole tier.
+- **`TN-J22` — DEFERRED by the lead 2026-09-18** ("we will deal with the teacher problem later if
+  it arises"). Recorded rather than dropped, because it is still **the only lever on label quality**
+  and the condition under which it *arises* is knowable in advance: **if Phase 4 passes PRIMARY but
+  the tier later plateaus below the human path-only ceiling of 85.4%, the teacher's 72.3% is the
+  ceiling being hit** — not the feature space, and not the corpus size.
