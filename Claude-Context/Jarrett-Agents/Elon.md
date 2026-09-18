@@ -126,27 +126,42 @@ Majority-class baseline for 17 classes is ~5.9%.
 
 ## Current state
 
-**2026-09-17 — onboarded, nothing built yet.** Set up per `NEW-AGENT.md`: worktree `../n-dx-elon`,
-branch `elm/jarrett/classify-elm-content`, claimed `TJ-E1`. Read the full doctrine set, Archer's
-and Realm's charters, the `TJ-R3` ADR, and the real current state of
+**2026-09-17 — onboarded and planned; no code yet.** Set up per `NEW-AGENT.md`: worktree
+`../n-dx-elon`, branch `elm/jarrett/classify-elm-content` (pushed), claimed `TJ-E1`. Read the full
+doctrine set, Archer's and Realm's charters, and the real current state of
 `classify.ts`/`classify-elm.ts`/`classify-llm.ts` on this branch rather than trusting the boards —
-which were stale in three places (see session log). Supersedes `TJ-R2` (Archer) per the user's
-direction; Archer's Step 4 encoder work is mine to absorb. No ADR or IMPL written yet, no code
-written yet.
+which were stale in three places (see session log). Supersedes `TJ-R2` (Archer); Archer's Step 4
+encoder is absorbed as the measured baseline, not discarded.
+
+**Plan written:** `ADR-2026-09-17-elon-content-based-elm-classifier.md` +
+`IMPL-2026-09-17-elon-content-based-elm-classifier.md`. ADR Status is **Proposed** with a
+deliberately unmeasured Evidence section — it does not move to Accepted until the eval clears its
+gate, and it inherits none of the four historical accuracy numbers.
+
+**The design decision that shaped the plan:** `UniversalEncoder` cannot encode file content. Read
+the installed bundle's `textToVector` directly — it is a fixed-position one-hot per character,
+vector size `maxLen × charSize`, hard-truncated at `maxLen`. Raising `maxLen` to fit content gives
+~82k input dimensions against 128 hidden units and ~500 examples. So the plan uses a
+length-independent fixed-width vector instead: name/extension block + feature-hashed content tokens
++ structural counts, fed through the existing (representation-agnostic)
+`trainArchetypeELMNumeric`/`predictArchetypeNumeric` path.
 
 ## Next up
 
-- [ ] Absorb Archer's `TJ-R2` Step 4 work — `extractPathExportExamples`/`pathExportVector` and its
-      10 tests, commit `ae9dc463` on `../n-dx-jarrett` — rather than rebuilding it.
-- [ ] Write the ADR + IMPL for the content-reading representation before code (project doctrine:
-      plan first, and the ADR's Evidence section gates Status).
-- [ ] Decide what "content" means concretely by measurement, not assumption: full text vs.
-      truncated head vs. extracted structure. Cost and signal both matter.
-- [ ] Build the seeded eval against the **genuinely zero-evidence population** — the thing no prior
-      eval in this project ever did. Out-of-domain held-out set, not just k-fold.
-- [ ] Produce the precision/coverage curve so the user picks a real gate number, and determine
-      whether it should be absolute confidence or a top1/top2 margin.
-- [ ] Wire the retrain loop (`OnlineELM`) once the representation clears its gate — not before.
+- [ ] **IMPL Step 1** — absorb `ae9dc463` (`../n-dx-jarrett`): `extractPathExportExamples`/
+      `pathExportVector` + 10 tests, unchanged, as the path-only baseline.
+- [ ] **Steps 2-4** — `classify-elm-features.ts`: name/extension block, feature-hashed content
+      block, structural counts. File I/O with degradation paths (missing/unreadable/binary → never
+      throw).
+- [ ] **Step 5** — build the zero-evidence corpus and **assert** every eval input has an all-zero
+      evidence vector. This assertion is the check whose absence invalidated four prior results.
+- [ ] **Flag to Knight before Step 6** — `TJ-A3` moves both the label set and the zero-evidence
+      population, so any number measured before it lands needs re-verification after.
+- [ ] **Steps 6-8** — seeded eval, calibrate the sweep range before trusting a zero, then the
+      ablation (name only · +content · +structural · content only · `TJ-R2` baseline).
+- [ ] **Step 9 — back to the user:** gate shape (absolute confidence vs. top1/top2 margin) and
+      number, chosen off the curve with its coverage cost stated.
+- [ ] Retrain loop (`OnlineELM`) is **phase 2**, only after a representation clears.
 
 ## Session log
 
@@ -205,3 +220,66 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 **Handoff:**
 - Absorb `ae9dc463` from `../n-dx-jarrett`, then write the ADR + IMPL for the content-reading
   representation before writing classifier code.
+
+---
+
+### 2026-09-17 (later) — ADR + IMPL written; `UniversalEncoder` ruled out for content
+
+**Did:**
+- On the user's instruction ("save everything and push to jarrett... I plan on opening this up on
+  another computer later"), committed **Realm's untracked work** — `ADR-2026-09-07-realm-classify-gate-split.md`,
+  its IMPL, three collision notes, and a modified `Realm.md`. The design record for shipped, merged
+  code (`7ecf69f3`) existed only in one machine's working directory. Committed unchanged, attributed
+  to Realm.
+- Wrote `ADR-2026-09-17-elon-content-based-elm-classifier.md` and
+  `IMPL-2026-09-17-elon-content-based-elm-classifier.md`.
+- Read Archer's `TJ-R2` Step 4 code on `../n-dx-jarrett` to ground the plan rather than planning
+  around a summary of it.
+
+**Learned:**
+- **`UniversalEncoder` cannot encode file content — the decisive design finding.** Read
+  `dist/astermind.esm.js`'s `textToVector` directly: it lowercases, strips anything outside
+  `charSet`, pads/truncates to exactly `maxLen`, then emits a **one-hot per character position**.
+  Vector size is `maxLen × charSize` — Archer's config (80 × 41) is 3,280 dimensions **for a path**.
+  Content needs thousands of characters → ~82k input dimensions against a 128-unit hidden layer and
+  ~500 training examples. Also positionally brittle: one extra directory level shifts every
+  subsequent character into different dimensions.
+- **A latent bug in the same function, which only bites on content.** The strip regex interpolates
+  `charSet` into a character class, so Archer's `"...9/.-_ "` makes `.-_` a **range** (0x2E–0x5F),
+  not three literals. `: ; < = > ? @` survive the strip and then encode to an all-zero one-hot
+  (`indexOf` → −1) while still consuming a position slot. Paths rarely contain those characters;
+  source code is full of them. Not exploited, not fixed — recorded, and routed around by not using
+  this encoder for content.
+- Consequence for the plan: length-independent **feature hashing** for content, plus a
+  name/extension block and structural counts, fed through the existing representation-agnostic
+  numeric training path. No change to `runELMGate`'s signature.
+- No accuracy numbers produced. None to report with seed/baseline, and the ADR's Evidence section
+  is deliberately unmeasured.
+
+**Broke / still broken:**
+- Nothing broken by me; no code written this session.
+- Still unverified by me personally: the 4 pre-existing root `pnpm test` failures
+  (`cli-stale-check.test.js` ×2, `published-assets-bundled.test.js` ×2) reported by `7ecf69f3`.
+  IMPL test strategy commits to confirming these on the unmodified branch **before** reporting any
+  result of my own, so I never attribute someone else's red to my change or hide mine behind theirs.
+
+**Left undone and why:**
+- All 13 IMPL steps. This session was plan-only, per the user's instruction to write the ADR and
+  IMPL; the project gates ADR Status on the Evidence section, so writing code first would invert
+  the process this repo actually runs on.
+- Have **not** flagged `TJ-A3` interaction to Knight yet — IMPL says before Step 6, and Steps 1-4
+  are catalog-independent, so it is not yet due.
+
+**Notes sent / received:**
+- Sent: none. **Deliberate** — the `TJ-R3` split makes this change Team-Jarrett-internal (own
+  module, stable interface, no shared file, no dependency addition), so no cross-team note is owed.
+  The two items that *do* need cross-team action are logged in `IN-FLIGHT.md` § 6 as lead-level
+  calls, not agent notes.
+
+**Handoff:**
+- Start at IMPL Step 1: absorb `ae9dc463` from `../n-dx-jarrett` unchanged, with a provenance
+  comment, then Steps 2-4 (the feature extractor).
+- **On a different machine:** the branch `elm/jarrett/classify-elm-content` is pushed, but the
+  worktree `../n-dx-elon` is machine-local and will not exist there. Recreate it with
+  `git worktree add ../n-dx-elon elm/jarrett/classify-elm-content && cd ../n-dx-elon && pnpm install`,
+  or just check the branch out directly.
