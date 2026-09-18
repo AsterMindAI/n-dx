@@ -1,0 +1,126 @@
+{
+  "generatedBy": "scripts/elm-normaliser-sweep.mjs",
+  "generatedAt": "2026-09-18T18:54:13.256Z",
+  "note": "TRAIN-CV ONLY. Gold set #2 is never read by this script.",
+  "corpus": "scripts/data/elm-archetype-corpus-v2.json",
+  "spec": {
+    "hiddenUnits": 4096,
+    "activation": "tanh",
+    "ridgeLambda": 0.01,
+    "vocabCap": 4000
+  },
+  "folds": 3,
+  "seed": 42,
+  "grid": {
+    "normaliser": [
+      "percentile",
+      "log1p",
+      "pooled"
+    ],
+    "blockScale": [
+      0.25,
+      0.5,
+      1,
+      2
+    ]
+  },
+  "complete": true,
+  "results": [
+    {
+      "normaliser": "percentile",
+      "blockScale": 0.25,
+      "cvAgreement": 0.6939655172413793,
+      "distinctLabels": 12,
+      "n": 464,
+      "seconds": 186
+    },
+    {
+      "normaliser": "percentile",
+      "blockScale": 0.5,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 186
+    },
+    {
+      "normaliser": "percentile",
+      "blockScale": 1,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 183
+    },
+    {
+      "normaliser": "percentile",
+      "blockScale": 2,
+      "cvAgreement": 0.6767241379310345,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 189
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 0.25,
+      "cvAgreement": 0.6896551724137931,
+      "distinctLabels": 12,
+      "n": 464,
+      "seconds": 188
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 0.5,
+      "cvAgreement": 0.6896551724137931,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 181
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 1,
+      "cvAgreement": 0.6831896551724138,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 185
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 2,
+      "cvAgreement": 0.6831896551724138,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 187
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 0.25,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 12,
+      "n": 464,
+      "seconds": 185
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 0.5,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 187
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 1,
+      "cvAgreement": 0.6875,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 187
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 2,
+      "cvAgreement": 0.6853448275862069,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 188
+    }
+  ]
+}

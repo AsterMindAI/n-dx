@@ -54,8 +54,22 @@ const SEED = Number(arg("seed", "42"));
 const STAGING = "/Users/nolanmoore/Work/n-dx-elm-corpus";
 
 const GRID = {
-  normaliser: ["percentile", "log1p", "pooled"],
-  blockScale: [0.25, 0.5, 1.0, 2.0],
+  normaliser: (arg("normalisers", "percentile,log1p,pooled")).split(","),
+  /**
+   * blockScale 0 is the CONTROL, not a candidate: it zeroes the structural block
+   * so the model is path-only, on identical folds and seed.
+   *
+   * Added 2026-09-18 AFTER the first 12-config run, and recorded as an addition
+   * rather than folded in silently. The first run came out monotone decreasing in
+   * block scale (0.25 > 0.5 > 1.0 > 2.0, consistently across all three
+   * normalisers), and the limit of "less structural is better" is none at all.
+   * Without this arm the sweep cannot say whether structural features help, only
+   * which non-zero amount of them hurts least.
+   *
+   * This touches only train-CV. Gold set #2 is still read exactly once, after
+   * selection is frozen, so the pre-registered stopping rule is intact.
+   */
+  blockScale: (arg("scales", "0.25,0.5,1,2")).split(",").map(Number),
 };
 
 const docOf = (p) => tokenize(p).join(" ");

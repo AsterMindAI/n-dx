@@ -1,0 +1,160 @@
+{
+  "schema": "elm-v3-selection/v1",
+  "frozenAt": "2026-09-18",
+  "frozenBy": "Nutella (Team Nolan)",
+  "preregistration": "scripts/data/elm-v3-preregistration.json",
+  "basis": "TRAIN-CV ONLY, 3-fold, seed 42, 464 train rows. Gold set #2 was not read.",
+  "model": {
+    "hiddenUnits": 4096,
+    "activation": "tanh",
+    "ridgeLambda": 0.01,
+    "vocabCap": 4000
+  },
+  "PRIMARY": {
+    "normaliser": "percentile",
+    "blockScale": 0.25,
+    "cvAgreement": 0.694,
+    "why": "Highest train-CV agreement in the pre-registered grid. This is the pre-registered selection rule applied as written."
+  },
+  "SECONDARY_declared_in_advance": {
+    "normaliser": "pooled",
+    "blockScale": 0.25,
+    "cvAgreement": 0.6918,
+    "why": "Statistically INDISTINGUISHABLE from PRIMARY (0.22 pp on one seed; K2 measured ~16 pp seed spread on this corpus), and principled grounds favour it: pooled is repo-independent by construction and is the only normaliser with a single-file runtime definition.",
+    "rule": "Reported for the record. Its gold-set result DOES NOT change the selection. Declared before evaluation so that reporting it is not selection on the test set."
+  },
+  "control": {
+    "blockScale": 0,
+    "cvAgreement": 0.681,
+    "what": "path-only, identical folds and seed",
+    "added": "AFTER the first 12-config run, because the grid had no zero arm and the observed monotone decline in block scale extrapolated to 'none at all'. Recorded as an addition rather than folded in silently. Touches train-CV only."
+  },
+  "findings": {
+    "structural_features_help_on_train_CV": "+1.30 pp at the best scale (69.40 vs 68.10 path-only)",
+    "block_scale_is_an_inverted_U": {
+      "0": 0.681,
+      "0.25": 0.6918,
+      "0.5": 0.6911,
+      "1.0": 0.6875,
+      "2.0": 0.6818,
+      "reading": "means across normalisers. Too much structural is worth about as little as none, which is what the measured 2.7x energy dominance predicted. The default of 1.0 is NOT the right balance."
+    },
+    "normaliser_is_NOT_resolved_by_this_evidence": {
+      "percentile": 0.6886,
+      "log1p": 0.6864,
+      "pooled": 0.6891,
+      "reading": "0.27 pp between means across scales. That is noise at one seed and 3 folds. Do not report the normaliser as 'selected by measurement'."
+    }
+  },
+  "honest_limits": [
+    "CV-agreement is agreement with a teacher that is 72.3% against truth. It is NOT accuracy.",
+    "One seed, 3 folds. K2 measured ~16 pp seed spread on this corpus, so a 1.30 pp effect is suggestive, not conclusive. What makes it more than a lucky cell is that the block-scale pattern is consistent across all three normalisers AND has a control.",
+    "Everything here is in-distribution. It says nothing about transfer, which is the entire question. Phase 4 answers that."
+  ],
+  "allResults": [
+    {
+      "normaliser": "percentile",
+      "blockScale": 0.25,
+      "cvAgreement": 0.6939655172413793,
+      "distinctLabels": 12,
+      "n": 464,
+      "seconds": 186
+    },
+    {
+      "normaliser": "percentile",
+      "blockScale": 0.5,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 186
+    },
+    {
+      "normaliser": "percentile",
+      "blockScale": 1,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 183
+    },
+    {
+      "normaliser": "percentile",
+      "blockScale": 2,
+      "cvAgreement": 0.6767241379310345,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 189
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 0.25,
+      "cvAgreement": 0.6896551724137931,
+      "distinctLabels": 12,
+      "n": 464,
+      "seconds": 188
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 0.5,
+      "cvAgreement": 0.6896551724137931,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 181
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 1,
+      "cvAgreement": 0.6831896551724138,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 185
+    },
+    {
+      "normaliser": "log1p",
+      "blockScale": 2,
+      "cvAgreement": 0.6831896551724138,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 187
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 0.25,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 12,
+      "n": 464,
+      "seconds": 185
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 0.5,
+      "cvAgreement": 0.6918103448275862,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 187
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 1,
+      "cvAgreement": 0.6875,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 187
+    },
+    {
+      "normaliser": "pooled",
+      "blockScale": 2,
+      "cvAgreement": 0.6853448275862069,
+      "distinctLabels": 13,
+      "n": 464,
+      "seconds": 188
+    },
+    {
+      "normaliser": "percentile",
+      "blockScale": 0,
+      "cvAgreement": 0.6810344827586207,
+      "distinctLabels": 12,
+      "n": 464,
+      "seconds": 854
+    }
+  ]
+}
