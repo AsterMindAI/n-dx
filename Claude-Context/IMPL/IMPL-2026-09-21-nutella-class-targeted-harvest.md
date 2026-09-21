@@ -5,8 +5,8 @@
 - **Backlog item:** `TN-N20`
 - **Branch:** `Nolan-Work` (shared checkout — deviation recorded under `TN-F1`)
 - **Worktree:** none — shared checkout `/Users/nolanmoore/Work/n-dx-1`
-- **Status:** Not started. **Phases 1–2 are free. Phase 3 is the first step that spends money and
-  does not start until the lead accepts the ADR.**
+- **Status:** **In progress** (lead: "get started with the work", 2026-09-21). ADR accepted, so
+  Phase 3 is procedurally unblocked — it still spends incrementally with a free audit between repos.
 
 ---
 

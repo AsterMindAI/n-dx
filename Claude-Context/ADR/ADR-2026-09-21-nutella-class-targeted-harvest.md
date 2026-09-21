@@ -1,7 +1,9 @@
 # ADR — Clear K1′ by class-targeted harvest: fix what the model cannot emit, not what it is fed
 
-- **Status:** **Proposed.** Needs the lead. **This is a new experiment with its own pre-registered
-  bar, deliberately NOT an amendment to the failed one** — see § Why this is a separate ADR.
+- **Status:** **ACCEPTED 2026-09-21 by the lead** ("get started with the work"). A new experiment
+  with its own pre-registered bar, deliberately **not** an amendment to the failed one — see
+  § Why this is a separate ADR. Executed under
+  [`IMPL-2026-09-21-nutella-class-targeted-harvest.md`](../IMPL/IMPL-2026-09-21-nutella-class-targeted-harvest.md).
 - **Date:** 2026-09-21
 - **Author:** Nutella (Team Nolan)
 - **Supersedes:** none. **Follows**

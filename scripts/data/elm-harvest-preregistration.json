@@ -1,0 +1,68 @@
+{
+  "schema": "elm-harvest-preregistration/v1",
+  "registeredAt": "2026-09-21",
+  "registeredBy": "Nutella (Team Nolan)",
+  "adr": "Claude-Context/ADR/ADR-2026-09-21-nutella-class-targeted-harvest.md",
+  "impl": "Claude-Context/IMPL/IMPL-2026-09-21-nutella-class-targeted-harvest.md",
+  "backlog": ["TN-N20"],
+
+  "why_this_exists": "Committed before any repo is analyzed and before any call is spent. The previous experiment's bar was registered the same way and it is the reason its failure could not be reinterpreted afterwards.",
+
+  "question": "Does harvesting the classes the model cannot currently emit clear K1' on fresh ecosystems?",
+
+  "population": {
+    "name": "gold set #2 packet", "n": 250, "repos": ["hono", "trpc"],
+    "file": "scripts/data/k2-goldset2-llm-labels.json",
+    "status": "FRESH ecosystems, never trained on. Human labels remain UNREAD.",
+    "note": "Coverage needs no ground truth, so measuring here does NOT spend the blind set."
+  },
+
+  "feature_space": "PATH-ONLY. Structural features measured neutral (-0.4 pp) in the previous experiment, so including them would move two variables at once. They remain in `raw`, re-derivable at zero cost.",
+
+  "model_spec_pinned_to_frozen_v2": {
+    "hiddenUnits": 4096, "activation": "tanh", "ridgeLambda": 0.01, "vocabCap": 4000,
+    "ensembleSeeds": [42,43,44,45,46,47,48,49,50],
+    "operatingPoint": {"design": "B+su", "abstainOn": ["service","utility"], "suAdmitFraction": 0.1}
+  },
+
+  "baseline": {
+    "value": 0.280, "rendered": "28.0%",
+    "what": "path-only on corpus v2, K1' FAIL",
+    "artifact": "scripts/data/elm-coverage-v2.log",
+    "companion": {"trained_on": 0.338, "hono": 0.358, "trpc": 0.243, "distinct_labels": 7}
+  },
+
+  "criteria": {
+    "PRIMARY":   {"test": "coverage_fresh >= 0.300", "means": "K1' clears"},
+    "SECONDARY": {"test": "distinct_labels_fresh > 7", "means": "the class prior genuinely widened"},
+    "TERTIARY":  {"test": "coverage improves on BOTH hono and trpc separately", "means": "not an average hiding one repo"},
+    "GUARD":     {"test": "coverage_trained_on >= 0.318", "means": "not bought by wrecking the in-distribution case"}
+  },
+
+  "harvest_target": {
+    "bar_relevant_classes": {"config": 30, "model": 30, "component": 30, "middleware": 30, "gateway": 30, "schema": 30, "hook": 30},
+    "current_rows":         {"config": 11, "model": 1,  "component": 8,  "middleware": 6,  "gateway": 4,  "schema": 1,  "hook": 1},
+    "floor_rationale": "Measured recall by row count: entrypoint 59 rows -> 85%; types 34 -> 42%; 1-2 rows -> 0%. Floor 30, target 50.",
+    "catalog_only_cannot_move_the_bar": ["route-module", "store", "cli-command"]
+  },
+
+  "stopping_rule": {
+    "build_before_measure": "The corpus is built, frozen and committed BEFORE the coverage run.",
+    "one_run": "One coverage run per corpus version. No tuning against the 250.",
+    "incremental_spend": "Analyze one repo, re-run the free class audit, decide whether to continue. Stop when the seven classes hit target, not when the budget is spent."
+  },
+
+  "necessary_not_sufficient": "Coverage counts predictions outside service/utility WHETHER OR NOT THEY ARE CORRECT, so emitting starved classes raises it partly mechanically. Clearing 30% proves the prior widened; it does NOT prove the predictions are right. Precision needs the blind 250 -- the one irreversible spend -- and is capped regardless by the teacher's 72.3% agreement with human judgement. NO ACCURACY CLAIM will be made from this experiment.",
+
+  "constraints": [
+    "Do NOT harvest the 105 unsampled hono/trpc candidates -- same repos as the eval set; the path-level assertion would pass, the contamination is ecosystem-level.",
+    "Do NOT touch the blind 250.",
+    "Do NOT re-split. Seed 42, holdout 0.25.",
+    "NEVER git pull a staged clone -- labels are pinned to a tree.",
+    "Pin the teacher per repo before --full, or it silently takes NEWEST_MODELS.claude.",
+    "--fast gates the classify pass: it spends nothing and yields nothing usable.",
+    "--max-old-space-size=6144 on every coverage run; an OOM exits 0 with an empty table."
+  ],
+
+  "certification": "Harvest and corpus: Nutella. Certification and model evaluation: Jam, per the TN-N3 seam -- the agent who diagnosed the problem and proposed the fix does not grade it."
+}
