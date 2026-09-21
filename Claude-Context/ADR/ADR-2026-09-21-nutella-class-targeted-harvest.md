@@ -111,6 +111,9 @@ SECONDARY  distinct labels emitted > 7           -> the prior has genuinely wide
 TERTIARY   coverage improves on BOTH hono and trpc separately
                                                  -> not an average hiding one repo
 GUARD      trained-on held-out coverage >= 31.8% -> not bought by wrecking in-distribution
+           ⚠️ REDEFINED pre-build (addendum, 2026-09-21): measured on EXACTLY v2's 160
+           held-out files, kept out of training by --carry-split. As first written it
+           would have compared a v2 threshold to a re-split population, biased to pass.
 
 HARVEST TARGET  >= 30 training rows for each of config, model, component, middleware,
                 gateway, schema, hook -- the seven classes the teacher actually uses
@@ -168,7 +171,9 @@ constraint — staging-tree collisions and time are.
 
 - **Do not harvest the 105 unsampled hono/trpc candidates.** Same two repos as the evaluation set;
   the existing contamination assertion is *path-level* and would pass. The builder asserts on
-  **repo identity**.
+  **repo identity**. *(Corrected 2026-09-21: when this was written the builder did **not** do this — the
+  guard existed only in the residue script. Implemented at `436d3307` and verified, including against
+  a renamed clone.)*
 - **Do not touch the blind 250.** Never sampled, never trained on.
 - **Do not re-split.** Seed 42, holdout 0.25 — re-splitting makes every number incomparable.
 - **Never `git pull` a staged clone.** Labels are pinned to a tree; moving the tree unpins them.

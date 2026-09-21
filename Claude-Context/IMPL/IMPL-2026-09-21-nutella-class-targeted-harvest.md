@@ -49,6 +49,14 @@ move.**
 | `schema` | 1 | 2 | 1 | **1** |
 | `hook` | 1 | 1 | 1 | **0** |
 
+> ⚠️ **Correction 2026-09-21 (Jam, certification-seam note, defect (b)) — this table overstates the
+> headroom, and its fourth column is mislabelled.** The "usable headroom" vector 4/1/3/2/2/1/0 is
+> exactly `corpus_full − corpus_train`, class for class: **those rows are already harvested and sit
+> in the corpus's own held-out split.** Collecting them would mean re-splitting, which this project
+> forbids. **True usable headroom from every analyzed repo is zero.** And "of which sit in
+> hono/trpc" reads as a subset but is a **separate population** — 25 exceeds 15 for `config`. The
+> conclusion below stands, more absolutely than the table said.
+
 **There is no re-harvesting our way to the bar.** The corpus has already taken nearly everything
 available, and a large share of what exists for these classes sits in hono and trpc — the
 evaluation set, which must stay untouched. **Every new row must come from a repo we have not
@@ -181,6 +189,20 @@ Order, and why — **revised by the residue probe above:**
 **After every repo, re-run the audit and stop as soon as the seven classes reach the target.**
 The audit is free and instant; there is no reason to spend the whole budget up front.
 
+> ⚠️ **Two operational findings from the first two repos (2026-09-21):**
+>
+> - **nest's first pass lost 17 of 29 batches to transport failure**, not to the teacher: batches
+>   1–12 succeeded, 13–29 each failed three times with `failed (unknown)` and gave up. After
+>   typeorm's 18 successful calls, ~30 calls then a wall — consistent with a rolling quota. **Those
+>   485 files are not "omissions",** and `omittedByLlm` would count them as such: it cannot tell a
+>   declined file from an unreached one, which is the caveat written into `omissionCount()`.
+> - **`--only=classifications` is not incremental.** It skips the inventory phase, so
+>   `changedFiles` is undefined and the reuse branch at `classify.ts:100` never fires — a retry
+>   re-sends **every** residue file, including labels already paid for. Caught two batches in and
+>   stopped. **Retries use `scripts/elm-classify-residue.mjs`**, which sends only still-unclassified
+>   files through the real `enrichClassificationsWithLLM` with the repo's pinned teacher: 17 batches
+>   instead of 29.
+
 **Budget:** 18 calls for `typeorm`, plus Phase 1's estimate for the rest. Expect **~50–70 calls
 total, $4–14**. Money is not the constraint — collisions and time are. **Stop when the seven classes
 hit target, not when the budget is spent.**
@@ -188,21 +210,42 @@ hit target, not when the budget is spent.**
 > ⚠️ `analyze` writes `.sourcevision/` into the **target** repo, which no worktree isolates, and
 > the staging tree is shared. **Claim it in `IN-FLIGHT.md` before starting and release after.**
 
-### Phase 4 — Build corpus v3 as two datasets
+### Phase 4 — Build corpus v3 (class-targeted) as two datasets
 
 ```sh
-node scripts/elm-corpus-build.mjs <repos…> --out=scripts/data/elm-archetype-corpus-v3.json
-node scripts/elm-corpus-build.mjs <repos…> --source=algorithmic --out=…-resolved-v3.json
+V2=scripts/data/elm-archetype-corpus-v2.json
+node scripts/elm-corpus-build.mjs <repos…> --carry-split=$V2 \
+  --out=scripts/data/elm-archetype-corpus-v3-classtargeted.json
+node scripts/elm-corpus-build.mjs <repos…> --source=algorithmic \
+  --out=scripts/data/elm-archetype-corpus-resolved-v3-classtargeted.json
 ```
-Seed 42, holdout 0.25, stratified. **Do not re-split.** The builder now records both the analysis
-and build commits and warns on mismatch (`TN-N17`), and asserts on **repo identity** so a hono or
-trpc row cannot enter.
 
-### Phase 5 — Re-freeze on corpus v3
+> ⚠️ **Corrected 2026-09-21 — two things this section previously said were not true.**
+>
+> 1. **It said "Do not re-split" directly above a command that re-splits.** The builder had no way to
+>    preserve a prior split, so every build moved the `round(len × 0.25)` boundary and v2's held-out
+>    rows would have become training rows (Jam, guard-is-not-comparable). **Fixed by
+>    `--carry-split`**: every v2 row keeps its v2 assignment and only new rows are split. Verified —
+>    rebuilding v2's own seven repos carries 464 train + 160 held-out unchanged with 0 new rows.
+> 2. **It said the builder "asserts on repo identity so a hono or trpc row cannot enter." It did
+>    not.** That guard existed only in `elm-classify-residue.mjs`. Demonstrated by building from hono:
+>    117 rows harvested, 87 into train. **Now implemented** (`436d3307`), matching on git remote as
+>    well as name, and verified against a clone renamed to hide it.
+>
+> **Naming:** artifacts are suffixed `-classtargeted`, because "v3" already names the failed
+> structural-features experiment (pre-registration addendum).
+
+The builder records both the analysis and build commits and warns on mismatch (`TN-N17`).
+
+### Phase 5 — Re-freeze on corpus v3 — **Jam's step**
 
 ```sh
-node scripts/elm-freeze-model.mjs --corpus=…-v3.json --out=…elm-frozen-model-v3.json
+node scripts/elm-freeze-model.mjs --corpus=scripts/data/elm-archetype-corpus-v3-classtargeted.json \
+  --out=scripts/data/elm-frozen-model-v3-classtargeted.json
 ```
+**Jam runs the freeze** (certification-seam note, `16f32443`): by the ADR's split the model is
+Jam's, and the freeze is where teacher mix and fold-seed reduction are stamped into the artifact Jam
+certifies against — so it is explicit rather than assumed by both sides.
 Spec pinned to v2's: ELM 4096 / tanh / ridge 0.01 / vocabCap 4000, 9 seeds. **The artifact
 existing is the only success test** — this job's exit code has lied before.
 
@@ -234,7 +277,8 @@ who diagnosed the problem and proposed the fix should not grade it.
   reproduce numbers I have already published, it is not measuring what I think.
 
 **During**
-- The builder's **repo-identity assertion** refuses any hono/trpc row. Path-level checks are
+- The builder's **repo-identity assertion** refuses any hono/trpc row *(implemented 2026-09-21 at
+  `436d3307` — this line previously described a guard that did not yet exist)*. Path-level checks are
   insufficient and would pass.
 - Provenance gate (`TN-N17`) reports `ANALYSIS != BUILD` or a dirty source tree per repo.
 - Teacher mix reported per build; a second unrecorded teacher is the `TN-J31` defect returning.

@@ -451,6 +451,51 @@ next has the clones already staged and only needs the classify calls.
 
 ## 9. Rebuilding and extending
 
+> ## ⚠️ Updated 2026-09-21 — the procedure below this box is superseded. Use this one.
+>
+> Found during the class-targeted harvest; each item has already cost real calls or produced a
+> wrong number once.
+>
+> ```sh
+> # 1. FREE — inventory, imports and rule labels. Spends nothing, yields no LLM rows.
+> sourcevision analyze <repo> --fast
+>
+> # 2. FREE — pin the teacher, or it silently takes NEWEST_MODELS.claude (TN-J31):
+> #    <repo>/.n-dx.json  ->  { "llm": { "claude": { "model": "claude-sonnet-5" } } }
+>
+> # 3. SPENDS — the classify pass ONLY. Not --full: that also buys phase-4 zone enrichment.
+> sourcevision analyze <repo> --only=classifications
+>
+> # 4. SPENDS, INCREMENTALLY — any retry, or any repo with labels already paid for.
+> node scripts/elm-classify-residue.mjs <repo>          # --dry-run first
+>
+> # 5. Build, carrying the prior split so held-out rows stay held out.
+> node scripts/elm-corpus-build.mjs <repos…> --carry-split=<prior-corpus.json> --out=…
+> ```
+>
+> - **`--help` is stale.** It lists four phases with *zones* as phase 3; the code has
+>   `{ phase: 3, module: "classifications" }` (`analyze.ts:145`). `--phase=1` runs inventory
+>   **from cache** and never reaches the classify pass. `--only=classifications` is the flag, and
+>   `--help` does not list it.
+> - **`--only=classifications` is NOT incremental.** It skips inventory, so `changedFiles` is
+>   undefined and the reuse branch at `classify.ts:100` never fires — every residue file is
+>   re-sent, **including labels you already paid for.** Use it once per repo; retry with
+>   `elm-classify-residue.mjs`, which sends only still-unclassified files through the real
+>   `enrichClassificationsWithLLM`, refuses the evaluation repos, backs up before writing, and
+>   refuses to write if an existing label would change.
+> - **A run of failed batches is not the teacher declining.** nest's first pass lost 17 of 29
+>   batches to `failed (unknown)` after ~30 successful calls in a row — a rolling quota, most
+>   likely. Read the log for `All attempts exhausted` before treating unclassified files as
+>   omissions; `omittedByLlm` cannot tell the two apart.
+> - **The builder refuses hono and trpc**, by git remote as well as name. Harvesting the 105
+>   unsampled candidates is **not** a way round it — same ecosystem.
+> - **Residue-path probing is a tie-breaker between repos, not a forecast.** On typeorm it
+>   predicted `config` 123 and `schema` 43; the teacher returned **6** and **0**. It was right
+>   about `model` (57 → 72). Never spend on a repo *because* its paths look right.
+> - **Watch repo dominance.** One repo's full yield can re-create the prior that caused v1's
+>   collapse (typeorm alone would be 46% of a v2+typeorm corpus). Keep every row and **report**
+>   each repo's share; do not fix it by dropping rows, which changes what the labels mean.
+
 ```sh
 # Analyze a repo WITH the LLM classify pass (this spends calls; --fast spends none
 # and yields no usable rows). Writes .sourcevision/ into the TARGET repo.
@@ -464,7 +509,7 @@ sourcevision analyze <repo> --full
 node scripts/elm-corpus-build.mjs <repo-path>... --out=scripts/data/<name>.json
 ```
 
-Options: `--out` `--source` `--seed` (42) `--holdout` (0.25) `--min-class` (10) `--dry-run`.
+Options: `--out` `--source` `--seed` (42) `--holdout` (0.25) `--min-class` (10) `--dry-run` `--carry-split=<prior>`.
 
 Two cautions earned the hard way:
 

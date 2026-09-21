@@ -1,6 +1,6 @@
 # ADR — Constructing the ELM training database: two datasets, a three-layer row, and the import graph as a first-class artifact
 
-- **Status:** **ACCEPTED 2026-09-18 by the lead** ("push forward with this project"). The two
+- **Status:** **ACCEPTED 2026-09-18 · PREMISE FAILED 2026-09-21 (see Outcome)** — accepted by the lead ("push forward with this project"). The two
   outward-facing items are resolved: **the deliverable repo is now public**, and **Jarrett and
   Thomas have been informed** — so § Consequences' "no note has been sent" is superseded.
   Implementation proceeds under
@@ -12,6 +12,28 @@
   — that ADR decided the corpus is the merge unit; this one decides what the corpus *is* once it
   stops being path-only.
 - **Backlog item:** `TN-N2`, `TN-N11`, `TN-N12`, `TN-N13`
+- ## ❌ OUTCOME 2026-09-21: THE PREMISE WAS TESTED AND FAILED ITS PRE-REGISTERED BAR
+  This ADR's hypothesis — that structural features (import graph + inventory) fix cross-ecosystem
+  transfer — was tested against `scripts/data/elm-v3-preregistration.json`, committed before any
+  model existed. **It failed.**
+
+  | | fresh-ecosystem coverage | vs 28.0% baseline |
+  |---|---:|---|
+  | path-only (baseline) | 28.0% | — |
+  | **structural, `pooled` @ 0.25 — the valid test** | **27.6%** | **−0.4 pp — no better** |
+  | structural, `percentile` @ 0.25 | 21.6% | invalid: dead features on unseen repos |
+
+  **PRIMARY, SECONDARY and TERTIARY all failed; GUARD passed.** The same features were worth
+  **+1.30 pp on train-CV** — they help in-distribution and do nothing out of it, the signature of
+  features that encode the training repos' structure rather than a general mapping. Artifacts:
+  `elm-coverage-v3-{primary,secondary}.{log,json}`, `elm-v3-selection.json`.
+
+  **What survives from this ADR:** the three-layer schema, shipping the graph whole, the two-dataset
+  split, the warranty (`FEATURES.md`), and every tooling and provenance fix. **What does not:** the
+  hypothesis. Per the pre-registration's failure clause, its harvest (IMPL Phase 5) did **not** run.
+  The diagnosis that followed — class starvation, not feature space — is a **separate** experiment
+  with its own bar: `ADR-2026-09-21-nutella-class-targeted-harvest.md`. Recorded here rather than
+  only there, because this is the document a reader lands on first. *(`SYNC-002` action #1.)*
 - **Revised 2026-09-18:** corpus v2's coverage is **measured, not pending** — 28.0% on fresh
   ecosystems, **K1′ FAIL** (`scripts/data/elm-coverage-v2.log`). Hiccup 12 is resolved, the evidence
   table carries the result, and **28.0% is now this ADR's committed baseline.** The result
