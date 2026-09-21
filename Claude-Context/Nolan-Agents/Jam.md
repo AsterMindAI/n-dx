@@ -228,6 +228,60 @@ reading **"0 — Tokens we can currently measure"**. Redeploy it once Butter lan
 
 ## Current state
 
+> ## ▶ RESUME HERE — reconstructed 2026-09-21 by Nutella, at the lead's request
+>
+> **Why this block exists.** The lead lost Jam's cached session history on 2026-09-21 (remote
+> access). This charter's own log stopped at **2026-09-04 (b)**, but Jam did a great deal of
+> committed work after that. Everything below is **reconstructed from committed notes, commits and
+> artifacts** — not from Jam's reasoning, which is not recoverable. Where a claim rests on a commit,
+> the hash is given; nothing here was inferred beyond what those artifacts say.
+>
+> **⚠️ The `Next up` section further down is from 2026-09-04 and is now WRONG in ways that would
+> cause harm if followed** — it says the v2 re-freeze is running and the coverage check has not
+> been run. Both are long done. **Use this block instead.** The old text is left in place, per this
+> project's rule that corrections are made visibly rather than by deletion.
+>
+> **Where things stand (verified against commits, 2026-09-21):**
+> - **v2 coverage: MEASURED by Jam, K1′ FAIL.** 33.8% trained-on, **28.0% fresh**; hono 35.8% PASS,
+>   trpc 24.3% FAIL. Artifact `scripts/data/elm-coverage-v2.log` (`f3a88d39`), invocation and
+>   hashes committed. Jam then **retracted in place** the "narratively convenient" insinuation
+>   about Syrup's 28.0% — it was right to the decimal (`f95b8cd3`).
+> - **v3 structural-feature experiment (Nutella's): FAILED its pre-registered bar.** Valid arm
+>   `pooled @ 0.25` = 27.6% vs 28.0% baseline. The `percentile` arm (21.6%) was invalid — dead
+>   features on unseen repos, a mechanism Jam pinpointed in `elm-features.mjs`.
+> - **Class-targeted harvest (`TN-N20`, Nutella) is in progress.** typeorm harvested (`model` 1→74
+>   rows); nest's first pass hit 17 failed batches and is being retried; remix queued.
+> - **Jam prepared `SYNC-002`** (`81cf6042`) for the 2026-09-21 leads meeting.
+>
+> **Jam's live commitments — what a revived Jam owns right now:**
+> 1. **Certification of the class-targeted corpus** — agreed: *Jam runs the coverage check*
+>    (`16f32443`).
+> 2. **The freeze of the new corpus's model** — Jam read it as theirs by the ADR's split and said
+>    so; it is the expensive step (~57 min, OOM'd once before the streaming fix).
+> 3. **The GUARD fix** — measure the GUARD on the **same 160 v2 held-out files** rather than a
+>    re-split population; Jam offered to do this on the certification side (`4fae0e75`).
+> 4. **Awaiting a yes/no from the lead:** may Jam add the refit-fingerprint check to
+>    `elm-coverage-check.mjs`? Jam built it once and reverted it as scope creep, and will not
+>    touch that file again without an explicit yes.
+>
+> **Jam's positions on record, which a revived Jam should not re-derive:**
+> - **Do not rebalance the corpus; rebalance the training view** — keep every row, apply class
+>   balancing as a declared sampling step at training time, judge PRIMARY on the natural prior and
+>   report any rebalanced model as a diagnostic, **declared before the corpus is built**
+>   (`20415d3f`).
+> - **Do not spend payload's 70 calls on the residue-path probe** — it has now missed twice
+>   (`config` 123→6, `schema` 43→0). Harvest remix (8 calls), re-audit, then decide.
+> - **Call the new corpus's artifacts by experiment as well as version** — "v3" already names the
+>   failed structural experiment.
+> - **Callgraph/components metadata: deferred** (lead's call) — withheld by the ADR's own rule,
+>   CPU-only to backfill later (`0f766d22`).
+> - **`TN-J22`** (the classify prompt) — **deferred by the lead**, still the only lever on label
+>   quality.
+>
+> **Not reconstructable, stated so nobody assumes otherwise:** Jam's reasoning between commits, any
+> uncommitted work, and anything in a session scratchpad.
+
+
 **As of 2026-09-04 (revive).** The 08-23 text that stood here said Step 3 was paused on `TN-J10`.
 `TN-J10` was resolved 2026-08-27 and everything downstream of it has since run, so that paragraph
 is superseded — its content survives in the session log, where it belongs.
@@ -379,6 +433,45 @@ entry here is not clutter, it is a wrong order.)*
 ## Session log
 
 Newest at the top. **Do not edit past entries** — append corrections as a new entry.
+
+---
+
+### 2026-09-05 → 2026-09-21 — RECONSTRUCTED 2026-09-21 by Nutella, not contemporaneous
+
+> **Written by Nutella, not Jam**, at the lead's request after Jam's cached history was lost. Each
+> line is a committed artifact; the reasoning behind them is Jam's and is not reproduced. If Jam is
+> revived and remembers any of this differently, **Jam's account wins** and this entry should be
+> corrected in place.
+
+**Did (by commit):**
+- **09-16 — corpus-acquisition handover to Nutella** (`189c5da5`). Proposed `TN-J9` → Nutella and
+  the `TN-J32` split (rebuild Nutella's, coverage check Jam's). Warned that the 105 unsampled
+  gold-set-#2 rows are **not free** — ecosystem-level contamination the path-level guard would
+  pass. Documented the residue mechanism, the sanity corpus, the `role: "source"` ceiling, three
+  unrecorded per-row variables, the `[partial signals]` teacher contamination, the free columns,
+  and the 83-row ground truth.
+- **09-17 — reviewed `ADR-2026-09-17-nutella-…`** (`e760897f`). Measured that the structural block
+  would carry ~2.7× the path block's energy (path squared-L2 mean 1.464 vs ~4.0); argued within-repo
+  percentile imports repo composition; flagged `language`, `depthFromRoot`, `symbols[]`,
+  `catalogVersion` and two stale zone counts. All adopted.
+- **09-17 — ran the v2 coverage check on the lead's authorisation** (`f3a88d39`): **28.0% fresh,
+  K1′ FAIL.** Then **retracted in place** the suggestion that Syrup's identical figure was
+  "narratively convenient" (`f95b8cd3`).
+- **09-18 — "defer the metadata, freeze the frame"** (`0f766d22`). Relayed the lead's call to defer
+  callgraph/components; set out the expensive-irreversible vs free-repeatable economics; asked for a
+  commit-join assertion before the harvest; filed two `sourcevision` defects (stale `--help`,
+  manifest stuck at `zones: "running"`).
+- **09-21 — certification seam** (`16f32443`): *Jam runs the coverage check*; raised who freezes,
+  the fingerprint-check question, the "v3" naming collision, and two defects — `elm-features.mjs`
+  marks an unavailable normalisation as measured, and the harvest IMPL's "usable headroom" was
+  actually the held-out split.
+- **09-21 — the GUARD is not comparable across corpus versions** (`4fae0e75`): the builder re-splits,
+  so a GUARD threshold from v2's 160 held-out files is applied to a different population, biased
+  toward passing.
+- **09-21 — don't rebalance the corpus** (`20415d3f`): answered Nutella's sampling question.
+- **09-21 — prepared `SYNC-002`** for the leads meeting (`81cf6042`).
+
+**Handoff:** see ▶ RESUME HERE under Current state.
 
 ---
 

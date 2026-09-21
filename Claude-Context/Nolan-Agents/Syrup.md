@@ -100,6 +100,48 @@ seam for anything that genuinely is a vendor.)*
 
 ## Current state
 
+> ## ▶ RESUME HERE — reconstructed 2026-09-21 by Nutella, at the lead's request
+>
+> **Why this block exists.** The lead lost Syrup's cached session history on 2026-09-21 (remote
+> access). This charter's log stopped at **2026-08-31**, but Syrup did three weeks of committed work
+> after that. Everything below is **reconstructed from committed notes, ADRs and artifacts** — not
+> from Syrup's reasoning, which is not recoverable. Commit hashes are given where they exist.
+>
+> **⚠️ The `Next up` section below is from 2026-08-31 and is stale** — Jarrett has since pushed all
+> five `elm/*` branches (including `TJ-A3`), so "re-read both branches after Jam replies" is
+> superseded. **Use this block.** The old text stays, per the project's rule on visible corrections.
+>
+> **Syrup's live commitments:**
+> 1. **`SYNC-002` action #5 — commit the capacity-sweep harness, or withdraw that row.** Syrup's
+>    own weekly note flags that the "capacity 1024 → 4096: held-out +3.8 pp, fresh −4.5 pp" row came
+>    from a **scratchpad simulation on 2026-09-11 with no committed artifact**, since rotated. By
+>    this project's standard it is a lead, not a finding, until committed.
+> 2. **The CV-vs-deployment anti-correlation — Syrup proposed it deserves its own ADR.** Three
+>    instances where a change that helped train-CV/held-out hurt fresh-ecosystem coverage (capacity,
+>    structural features; corpus v1→v2 was the exception). **Only two of the three have committed
+>    artifacts** — item 1 is the prerequisite.
+> 3. **Review Nutella's row schema before any harvest at scale** — Syrup's own request (09-16), which
+>    Nutella accepted. Not yet sent.
+> 4. **The Elon ↔ Nutella seam** (`SYNC-002` blocker #2) — Jarrett's new agent Elon (`TJ-E1`) is
+>    building content features for the ELM while Nutella builds the database they would be computed
+>    from. Syrup surfaced it; it is a leads' action now.
+>
+> **Syrup's standing record, which a revived Syrup should not re-derive:**
+> - **The 28.0% v2 coverage figure was right, to the decimal.** Challenged by Nutella (no artifact)
+>   and by Jam ("narratively convenient"); Jam then ran it and got 28.0% (`f3a88d39`) and retracted
+>   in place (`f95b8cd3`). The only real gap was a number without a committed invocation.
+> - **Two of Syrup's claims were corrected and Syrup accepted both:** the "105 free training rows"
+>   (repeated from `ELM-CORPUS.md` § 7 — ecosystem-level contamination; retracted at source), and the
+>   `ELM.train()` proof (resting on 3-byte `savedModelJSON` byte-identity; the behavioural test is
+>   the real proof — the defect itself stands).
+> - **⚠️ Syrup's 09-21 weekly note § 1 says `elm-coverage-v3-primary.json` is uncommitted. It was
+>   committed at `21d4c083` (11:46), within minutes.** A revived Syrup should not re-chase it. *(The
+>   author field is the shared git identity, so which session committed it is not recoverable.)*
+>
+> **Not reconstructable:** Syrup's reasoning between commits, any uncommitted or scratchpad work —
+> including the capacity simulation behind item 1, which is why that row needs re-running.
+
+
 `TN-S1` delivered 2026-08-31. Surveyed `origin/Jarrett` (41 commits ahead) and both Thomas branches;
 two notes written to Jam and Butter. **Headline: all three teams have independently built an ELM
 classifier into `packages/sourcevision/src/analyzers/`, and both other teams shipped theirs
@@ -121,6 +163,35 @@ outbound cross-team notes (I draft, the lead sends).
 ## Session log
 
 Newest at the top. **Do not edit past entries** — append corrections as a new entry.
+
+---
+
+### 2026-09-01 → 2026-09-21 — RECONSTRUCTED 2026-09-21 by Nutella, not contemporaneous
+
+> **Written by Nutella, not Syrup**, at the lead's request after Syrup's cached history was lost.
+> Each line is a committed artifact; the reasoning is Syrup's and is not reproduced. **If Syrup is
+> revived and remembers differently, Syrup's account wins** and this entry should be corrected in
+> place.
+
+**Did (by artifact):**
+- **09-04 — two ADRs + IMPLs** (`f3a3e879`):
+  `ADR-2026-09-04-syrup-merge-elm-corpus-into-jarrett-harness.md` (`TN-S2`) — the corpus, not the
+  frozen model, is the merge unit; four of five integration blockers were artifacts of choosing the
+  wrong thing to merge; the coverage check should become a runtime gate — and
+  `ADR-2026-09-04-syrup-merge-thomas-path-text-classifier.md`.
+- **~09-11 — capacity gate simulation** (1024 → 4096: held-out +3.8 pp, fresh −4.5 pp). **No
+  committed artifact**; the scratch output has rotated. Recorded as a lead only.
+- **09-16 — groundwork note to Nutella** (`NOTE-…-syrup-to-nutella-corpus-groundwork.md`). Nothing
+  built reads file content; the residue selection bias; the archetype catalog is moving under us
+  (`TJ-A3`); pick repos by class need, 30-row floor; **the `ELM.train()` defect** (found by Team
+  Thomas's Nala first); the 80% confidence bar is unreachable on measured margins; stated the v2
+  fresh coverage as **28.0%**.
+- **09-21 — weekly update to Jam** (`NOTE-…-syrup-to-jam-weekly-update.md`). Surfaced the v3
+  negative; the CV-vs-deployment anti-correlation; Jarrett pushed all five `elm/*` branches and
+  onboarded Elon (`TJ-E1`, content-based); Team Thomas silent 11 days; `origin/dev` broken 16 days.
+- **Fed `SYNC-002`** — Jam prepared it "from Syrup's 2026-09-21 cross-team survey."
+
+**Handoff:** see ▶ RESUME HERE under Current state.
 
 ---
 
