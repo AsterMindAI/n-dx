@@ -21,12 +21,13 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { ELM } from "@astermind/astermind-community";
+import { ELM, UniversalEncoder } from "@astermind/astermind-community";
 import { analyzeClassifications } from "./classify.js";
 import { BUILTIN_ARCHETYPES } from "./archetypes.js";
 import type {
   Classifications,
   FileClassification,
+  ImportEdge,
   Imports,
   Inventory,
 } from "../schema/index.js";
@@ -124,6 +125,141 @@ export function extractNumericExamples(
     examples.push({ vector, archetype: fc.archetype });
   }
   return examples;
+}
+
+// PROVENANCE: the block below is ported verbatim from commit ae9dc463 on branch
+// elm/jarrett/classify-elm-prefilter (Archer, TJ-R2 step 4, 2026-09-04). Absorbed under
+// TJ-E1 per IMPL-2026-09-17-elon-content-based-elm-classifier.md step 1. It is the measured
+// path-only BASELINE the content representation must beat (ADR-2026-09-17, Decision point 4)
+// -- not dead code. Do not remove it without a replacement baseline.
+
+// ── Path/export text representation (TJ-R2, ADR-2026-08-31-realm-path-based-elm-classifier.md)
+//
+// The evidence-vector representation above is real, validated infrastructure — for contexts
+// where evidence isn't uniformly zero. At classifyWithELM's actual call site (files where
+// analyzeClassifications already produced archetype: null), it's provably always the
+// all-zero vector (ADR-2026-08-11's "Zero-evidence population," 2026-08-27). Path/filename
+// text is never empty for a real file, so it can't degenerate the same way — that's the
+// entire premise of this section. Design-only for now (TJ-A3/TJ-R2 sequencing, see
+// Notes/NOTE-archer-to-knight-and-realm-2026-09-04-tj-r2-claimed-design-only-for-now.md):
+// the functions below are not yet wired into classifyWithELM or trained/evaluated against
+// real data — that's gated on TJ-A3's re-measurement of the zero-evidence population.
+//
+// Encoding shape, resolved 2026-09-04 by reading the installed
+// @astermind/astermind-community v3.0.0 source directly (not assumed):
+//
+// - ELM's own text mode (`new ELM({ useTokenizer: true, ... })`, TextConfig) routes through
+//   TextEncoder.textToVector's tokenizer branch, which still does
+//   `this.tokenizer.tokenize(text).join('')` — no separator — before slicing/padding to
+//   maxLen and one-hot-encoding character by character. Confirmed present in the currently
+//   installed dist (astermind.esm.js), same bug Knight's TJ-K1 found in the now-retired
+//   text-mode code above. TextConfig's `useTokenizer` is typed as the literal `true` — the
+//   type system doesn't offer a way to reach char-mode encoding through ELM's own config.
+// - UniversalEncoder (exported from the package root, not an ELM-internal type) supports
+//   char-mode directly via `mode: "char"`, which never touches the tokenizer at all
+//   (`useTokenizer = merged.mode === "token"` in the bundled source) — this is what's used
+//   below, constructed independently of ELM and fed through the existing NumericConfig path
+//   (trainArchetypeELMNumeric/predictArchetypeNumeric, unchanged — they only consume
+//   {vector, archetype} pairs and don't care what produced the vector).
+// - The encoder's encode() takes a single string, full stop (`encode(text: string): number[]`,
+//   UniversalEncoder.d.ts) — there is no structured multi-field input option. Resolves the
+//   IMPL's Open Question 1: path and export names are concatenated into one string, the same
+//   pattern the retired fileToText used for path + evidence hints.
+// - The default charSet ("abcdefghijklmnopqrstuvwxyz", 26 lowercase letters) silently drops
+//   every other character — digits, "/", ".", "-", "_" — which would destroy exactly the
+//   directory/extension structure that makes a path meaningful (e.g. "/utils/" would become
+//   indistinguishable from adjoining path segments). Expanded below to keep that structure.
+// - The default maxLen (15) is far shorter than a real path. Widened below to a reasoned
+//   starting point, not a validated one — the exact value belongs in the (currently gated)
+//   eval, where actual path-length distributions can be checked against coverage, not
+//   asserted here as final.
+
+const PATH_EXPORT_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789/.-_ ";
+const PATH_EXPORT_MAX_LEN = 80;
+
+let pathExportEncoder: UniversalEncoder | undefined;
+
+function getPathExportEncoder(): UniversalEncoder {
+  if (!pathExportEncoder) {
+    pathExportEncoder = new UniversalEncoder({
+      mode: "char",
+      charSet: PATH_EXPORT_CHARSET,
+      maxLen: PATH_EXPORT_MAX_LEN,
+    });
+  }
+  return pathExportEncoder;
+}
+
+/**
+ * Mirrors classify.ts's private buildExportMap (classify.ts:256-274) — duplicated, not
+ * imported, to keep this module standalone (see file header). Low drift risk relative to
+ * extractNumericExamples's choice to call through analyzeClassifications() instead of
+ * reimplementing: this is a simple grouping pass with no scoring/regex logic to drift from.
+ */
+function buildExportMap(edges: ImportEdge[]): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (edge.type !== "reexport") continue;
+    let list = result.get(edge.to);
+    if (!list) {
+      list = [];
+      result.set(edge.to, list);
+    }
+    for (const sym of edge.symbols) {
+      if (!list.includes(sym)) list.push(sym);
+    }
+  }
+  return result;
+}
+
+/**
+ * The single string fed to the encoder for one file: its path plus any raw export names —
+ * not classifyFile's matched signals (which are what's zero at this call site; see ADR
+ * Decision point 2) — concatenated, since the encoder only accepts one string (see design
+ * note above).
+ */
+function pathExportText(path: string, exportMap: Map<string, string[]>): string {
+  const exports = exportMap.get(path);
+  return exports && exports.length > 0 ? `${path} ${exports.join(" ")}` : path;
+}
+
+/**
+ * Extract (path/export-text-vector, archetype) pairs — the TJ-R2 counterpart to
+ * extractNumericExamples above. Same labeling rules (algorithmic/llm source, source-role
+ * files only), different input representation. Vector length is fixed by the shared
+ * encoder's config, independent of the archetype catalog size (unlike the evidence-vector
+ * representation, whose length is the catalog size).
+ */
+export function extractPathExportExamples(
+  classifications: Classifications,
+  inventory: Inventory,
+  imports: Imports,
+): NumericArchetypeExample[] {
+  const encoder = getPathExportEncoder();
+  const exportMap = buildExportMap(imports.edges);
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
+
+  const examples: NumericArchetypeExample[] = [];
+  for (const file of inventory.files) {
+    if (file.role !== "source") continue;
+    const fc = classificationByPath.get(file.path);
+    if (!fc?.archetype) continue;
+    if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
+    const vector = encoder.normalize(encoder.encode(pathExportText(file.path, exportMap)));
+    examples.push({ vector, archetype: fc.archetype });
+  }
+  return examples;
+}
+
+/**
+ * Encode one file's path/export text into the same vector space extractPathExportExamples
+ * trains on — the prediction-time counterpart, mirroring evidenceToVector's role for the
+ * numeric/evidence representation above.
+ */
+export function pathExportVector(path: string, imports: Imports): number[] {
+  const encoder = getPathExportEncoder();
+  const exportMap = buildExportMap(imports.edges);
+  return encoder.normalize(encoder.encode(pathExportText(path, exportMap)));
 }
 
 export interface TrainedArchetypeELMNumeric {
