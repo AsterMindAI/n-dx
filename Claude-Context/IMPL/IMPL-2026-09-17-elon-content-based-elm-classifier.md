@@ -5,7 +5,7 @@
 - **Backlog item:** `TJ-E1`
 - **Branch:** `elm/jarrett/classify-elm-content`
 - **Worktree:** `../n-dx-elon`
-- **Status:** Not started (plan written 2026-09-17, no code yet)
+- **Status:** In progress -- **steps 1-4 DONE** (commit `fad02a8e`, 2026-09-21). Extraction only: nothing wired into `runELMGate`, no model trained, no accuracy number claimed. The gate still resolves zero files. Next: step 5.
 
 ## Scope
 

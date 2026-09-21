@@ -133,6 +133,12 @@ doctrine set, Archer's and Realm's charters, and the real current state of
 which were stale in three places (see session log). Supersedes `TJ-R2` (Archer); Archer's Step 4
 encoder is absorbed as the measured baseline, not discarded.
 
+**Steps 1-4 shipped 2026-09-21** (`fad02a8e` on `elm/jarrett/classify-elm-content`):
+`classify-elm-features.ts` exists, 1786/1786 sourcevision tests green, arch gates 108/108.
+**This changes nothing user-visible yet** — the extractor is not wired into `runELMGate`, no model
+is trained on it, and the gate still resolves zero files. Step 5 (the zero-evidence corpus) is next
+and is blocked on training data.
+
 **Plan written:** `ADR-2026-09-17-elon-content-based-elm-classifier.md` +
 `IMPL-2026-09-17-elon-content-based-elm-classifier.md`. ADR Status is **Proposed** with a
 deliberately unmeasured Evidence section — it does not move to Accepted until the eval clears its
@@ -148,11 +154,9 @@ length-independent fixed-width vector instead: name/extension block + feature-ha
 
 ## Next up
 
-- [ ] **IMPL Step 1** — absorb `ae9dc463` (`../n-dx-jarrett`): `extractPathExportExamples`/
-      `pathExportVector` + 10 tests, unchanged, as the path-only baseline.
-- [ ] **Steps 2-4** — `classify-elm-features.ts`: name/extension block, feature-hashed content
-      block, structural counts. File I/O with degradation paths (missing/unreadable/binary → never
-      throw).
+- [x] **IMPL Step 1** — DONE (`fad02a8e`). Absorbed `ae9dc463` verbatim with a provenance header.
+- [x] **Steps 2-4** — DONE (`fad02a8e`). `classify-elm-features.ts`, 48 new tests, degradation
+      paths covered. **Extraction only — nothing wired, no model trained, gate still resolves zero.**
 - [ ] **Step 5** — build the zero-evidence corpus and **assert** every eval input has an all-zero
       evidence vector. This assertion is the check whose absence invalidated four prior results.
 - [ ] **Flag to Knight before Step 6** — `TJ-A3` moves both the label set and the zero-evidence
@@ -283,3 +287,55 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
   worktree `../n-dx-elon` is machine-local and will not exist there. Recreate it with
   `git worktree add ../n-dx-elon elm/jarrett/classify-elm-content && cd ../n-dx-elon && pnpm install`,
   or just check the branch out directly.
+
+---
+
+### 2026-09-21 — IMPL steps 1-4: the feature extractor exists
+
+**Did:**
+- **Step 1** — ported `extractPathExportExamples`/`pathExportVector` + Archer's 10 tests verbatim
+  from `ae9dc463`, with a provenance header marking them as the path-only baseline to beat, not
+  dead code.
+- **Steps 2-4** — wrote `classify-elm-features.ts`: five blocks (extension one-hot, path scalars,
+  hashed path tokens, hashed content tokens, structural counts), each L2-normalized independently
+  so the 512-dim content block cannot swamp the 6-dim scalar block by magnitude. Plus
+  `readFileContentSafely`, which never throws.
+- 48 new unit tests. Committed `fad02a8e`.
+
+**Learned:**
+- **The `UniversalEncoder` finding held up under implementation.** `textToVector` emits a one-hot
+  per character *position* — `maxLen × charSize`, hard-truncated at `maxLen`. Confirmed by reading
+  the bundle. Feature hashing replaces it: fixed width regardless of file length, no vocabulary to
+  persist next to the model.
+- **The charSet range bug is real**, and I left it alone deliberately — it is in the vendored
+  library's own encoder, reached only through TJ-R2's path-only baseline, and routing around it
+  costs nothing. Recorded in the module header so the next reader does not rediscover it.
+- Test-count arithmetic reconciles exactly: 1728 baseline + 48 new + 10 ported = **1786**. Worth
+  checking, because a silently-skipped test file would look identical to a passing one in the
+  summary line.
+
+**Broke / still broken:**
+- Nothing broken. **Both red-test checks were actually run, not asserted:**
+  - Disabling the content block failed exactly 3 tests — and only the content-dependent ones
+    ("distinguishes files that differ only in content", "content changes the vector", the per-block
+    L2 assertion). The other 45 stayed green, which is the evidence that the block boundaries are
+    real and not incidentally coupled.
+  - Changing the FNV prime by one bit failed the hash-stability test. That test pins the
+    *canonical* FNV-1a vectors (`""`→`0x811c9dc5`, `"a"`→`0xe40c292c`, `"foobar"`→`0xbf9cf968`),
+    not values copied from my own output — so it is an independent check, not a tautology.
+  - Both sabotages reverted and verified absent by grep before committing.
+- **Still unverified by me:** the 4 pre-existing root `pnpm test` failures. I have not run the
+  whole-repo suite yet. Per the IMPL, I confirm those on the unmodified branch *before* reporting
+  any result of my own.
+
+**Left undone and why:**
+- Steps 5-13. Step 5 needs the zero-evidence corpus, and the user is supplying training data — so
+  waiting is correct rather than fabricating a corpus that the real data would invalidate.
+- Nothing is wired into `runELMGate`. Deliberate: wiring before the eval would mean shipping an
+  unmeasured representation, which is the exact mistake this whole line of work exists to undo.
+
+**Notes sent / received:** none. Still Team-Jarrett-internal.
+
+**Handoff:**
+- Step 5 on receipt of training data. Before step 6, flag the `TJ-A3` interaction to Knight —
+  a moving catalog moves both the label set and the zero-evidence population.
