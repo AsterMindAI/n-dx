@@ -60,6 +60,13 @@ const pooled = buildStats(new Map([["n-dx-1", ndx], ["commerce", commerce]]), "p
 const pn = at(1, "n-dx-1", pooled), pc = at(1, "commerce", pooled);
 ok(pn === pc, `pooled gives ONE yardstick across repos (${(pn * 100).toFixed(1)}th in both) — percentile gave 12.5 vs 72.7`);
 
+// Jam's defect (a), 2026-09-21: an unseen repo under percentile has a raw value but
+// no distribution. It must read as NOT MEASURED, never as "measured, ranks bottom".
+{
+  const unseen = deriveFeatures(row({ inDegree: 3 }), "some-unseen-repo", pctNdx).vector;
+  ok(unseen[IN_MISS] === 1, "percentile on an unseen repo -> flagged missing, not 'ranks at the bottom'");
+}
+
 console.log("\nwithheld-by-construction properties");
 ok(vec({ externalPackages: ["some-unmapped-package"] }, "r", LOG).join() === vec({}, "r", LOG).join(),
    "an unmapped package yields no family column, never a new family");

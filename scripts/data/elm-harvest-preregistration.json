@@ -4,56 +4,110 @@
   "registeredBy": "Nutella (Team Nolan)",
   "adr": "Claude-Context/ADR/ADR-2026-09-21-nutella-class-targeted-harvest.md",
   "impl": "Claude-Context/IMPL/IMPL-2026-09-21-nutella-class-targeted-harvest.md",
-  "backlog": ["TN-N20"],
-
+  "backlog": [
+    "TN-N20"
+  ],
   "why_this_exists": "Committed before any repo is analyzed and before any call is spent. The previous experiment's bar was registered the same way and it is the reason its failure could not be reinterpreted afterwards.",
-
   "question": "Does harvesting the classes the model cannot currently emit clear K1' on fresh ecosystems?",
-
   "population": {
-    "name": "gold set #2 packet", "n": 250, "repos": ["hono", "trpc"],
+    "name": "gold set #2 packet",
+    "n": 250,
+    "repos": [
+      "hono",
+      "trpc"
+    ],
     "file": "scripts/data/k2-goldset2-llm-labels.json",
     "status": "FRESH ecosystems, never trained on. Human labels remain UNREAD.",
     "note": "Coverage needs no ground truth, so measuring here does NOT spend the blind set."
   },
-
   "feature_space": "PATH-ONLY. Structural features measured neutral (-0.4 pp) in the previous experiment, so including them would move two variables at once. They remain in `raw`, re-derivable at zero cost.",
-
   "model_spec_pinned_to_frozen_v2": {
-    "hiddenUnits": 4096, "activation": "tanh", "ridgeLambda": 0.01, "vocabCap": 4000,
-    "ensembleSeeds": [42,43,44,45,46,47,48,49,50],
-    "operatingPoint": {"design": "B+su", "abstainOn": ["service","utility"], "suAdmitFraction": 0.1}
+    "hiddenUnits": 4096,
+    "activation": "tanh",
+    "ridgeLambda": 0.01,
+    "vocabCap": 4000,
+    "ensembleSeeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50
+    ],
+    "operatingPoint": {
+      "design": "B+su",
+      "abstainOn": [
+        "service",
+        "utility"
+      ],
+      "suAdmitFraction": 0.1
+    }
   },
-
   "baseline": {
-    "value": 0.280, "rendered": "28.0%",
+    "value": 0.28,
+    "rendered": "28.0%",
     "what": "path-only on corpus v2, K1' FAIL",
     "artifact": "scripts/data/elm-coverage-v2.log",
-    "companion": {"trained_on": 0.338, "hono": 0.358, "trpc": 0.243, "distinct_labels": 7}
+    "companion": {
+      "trained_on": 0.338,
+      "hono": 0.358,
+      "trpc": 0.243,
+      "distinct_labels": 7
+    }
   },
-
   "criteria": {
-    "PRIMARY":   {"test": "coverage_fresh >= 0.300", "means": "K1' clears"},
-    "SECONDARY": {"test": "distinct_labels_fresh > 7", "means": "the class prior genuinely widened"},
-    "TERTIARY":  {"test": "coverage improves on BOTH hono and trpc separately", "means": "not an average hiding one repo"},
-    "GUARD":     {"test": "coverage_trained_on >= 0.318", "means": "not bought by wrecking the in-distribution case"}
+    "PRIMARY": {
+      "test": "coverage_fresh >= 0.300",
+      "means": "K1' clears"
+    },
+    "SECONDARY": {
+      "test": "distinct_labels_fresh > 7",
+      "means": "the class prior genuinely widened"
+    },
+    "TERTIARY": {
+      "test": "coverage improves on BOTH hono and trpc separately",
+      "means": "not an average hiding one repo"
+    },
+    "GUARD": {
+      "test": "coverage_trained_on >= 0.318",
+      "means": "not bought by wrecking the in-distribution case"
+    }
   },
-
   "harvest_target": {
-    "bar_relevant_classes": {"config": 30, "model": 30, "component": 30, "middleware": 30, "gateway": 30, "schema": 30, "hook": 30},
-    "current_rows":         {"config": 11, "model": 1,  "component": 8,  "middleware": 6,  "gateway": 4,  "schema": 1,  "hook": 1},
+    "bar_relevant_classes": {
+      "config": 30,
+      "model": 30,
+      "component": 30,
+      "middleware": 30,
+      "gateway": 30,
+      "schema": 30,
+      "hook": 30
+    },
+    "current_rows": {
+      "config": 11,
+      "model": 1,
+      "component": 8,
+      "middleware": 6,
+      "gateway": 4,
+      "schema": 1,
+      "hook": 1
+    },
     "floor_rationale": "Measured recall by row count: entrypoint 59 rows -> 85%; types 34 -> 42%; 1-2 rows -> 0%. Floor 30, target 50.",
-    "catalog_only_cannot_move_the_bar": ["route-module", "store", "cli-command"]
+    "catalog_only_cannot_move_the_bar": [
+      "route-module",
+      "store",
+      "cli-command"
+    ]
   },
-
   "stopping_rule": {
     "build_before_measure": "The corpus is built, frozen and committed BEFORE the coverage run.",
     "one_run": "One coverage run per corpus version. No tuning against the 250.",
     "incremental_spend": "Analyze one repo, re-run the free class audit, decide whether to continue. Stop when the seven classes hit target, not when the budget is spent."
   },
-
   "necessary_not_sufficient": "Coverage counts predictions outside service/utility WHETHER OR NOT THEY ARE CORRECT, so emitting starved classes raises it partly mechanically. Clearing 30% proves the prior widened; it does NOT prove the predictions are right. Precision needs the blind 250 -- the one irreversible spend -- and is capped regardless by the teacher's 72.3% agreement with human judgement. NO ACCURACY CLAIM will be made from this experiment.",
-
   "constraints": [
     "Do NOT harvest the 105 unsampled hono/trpc candidates -- same repos as the eval set; the path-level assertion would pass, the contamination is ecosystem-level.",
     "Do NOT touch the blind 250.",
@@ -63,6 +117,36 @@
     "--fast gates the classify pass: it spends nothing and yields nothing usable.",
     "--max-old-space-size=6144 on every coverage run; an OOM exits 0 with an empty table."
   ],
-
-  "certification": "Harvest and corpus: Nutella. Certification and model evaluation: Jam, per the TN-N3 seam -- the agent who diagnosed the problem and proposed the fix does not grade it."
+  "certification": "Harvest and corpus: Nutella. Certification and model evaluation: Jam, per the TN-N3 seam -- the agent who diagnosed the problem and proposed the fix does not grade it.",
+  "addendum_2026_09_21_pre_build": {
+    "declared": "2026-09-21, BEFORE the class-targeted corpus exists. Verified: no corpus or coverage artifact for this experiment is on disk at declaration time.",
+    "why": "Jam's notes of 2026-09-21 (guard-is-not-comparable; dont-rebalance-the-corpus; certification-seam) identified three choices that would otherwise be made after the corpus is seen -- which would be tuning against the 250. They are fixed here instead. The original criteria above are NOT changed.",
+    "sampling": {
+      "PRIMARY_is_judged_on": "the NATURAL PRIOR. Every harvested row is kept. No class rebalancing and no per-repo cap in the model PRIMARY is judged on.",
+      "why_natural": "The 28.0% baseline was measured at the natural prior. Any change to the training prior makes coverage incomparable to it. And class rebalancing is a direct mechanical lever on the metric: removing service/utility/types rows shifts the learned prior away from them, so coverage rises whether or not any prediction became more correct. A pass obtained that way would be an artefact, not a result.",
+      "diagnostic_model": {
+        "status": "planned; run only AFTER the PRIMARY artifact is committed; reported alongside it; CAN NEVER CHANGE THE PRIMARY VERDICT",
+        "training_view": "same carried train split, with each class capped at 100 training rows by seeded sampling (mulberry32, seed 42). Held-out and gold set #2 unaffected. Model spec identical.",
+        "purpose": "to make the mechanical component of coverage visible: the gap between this model's coverage and the natural-prior model's coverage is the share attributable to prior shift rather than learning."
+      },
+      "repo_dominance": "Not capped in PRIMARY (a cap changes the prior). Instead, every repo's share of the corpus is REPORTED. Expected to be diluted by continuing the harvest rather than by sampling."
+    },
+    "split": {
+      "rule": "The corpus is built with --carry-split=scripts/data/elm-archetype-corpus-v2.json. Every v2 row keeps its v2 train/held-out assignment; only NEW rows are split (stratified, seed 42, holdout 0.25).",
+      "verified": "Rebuilding v2's own seven repos with --carry-split carries 464 train + 160 held-out unchanged with 0 new rows and identical labels.",
+      "why": "Without it the builder re-splits everything, so v2 held-out rows become v3 training rows and every held-out comparison breaks."
+    },
+    "GUARD_redefined": {
+      "old": "coverage_trained_on >= 0.318, where 'trained_on' meant the NEW corpus's held-out split",
+      "new": "coverage on EXACTLY the 160 files of corpus v2's held-out split >= 0.318",
+      "why": "The old threshold came from v2's 160 held-out files but would have been applied to a different, re-split population -- and one biased toward passing, because the harvest adds only minority-class rows and a quarter of them land in held-out. With --carry-split those 160 files are guaranteed absent from training, so the comparison is valid."
+    },
+    "naming": {
+      "rule": "Every artifact of this experiment names the experiment, not only the version: elm-archetype-corpus-v3-classtargeted.json, elm-archetype-corpus-resolved-v3-classtargeted.json, elm-frozen-model-v3-classtargeted.json, elm-coverage-v3-classtargeted.{log,json}.",
+      "why": "'v3' already names the failed structural-features experiment (elm-v3-*, elm-coverage-v3-*). A shared name inside one directory is how a number loses its provenance."
+    },
+    "component": "Recorded as a CATALOG-COVERAGE GAP, not a risk to PRIMARY. It is 9 of the 40 locked files; without it 31 remain reachable and only 6 must move. Its signal is weak in every candidate repo; the proper source is a React/Next application.",
+    "reporting_rule": "If PRIMARY fails, the report states in the same sentence whether coverage beat the 28.0% baseline -- so the next decision (harvest more vs. TN-J22) can see whether the lever moved or was flat. A bare FAIL discards the gradient. The bar itself does not move.",
+    "certification": "Jam runs the freeze and the coverage check and commits the artifact whatever it says (NOTE-...-jam-to-nutella-certification-seam, 16f32443)."
+  }
 }

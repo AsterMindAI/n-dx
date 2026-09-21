@@ -211,16 +211,25 @@ export function deriveFeatures(row, repo, stats) {
 
   for (const field of ["inDegree", "outDegree", "loc", "size"]) {
     const raw = row[field];
-    const measured = typeof raw === "number";
+    // "Measured" means the NORMALISED value exists, not merely the raw one. Under
+    // `percentile`, a repo with no statistics (every unseen repo) has a raw value
+    // but no distribution to rank it against. Before 2026-09-21 that case emitted
+    // value 0 with missing 0 — asserting "measured, and it ranks at the bottom"
+    // when nothing had been ranked. That broke the zero-vs-missing invariant this
+    // module exists to protect, and it is the mechanism behind the invalid 21.6%
+    // percentile arm. Found by Jam (certification-seam note, defect (a)).
     let val = 0;
-    if (measured) {
+    let measured = false;
+    if (typeof raw === "number") {
       if (stats.normaliser === "log1p") {
         // Compressed but unbounded; divided by a fixed constant so the block stays
         // comparable in scale to the [0,1] normalisers. ln(1+249) ~ 5.52.
         val = Math.log1p(raw) / 6;
+        measured = true;
       } else {
         const d = dist(field);
-        val = d ? (midrank(d, raw) ?? 0) : 0;
+        const r = d && d.length ? midrank(d, raw) : null;
+        if (r !== null) { val = r; measured = true; }
       }
     }
     push(`${field}Norm`, val);

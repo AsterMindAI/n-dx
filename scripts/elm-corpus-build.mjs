@@ -54,6 +54,7 @@ function parseArgs(argv) {
     holdout: DEFAULT_HOLDOUT,
     minClass: DEFAULT_MIN_CLASS,
     dryRun: false,
+    carrySplit: null,
   };
   for (const arg of argv) {
     if (arg.startsWith("--out=")) opts.out = arg.slice(6);
@@ -62,6 +63,7 @@ function parseArgs(argv) {
     else if (arg.startsWith("--holdout=")) opts.holdout = Number(arg.slice(10));
     else if (arg.startsWith("--min-class=")) opts.minClass = Number(arg.slice(12));
     else if (arg === "--dry-run") opts.dryRun = true;
+    else if (arg.startsWith("--carry-split=")) opts.carrySplit = arg.slice(14);
     else if (arg.startsWith("--")) throw new Error(`Unknown option: ${arg}`);
     else repos.push(arg);
   }
@@ -410,6 +412,103 @@ function majorityBaseline(rows) {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
+/**
+ * ⛔ EVALUATION-SET GUARD — refuses to build from any repo in gold set #2.
+ *
+ * hono and trpc are the only fresh ecosystems this project has ever measured
+ * generalisation against. A row from either, in any training corpus, turns the
+ * coverage check into a held-out test on a trained-on ecosystem — the exact
+ * instrument that failed to detect corpus v1's collapse. Path-level checks are not
+ * enough: the 105 unsampled gold-set-#2 candidates are different FILES from the
+ * 250, so a path check passes, but they are the same ECOSYSTEM.
+ *
+ * Matched two ways so a renamed clone cannot slip past: the directory name, and
+ * the git remote recorded for each evaluation repo in the gold-set file itself —
+ * so the guard follows the evaluation set rather than a hardcoded list.
+ *
+ * History, recorded because it is the reason this exists: ADR-2026-09-21 and its
+ * IMPL both stated that this builder "asserts on repo identity". It did not. The
+ * guard existed only in scripts/elm-classify-residue.mjs. Found 2026-09-21 by
+ * checking the claim; demonstrated by building from hono, which harvested 117 rows
+ * and put 87 in train.
+ */
+const GOLD2_LABELS = "scripts/data/k2-goldset2-llm-labels.json";
+function evaluationRepos() {
+  const names = new Set(["hono", "trpc"]);
+  const remotes = new Set();
+  try {
+    const g = JSON.parse(readFileSync(GOLD2_LABELS, "utf-8"));
+    for (const p of g.provenance ?? []) {
+      if (p.repo) names.add(p.repo);
+      if (p.git?.remote) remotes.add(normRemote(p.git.remote));
+    }
+  } catch {
+    // The hardcoded names still apply if the gold-set file is missing.
+  }
+  return { names, remotes };
+}
+function normRemote(u) {
+  return String(u).trim().toLowerCase().replace(/\.git$/, "").replace(/^git@github\.com:/, "https://github.com/");
+}
+function assertNotEvaluationRepo(l) {
+  const ev = evaluationRepos();
+  const remote = l.git?.remote ? normRemote(l.git.remote) : null;
+  if (ev.names.has(l.repo) || (remote && ev.remotes.has(remote))) {
+    throw new Error(
+      `REFUSED: ${l.repo} (${remote ?? "no remote"}) is part of gold set #2, the evaluation set.\n` +
+      "  It is never used for training — not its sampled files and not its unsampled ones.\n" +
+      "  The contamination is ecosystem-level, which is the level corpus v1 failed at.",
+    );
+  }
+}
+
+/**
+ * --carry-split=<prior corpus.json>: keep every prior row's train/held-out
+ * assignment, and split only rows that are new.
+ *
+ * Without this, adding rows re-splits everything: each label group's length
+ * changes, so both the shuffle order and the round(len x 0.25) boundary move. Rows
+ * held out in the prior corpus become training rows, every held-out figure measured
+ * on the prior corpus stops being comparable, and a guard threshold taken from the
+ * prior held-out is applied to a different population. (Jam, 2026-09-21: the GUARD
+ * is not comparable across corpus versions.) This also makes the documented rule
+ * "do not re-split" something the tooling can actually honour.
+ *
+ * Identity is (repo, path). A row whose label changed since the prior corpus keeps
+ * its assignment and is reported.
+ */
+function carrySplit(rows, priorPath, holdout, rand) {
+  const prior = JSON.parse(readFileSync(priorPath, "utf-8"));
+  const key = (r) => `${r.repo}\u0000${r.text}`;
+  const priorHeld = new Map(prior.heldOut.map((r) => [key(r), r]));
+  const priorTrain = new Map(prior.train.map((r) => [key(r), r]));
+  const carriedTrain = [], carriedHeld = [], fresh = [];
+  let relabelled = 0;
+  for (const r of rows) {
+    const k = key(r);
+    const was = priorHeld.get(k) ?? priorTrain.get(k);
+    if (was && was.label !== r.label) relabelled++;
+    if (priorHeld.has(k)) carriedHeld.push(r);
+    else if (priorTrain.has(k)) carriedTrain.push(r);
+    else fresh.push(r);
+  }
+  const present = new Set(rows.map(key));
+  const missingHeld = [...priorHeld.keys()].filter((k) => !present.has(k)).length;
+  const missingTrain = [...priorTrain.keys()].filter((k) => !present.has(k)).length;
+  const s = stratifiedSplit(fresh, holdout, rand);
+  return {
+    train: [...carriedTrain, ...s.train],
+    held: [...carriedHeld, ...s.held],
+    report: {
+      from: priorPath,
+      carriedTrain: carriedTrain.length, carriedHeld: carriedHeld.length,
+      newTrain: s.train.length, newHeld: s.held.length,
+      missingFromBuild: { heldOut: missingHeld, train: missingTrain },
+      relabelled,
+    },
+  };
+}
+
 function main() {
   const { repos, opts } = parseArgs(process.argv.slice(2));
 
@@ -419,6 +518,7 @@ function main() {
   console.log("");
 
   const loaded = repos.map((r) => loadRepo(r, opts.sources));
+  for (const l of loaded) assertNotEvaluationRepo(l);
 
   for (const l of loaded) {
     const pct = l.totalFiles ? ((l.unclassified / l.totalFiles) * 100).toFixed(1) : "0.0";
@@ -509,8 +609,19 @@ function main() {
   }
 
   const rand = mulberry32(opts.seed);
-  const { train, held } = stratifiedSplit(rows, opts.holdout, rand);
-  console.log(`  split: ${train.length} train / ${held.length} held-out (stratified, seed ${opts.seed})`);
+  let train, held, carryReport = null;
+  if (opts.carrySplit) {
+    ({ train, held, report: carryReport } = carrySplit(rows, opts.carrySplit, opts.holdout, rand));
+    console.log(`  split: ${train.length} train / ${held.length} held-out — CARRIED from ${opts.carrySplit}`);
+    console.log(`         carried ${carryReport.carriedTrain} train + ${carryReport.carriedHeld} held-out unchanged; ` +
+      `new rows split ${carryReport.newTrain} / ${carryReport.newHeld} (stratified, seed ${opts.seed})`);
+    const m = carryReport.missingFromBuild;
+    if (m.heldOut || m.train) console.log(`  ⚠️  ${m.heldOut} prior held-out and ${m.train} prior train rows are NOT in this build (repo dropped or relabelled to null)`);
+    if (carryReport.relabelled) console.log(`  ⚠️  ${carryReport.relabelled} carried rows have a different label than in the prior corpus`);
+  } else {
+    ({ train, held } = stratifiedSplit(rows, opts.holdout, rand));
+    console.log(`  split: ${train.length} train / ${held.length} held-out (stratified, seed ${opts.seed})`);
+  }
 
   if (opts.dryRun) {
     console.log("\n--dry-run: nothing written.");
@@ -525,6 +636,7 @@ function main() {
       sources: opts.sources,
       seed: opts.seed,
       holdout: opts.holdout,
+      carriedSplit: carryReport,
       repos: loaded.map(({
         repo, path, git, analysis, teacher, totalFiles, classified, unclassified, harvested,
         bySource, omittedByLlm, featuresAvailable,
