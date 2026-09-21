@@ -369,6 +369,52 @@ Newest at the top. **Do not edit past entries** — append corrections as a new 
 
 ---
 
+### 2026-09-21 — Harvest done, corpus built, Jam and Syrup re-logged, methodology archived
+
+**Did:**
+- **Re-logged Jam and Syrup** after the lead lost their cached history: reconstructed session
+  entries plus a ▶ RESUME HERE block in each charter, from commits and notes only, marked as written
+  by me and superseding (not deleting) their stale `Next up`.
+- **Archived the methodology** to the public `NMoore-Astermind/ELM-database-ndx` (`5f22250`, synced
+  `7025406`): ADRs, IMPLs, `FEATURES.md`, `ELM-CORPUS.md`, pre-registrations, every result
+  including both failures, scripts, and a per-file SHA-256 provenance table. Secret-scanned twice.
+- **Finished the class-targeted harvest** (nest retry, remix) and **built both corpora**; handed
+  freeze and certification to Jam in the living note.
+
+**Learned:**
+- **nest's first pass failed on transport, not on content** — batches 13–29 all `failed
+  (unknown)` after ~30 good calls in a row. The LLM was reachable again minutes later.
+- **`--only=classifications` is not incremental** (`classify.ts:100` needs `changedFiles`, which
+  only the inventory phase sets). Wrote `elm-classify-residue.mjs`: nest retry cost **17 batches,
+  not 29**, with 0 failures.
+- **Corpus v3-classtargeted:** 2,195 rows, majority baseline **25.5%** (v2 38.3%); `config` 228,
+  `model` 106, `middleware` 100, `schema` 56 met; `component`/`gateway`/`hook` short.
+- **But each met class is 68–91% one ecosystem** (`config` 90.8% nest). Declared before the
+  measurement.
+
+**Broke / still broken:**
+- **⚠️ I published a guard that did not exist.** The ADR and IMPL (twice) said the builder "asserts on
+  repo identity" to keep hono/trpc out. It did not — only the residue script did. Building from hono
+  harvested 117 rows, 87 into train. **Now implemented, verified against a renamed clone, and
+  corrected in place in both documents.** Same class of failure as the 105-row claim: I described
+  intended behaviour as present behaviour and never executed the claim.
+- My failure counter matched the residue script's own summary text ("batches failed") and reported 2
+  failures that were not failures. Caught by reading the lines, not trusting the count.
+
+**Left undone and why:**
+- **The measurement is Jam's** — freeze and coverage check, by agreement.
+- **Fingerprint-check yes/no is the lead's**, asked.
+- **No further harvest** until there is a number — `component`, `gateway`, `hook` are catalog gaps.
+
+**Notes:** appended entry (c) to `NOTE-…-nutella-to-jam-harvest-run-log.md`; read Jam's three notes
+and Syrup's weekly update.
+
+**Handoff:** wait for Jam's certification artifact. Report PRIMARY in the same sentence as whether
+it beat 28.0%. If it passes, the per-class concentration is the first thing to check; if it fails,
+the next choice is diversify-by-ecosystem vs `TN-J22`, and it is the lead's.
+
+---
+
 ### 2026-09-18 — IMPL written; v2 measured and FAILED; three documents were stale within hours
 
 **Did:**
