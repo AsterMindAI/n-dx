@@ -1,0 +1,52 @@
+=== Phase 4 SECONDARY — run provenance ===
+date            : 2026-09-21T15:50:19Z
+repo commit     : 81cf6042ec16a0ca4015740fc6530e8b89be7a13
+node            : v22.20.0
+harness sha256  : bb2e6bc95bec89df6f03624cbfb4fa9659504ca83cf9071d893e07607c55ebbc
+features sha256 : f0a637b87e1c0eaabb4a81e1769f519c4c3d4a1dadafc79142e6df21000d10d2
+frozen v2 sha256: 3a41980dbf1efb89843ca4a9a3a174206a2911044cbde41dd669d6781c9ba751
+selection       : scripts/data/elm-v3-selection.json (SECONDARY: pooled @ blockScale 0.25)
+preregistration : scripts/data/elm-v3-preregistration.json (bar: beat 28.0% fresh)
+invocation      : node --max-old-space-size=6144 scripts/elm-coverage-features.mjs --features=structural --normaliser=pooled --block-scale=0.25
+=== run output ===
+✅ TFIDFVectorizer vocabulary capped at: 2890 terms.
+Coverage check — path ⊕ structural features
+  mode        structural  normaliser=pooled  blockScale=0.25
+  model       bbf076741c23703c…  operating point B+su
+  spec        ELM 4096 / tanh
+  dims        2890 path + 22 structural = 2912
+  trained on  scripts/data/elm-archetype-corpus-v2.json  (464 rows)
+
+  held-out split — n-dx-1 + AsterMind-Community-Edition + express + fastify + commerce + got + core  [DEV, trained-on ecosystems]  (n=160)
+    ELM predicts service/utility   75.0%      teacher says 62.5%
+    distinct labels used: ELM 10 vs teacher 15
+    COVERAGE  32.5%   K1' (>=30%): PASS
+    ELM mix: utility 81, service 39, entrypoint 20, test-helper 5, types 5, component 3, gateway 2, middleware 2, route-handler 2, config 1
+
+  gold set #2 packet — hono + trpc  [FRESH ecosystems]  (n=250)
+    ELM predicts service/utility   80.4%      teacher says 48.4%
+    distinct labels used: ELM 7 vs teacher 13
+    COVERAGE  27.6%   K1' (>=30%): FAIL
+    ELM mix: utility 121, service 80, entrypoint 28, types 12, route-handler 5, middleware 3, test-helper 1
+
+    hono only  (n=81)
+    ELM predicts service/utility   76.5%      teacher says 45.7%
+    distinct labels used: ELM 6 vs teacher 8
+    COVERAGE  30.9%   K1' (>=30%): PASS
+    ELM mix: utility 50, service 12, types 11, entrypoint 4, middleware 3, test-helper 1
+
+    trpc only  (n=169)
+    ELM predicts service/utility   82.2%      teacher says 49.7%
+    distinct labels used: ELM 5 vs teacher 12
+    COVERAGE  26.0%   K1' (>=30%): FAIL
+    ELM mix: utility 71, service 68, entrypoint 24, route-handler 5, types 1
+
+  ── Against the pre-registered bar ─────────────────────────────────
+  baseline (frozen v2, path-only, committed)   28.0%
+  this run (fresh ecosystems)                  27.6%
+  PRIMARY   beat 28.0%    FAIL   (-0.4 pp)
+  SECONDARY >= 30.0%      FAIL
+  TERTIARY  >7 labels     FAIL   (7 vs teacher 13)
+  GUARD     trained-on >= 31.8%   PASS   (32.5%)
+
+  wrote scripts/data/elm-coverage-v3-secondary.json

@@ -1,0 +1,58 @@
+{
+  "generatedBy": "scripts/elm-coverage-features.mjs",
+  "mode": "structural",
+  "normaliser": "pooled",
+  "blockScale": 0.25,
+  "frozen": "scripts/data/elm-frozen-model-v2.json",
+  "dims": {
+    "path": 2890,
+    "structural": 22
+  },
+  "baseline": 0.28,
+  "results": [
+    {
+      "name": "held-out split — n-dx-1 + AsterMind-Community-Edition + express + fastify + commerce + got + core  [DEV, trained-on ecosystems]",
+      "n": 160,
+      "coverage": 0.325,
+      "rendered": "32.5%",
+      "elmSuShare": 0.75,
+      "teacherSuShare": 0.625,
+      "elmDistinctLabels": 10,
+      "teacherDistinctLabels": 15,
+      "pass": true
+    },
+    {
+      "name": "gold set #2 packet — hono + trpc  [FRESH ecosystems]",
+      "n": 250,
+      "coverage": 0.276,
+      "rendered": "27.6%",
+      "elmSuShare": 0.804,
+      "teacherSuShare": 0.484,
+      "elmDistinctLabels": 7,
+      "teacherDistinctLabels": 13,
+      "pass": false
+    },
+    {
+      "name": "  hono only",
+      "n": 81,
+      "coverage": 0.30864197530864196,
+      "rendered": "30.9%",
+      "elmSuShare": 0.7654320987654321,
+      "teacherSuShare": 0.4567901234567901,
+      "elmDistinctLabels": 6,
+      "teacherDistinctLabels": 8,
+      "pass": true
+    },
+    {
+      "name": "  trpc only",
+      "n": 169,
+      "coverage": 0.2603550295857988,
+      "rendered": "26.0%",
+      "elmSuShare": 0.8224852071005917,
+      "teacherSuShare": 0.4970414201183432,
+      "elmDistinctLabels": 5,
+      "teacherDistinctLabels": 12,
+      "pass": false
+    }
+  ]
+}
