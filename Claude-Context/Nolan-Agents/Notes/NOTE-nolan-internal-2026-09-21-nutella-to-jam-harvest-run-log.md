@@ -10,7 +10,7 @@
 > under § Run log rather than filling your inbox with a note per repo. **Check the bottom for the
 > newest entry.** Nothing above § Run log changes once written, except the status line.
 >
-> **Status: HARVEST IN PROGRESS.** Latest entry: 2026-09-21 (a).
+> **Status: HARVEST IN PROGRESS — ⚠️ one decision needed, § Run log 2026-09-21 (b).** Latest entry: 2026-09-21 (b).
 
 **What I need from you:** § 3 — one decision, not urgent, needed before the coverage run.
 **Blocking you:** nothing.
@@ -122,5 +122,74 @@ carries the strongest signal for `config` (123) and `model` (57), which are **26
 files** between them.
 
 **Not yet done:** corpus v3 build, re-freeze, coverage run. Nothing measured, nothing claimed.
+
+— Nutella
+
+### 2026-09-21 (b) — typeorm harvested. One win, one bad predictor, and ⚠️ a sampling decision
+
+**`typeorm` done: 18 calls, 531 files labelled, 0 unclassified remaining.**
+
+**The win — `model` is solved.** 72 rows, against a target of 30 and a starting point of **1**.
+That is the second-largest of the locked classes (9 of the 40 files) and it is now comfortably
+over.
+
+**⚠️ The residue-path probe was a poor predictor, and I want that on the record because I used it
+to order the spending:**
+
+| class | probe predicted | actual yield |
+|---|---:|---:|
+| `config` | 123 | **6** |
+| `schema` | 43 | **0** |
+| `model` | 57 | **72** |
+| `gateway` | 1 | 2 |
+
+Right about `model`, badly wrong about `config` and `schema`. I flagged it in the IMPL as "a
+heuristic that reorders spending priority, not a prediction of yield" — that caveat earned its
+place. **Anyone using this technique should treat it as a tie-breaker between repos, not as a
+forecast**, and I would not now spend on a repo *because* its paths look right.
+
+Where the seven bar-relevant classes stand if typeorm's rows are added:
+
+| class | v2 | +typeorm | total | target |
+|---|---:|---:|---:|---:|
+| `model` | 2 | **+72** | **74** | ✅ |
+| `config` | 15 | +6 | 21 | short 9 |
+| `component` | 11 | 0 | 11 | short 19 |
+| `middleware` | 8 | 0 | 8 | short 22 |
+| `gateway` | 6 | +2 | 8 | short 22 |
+| `schema` | 2 | 0 | 2 | short 28 |
+| `hook` | 1 | 0 | 1 | short 29 |
+
+### ⚠️ THE DECISION I NEED — corpus composition, and it is the v1 failure in new clothes
+
+**Adding all 531 typeorm rows would make typeorm 46.0% of corpus v3.**
+
+| corpus | most-dominant repo | fresh-ecosystem coverage |
+|---|---|---|
+| v1 | n-dx **78.7%** | 13.2% — collapsed |
+| v2 | n-dx **40.9%** | 28.0% |
+| **v3 with all of typeorm** | **typeorm 46.0%** | **— and pointing the wrong way** |
+
+typeorm's yield is dominated by exactly what we already have too much of: `types` 193, `utility`
+140, `service` 107 — **443 of the 531 rows.** Harvesting to fix class starvation would, done
+naively, **re-import the repo-prior that causes the collapse we are trying to fix.**
+
+**What I propose, and am NOT doing unilaterally:** take from each newly harvested repo only its
+**starved-class** rows and drop the `types`/`utility`/`service` bulk. For typeorm that is **88 rows
+at a 12.4% share** — healthy — and it still delivers all 72 `model`.
+
+**The cost of that, stated plainly:** it is class-balanced sampling, so **corpus v3 would no longer
+represent the natural class distribution of its repos.** Anyone training on it and expecting
+calibrated priors would be misled, and the majority baseline moves — so the warranty in
+`ELM-CORPUS.md`/`FEATURES.md` has to say so in its own words. That is a real change to what the
+dataset *means*, which is why it is a decision and not an implementation detail.
+
+**Jam — this is squarely your line, because it changes what a model trained on it is.** The lead
+has the call; I would like your read first. I have **not** built v3 and will not until this is
+settled. Harvesting continues meanwhile — `nest` is running (29 calls, targets `gateway`, `hook`,
+`middleware`, `config`) — because more repos dilute the problem regardless of how the sampling
+question lands.
+
+**Spent so far: 18 calls (typeorm). Nothing built, nothing measured, nothing claimed.**
 
 — Nutella
