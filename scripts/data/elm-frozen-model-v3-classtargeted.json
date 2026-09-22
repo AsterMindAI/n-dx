@@ -1,0 +1,873 @@
+{
+  "schema": "elm-frozen-model/v1",
+  "frozenAt": "2026-09-22T12:51:02.203Z",
+  "frozenBy": "scripts/elm-freeze-model.mjs",
+  "status": "FROZEN. Phase 3 evaluates this and only this. Any change voids the certification.",
+  "spec": {
+    "hiddenUnits": 4096,
+    "activation": "tanh",
+    "ridgeLambda": 0.01,
+    "vocabCap": 4000,
+    "ensembleSeeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50
+    ],
+    "operatingPoint": {
+      "design": "B+su",
+      "abstainOn": [
+        "service",
+        "utility"
+      ],
+      "suAdmitFraction": 0.1
+    }
+  },
+  "categories": [
+    "service",
+    "utility",
+    "types",
+    "middleware",
+    "config",
+    "store",
+    "cli-command",
+    "entrypoint",
+    "route-handler",
+    "gateway",
+    "hook",
+    "model",
+    "schema",
+    "route-module",
+    "test-helper",
+    "component"
+  ],
+  "trainedOn": {
+    "corpus": "scripts/data/elm-archetype-corpus-v3-classtargeted.json",
+    "split": "train",
+    "rows": 1642,
+    "corpusProvenance": {
+      "sources": [
+        "llm"
+      ],
+      "seed": 42,
+      "holdout": 0.25,
+      "carriedSplit": {
+        "from": "scripts/data/elm-archetype-corpus-v2.json",
+        "carriedTrain": 464,
+        "carriedHeld": 160,
+        "newTrain": 1178,
+        "newHeld": 393,
+        "missingFromBuild": {
+          "heldOut": 0,
+          "train": 0
+        },
+        "relabelled": 0
+      },
+      "repos": [
+        {
+          "repo": "n-dx-1",
+          "path": "/Users/nolanmoore/Work/n-dx-1",
+          "git": {
+            "commit": "e739cb4d5428340124248493189f75ea2e1a7e2d",
+            "branch": "Nolan-Work",
+            "remote": "https://github.com/AsterMindAI/n-dx.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "b8770042cb333334d864cca116c1c5e4189248ad",
+            "analyzedAt": "2026-08-20T19:03:41.832Z",
+            "branch": "nolan-work",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-4-6",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 683,
+          "classified": 683,
+          "unclassified": 0,
+          "harvested": 255,
+          "bySource": {
+            "algorithmic": 428,
+            "llm": 255
+          },
+          "omittedByLlm": 0,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": true
+          }
+        },
+        {
+          "repo": "AsterMind-Community-Edition",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/AsterMind-Community-Edition",
+          "git": {
+            "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+            "branch": "main",
+            "remote": "https://github.com/AsterMindAI/AsterMind-Community-Edition.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "7a2d763f556ea0ecc4df6f7f518f20dc65512fe9",
+            "analyzedAt": "2026-08-23T23:24:22.193Z",
+            "branch": "main",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": false,
+            "via": "unpinned — default from packages/llm-client/src/config.ts NEWEST_MODELS.claude"
+          },
+          "totalFiles": 114,
+          "classified": 114,
+          "unclassified": 0,
+          "harvested": 69,
+          "bySource": {
+            "llm": 69,
+            "algorithmic": 45
+          },
+          "omittedByLlm": 0,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": true
+          }
+        },
+        {
+          "repo": "express",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/express",
+          "git": {
+            "commit": "023767fe9872e029271df1418f73401bff20ff40",
+            "branch": "master",
+            "remote": "https://github.com/expressjs/express.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "023767fe9872e029271df1418f73401bff20ff40",
+            "analyzedAt": "2026-09-01T16:47:45.686Z",
+            "branch": "master",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 48,
+          "classified": 48,
+          "unclassified": 0,
+          "harvested": 17,
+          "bySource": {
+            "algorithmic": 31,
+            "llm": 17
+          },
+          "omittedByLlm": 0,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": false
+          }
+        },
+        {
+          "repo": "fastify",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/fastify",
+          "git": {
+            "commit": "4cdb0c5def812f5773c952efdb79f1e99dcfae92",
+            "branch": "main",
+            "remote": "https://github.com/fastify/fastify.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "4cdb0c5def812f5773c952efdb79f1e99dcfae92",
+            "analyzedAt": "2026-09-01T16:49:16.194Z",
+            "branch": "main",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 52,
+          "classified": 52,
+          "unclassified": 0,
+          "harvested": 48,
+          "bySource": {
+            "llm": 48,
+            "algorithmic": 4
+          },
+          "omittedByLlm": 0,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": false
+          }
+        },
+        {
+          "repo": "commerce",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/commerce",
+          "git": {
+            "commit": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+            "branch": "main",
+            "remote": "https://github.com/vercel/commerce.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "3761e52e60df9c6a316e067dbfd7032e494d3634",
+            "analyzedAt": "2026-09-01T16:49:51.189Z",
+            "branch": "main",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 64,
+          "classified": 64,
+          "unclassified": 0,
+          "harvested": 15,
+          "bySource": {
+            "algorithmic": 49,
+            "llm": 15
+          },
+          "omittedByLlm": 0,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": false
+          }
+        },
+        {
+          "repo": "got",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/got",
+          "git": {
+            "commit": "64f21e2a4797b8c56493143e416508893983063f",
+            "branch": "main",
+            "remote": "https://github.com/sindresorhus/got.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "64f21e2a4797b8c56493143e416508893983063f",
+            "analyzedAt": "2026-09-01T16:50:13.683Z",
+            "branch": "main",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 33,
+          "classified": 33,
+          "unclassified": 0,
+          "harvested": 8,
+          "bySource": {
+            "algorithmic": 25,
+            "llm": 8
+          },
+          "omittedByLlm": 0,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": false
+          }
+        },
+        {
+          "repo": "core",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/core",
+          "git": {
+            "commit": "d63616ca17de965ed32dcb449a4c5cd9982f15d2",
+            "branch": "main",
+            "remote": "https://github.com/vuejs/core.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "d63616ca17de965ed32dcb449a4c5cd9982f15d2",
+            "analyzedAt": "2026-09-01T16:56:23.629Z",
+            "branch": "main",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 303,
+          "classified": 280,
+          "unclassified": 23,
+          "harvested": 212,
+          "bySource": {
+            "algorithmic": 91,
+            "llm": 212
+          },
+          "omittedByLlm": 23,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": false
+          }
+        },
+        {
+          "repo": "typeorm",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/typeorm",
+          "git": {
+            "commit": "3ecf2c8dfccd02dd77f593fd7aa478c25ea9d428",
+            "branch": "master",
+            "remote": "https://github.com/typeorm/typeorm.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "3ecf2c8dfccd02dd77f593fd7aa478c25ea9d428",
+            "analyzedAt": "2026-09-21T17:00:22.027Z",
+            "branch": "master",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 563,
+          "classified": 563,
+          "unclassified": 0,
+          "harvested": 531,
+          "bySource": {
+            "llm": 531,
+            "algorithmic": 32
+          },
+          "omittedByLlm": 0,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": false
+          }
+        },
+        {
+          "repo": "nest",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/nest",
+          "git": {
+            "commit": "39fbddae51281ca56bf2fed9123d98e61509066c",
+            "branch": "master",
+            "remote": "https://github.com/nestjs/nest.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "39fbddae51281ca56bf2fed9123d98e61509066c",
+            "analyzedAt": "2026-09-21T20:47:45.740Z",
+            "branch": "master",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 1390,
+          "classified": 1382,
+          "unclassified": 8,
+          "harvested": 836,
+          "bySource": {
+            "llm": 836,
+            "algorithmic": 554
+          },
+          "omittedByLlm": 8,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": true
+          }
+        },
+        {
+          "repo": "remix",
+          "path": "/Users/nolanmoore/Work/n-dx-elm-corpus/remix",
+          "git": {
+            "commit": "8fcbf7109cafe26288b6a7f2742321ca9fce7459",
+            "branch": "main",
+            "remote": "https://github.com/remix-run/remix.git",
+            "dirty": false
+          },
+          "analysis": {
+            "commit": "8fcbf7109cafe26288b6a7f2742321ca9fce7459",
+            "analyzedAt": "2026-09-21T16:49:27.630Z",
+            "branch": "main",
+            "toolVersion": "0.1.0"
+          },
+          "teacher": {
+            "model": "claude-sonnet-5",
+            "pinned": true,
+            "via": "<repo>/.n-dx.json → llm.claude.model"
+          },
+          "totalFiles": 871,
+          "classified": 862,
+          "unclassified": 9,
+          "harvested": 204,
+          "bySource": {
+            "algorithmic": 667,
+            "llm": 204
+          },
+          "omittedByLlm": 9,
+          "featuresAvailable": {
+            "inventory": true,
+            "imports": true,
+            "zones": true
+          }
+        }
+      ],
+      "teachers": {
+        "distinct": 2,
+        "mixed": true,
+        "byModel": {
+          "claude-sonnet-5": {
+            "rows": 1940,
+            "share": 0.8838268792710706
+          },
+          "claude-sonnet-4-6": {
+            "rows": 255,
+            "share": 0.11617312072892938
+          }
+        }
+      },
+      "rowColumns": [
+        "confidence",
+        "inDegree",
+        "label",
+        "language",
+        "loc",
+        "outDegree",
+        "repo",
+        "role",
+        "source",
+        "text",
+        "zone"
+      ]
+    }
+  },
+  "selection": {
+    "channel": "5-fold CV on the TRAIN split only, fold seeds [7]. Gold sets NOT consulted.",
+    "foldSeeds": [
+      7
+    ],
+    "foldSeedsReduced": "REDUCED from the default [7,13,29] to [7] for cost. Legitimate here because this CV only has to show the ensemble is not WORSE than a single seed — a determinism decision, not model selection. Do not quote these CV figures as a model-selection result.",
+    "singleSeedCv": [
+      0.7752740560292326
+    ],
+    "ensembleCv": [
+      0.7807551766138855
+    ],
+    "deltaPp": 0.5481120584652888,
+    "note": "Majority vote over seeds is variance reduction, NOT the stacked VotingClassifierELM that lost 2.8 pp in Phase 1."
+  },
+  "vectorizer": {
+    "kind": "TFIDFVectorizer",
+    "vocabCap": 4000,
+    "fittedOn": "train split only",
+    "tokenizer": "library tokenize()",
+    "featureDim": 4000
+  },
+  "refitFingerprint": {
+    "sha256": "16f59612d90836fb7895a231bf4494a26fee1695ac82037ebf6fe84c93e1ec65",
+    "over": "ensemble vote on the train split paths",
+    "note": "Certification must re-fit and match this before scoring anything."
+  },
+  "library": {
+    "name": "@astermind/astermind-community",
+    "version": "3.0.0"
+  },
+  "models": [
+    {
+      "seed": 42,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 43,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 44,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 45,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 46,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 47,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 48,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 49,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    },
+    {
+      "seed": 50,
+      "config": {
+        "hiddenUnits": 4096,
+        "activation": "tanh",
+        "ridgeLambda": 0.01,
+        "weightInit": "xavier",
+        "dropout": 0,
+        "useTokenizer": false,
+        "categories": [
+          "service",
+          "utility",
+          "types",
+          "middleware",
+          "config",
+          "store",
+          "cli-command",
+          "entrypoint",
+          "route-handler",
+          "gateway",
+          "hook",
+          "model",
+          "schema",
+          "route-module",
+          "test-helper",
+          "component"
+        ]
+      },
+      "weightShape": {
+        "W": [
+          4096,
+          4000
+        ],
+        "b": [
+          4096,
+          1
+        ],
+        "beta": [
+          4096,
+          16
+        ]
+      }
+    }
+  ],
+  "contentHash": "ff5d05cc31c4d3350b39b36fa6cc6e096711ebfdb45acd44275932f07e721e39"
+}

@@ -1,0 +1,37 @@
+=== freeze, corpus v3-classtargeted — provenance ===
+date            : 2026-09-22T00:37:43Z
+repo commit     : c32a15c57e17813188b35b5c0bcd51df0870f719  (tree: 0 modified)
+node            : v22.20.0
+script sha256   : a6a8f1909071db24621180abeffafc2749fe695f945b93368b22cc10c55d7747
+corpus sha256   : ade0890d4062de785a26bf407e0a51c2e956a46f8e4f8003d6186c85a94dcb89
+spec            : pinned to frozen v2 — 4096 / tanh / ridge 0.01 / vocabCap 4000 / seeds 42-50
+fold seeds      : [7] — same reduction as the v2 freeze; affects only the ensemble-vs-single check
+invocation      : node --max-old-space-size=6144 scripts/elm-freeze-model.mjs --corpus=scripts/data/elm-archetype-corpus-v3-classtargeted.json --out=scripts/data/elm-frozen-model-v3-classtargeted.json --hidden=4096 --activation=tanh --fold-seeds=7
+success test    : scripts/data/elm-frozen-model-v3-classtargeted.json exists (the exit code has lied on this job before)
+=== run output ===
+Freezing the Phase 3 candidate
+
+  spec: ELM 4096 / tanh / λ0.01 / vocab 4000
+  ensemble: majority vote over 9 seeds [42,43,44,45,46,47,48,49,50]
+  operating point: B+su, admitting top 10% of service/utility
+
+  Checking the ensemble is not worse than a single seed — TRAIN-CV ONLY, gold untouched:
+✅ TFIDFVectorizer vocabulary capped at: 4000 terms.
+✅ TFIDFVectorizer vocabulary capped at: 4000 terms.
+✅ TFIDFVectorizer vocabulary capped at: 4000 terms.
+✅ TFIDFVectorizer vocabulary capped at: 4000 terms.
+✅ TFIDFVectorizer vocabulary capped at: 4000 terms.
+    single seed (42)   77.5%   runs 77.5%
+    9-seed majority vote  78.1%   runs 78.1%
+    delta +0.5 pp
+    => the ensemble is at least as good AND removes the seed lottery. Frozen.
+
+✅ TFIDFVectorizer vocabulary capped at: 4000 terms.
+  determinism verified: refitting seed 42 reproduces identical weights
+  refit fingerprint (1642 train paths, ensemble vote): 16f59612d90836fb…
+  wrote scripts/data/elm-frozen-model-v3-classtargeted.json
+  content hash ff5d05cc31c4d335…
+
+  From here on: no tuning. If Phase 3 fails, the honest move is a THIRD gold set,
+  not a retune against the second.
+node exit=0
