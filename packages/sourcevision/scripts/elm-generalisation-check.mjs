@@ -133,7 +133,11 @@ console.log(
   `${"repo".padEnd(12)} ${"rows".padStart(5)} ${"files".padStart(6)} ${"agree".padStart(7)} ${"pred sink".padStart(10)} ${"teach sink".padStart(11)} ${"labels".padStart(8)}`,
 );
 for (const r of report) {
-  const tag = r.heldIn ? " (TRAINED ON)" : " FRESH";
+  // The training repo's row is IN-SAMPLE -- it is evaluated on the same rows it trained on, so
+  // its "agree" figure is partly memorisation and is NOT a quality measure. It is printed only
+  // as the reference distribution the fresh repos are compared against. For an honest in-domain
+  // number use elm-savings-curve.mjs, which holds out Nolan's seed-42 split (~52-67%, not 80%).
+  const tag = r.heldIn ? " (IN-SAMPLE, not a quality number)" : " FRESH";
   console.log(
     `${r.repo.padEnd(12)} ${String(r.rows).padStart(5)} ${String(r.filesFound).padStart(6)} ` +
       `${(100 * r.agreement).toFixed(1).padStart(6)}% ${(100 * r.predSink).toFixed(1).padStart(9)}% ` +
