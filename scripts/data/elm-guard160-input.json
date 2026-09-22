@@ -1,0 +1,805 @@
+{
+ "files": [
+  {
+   "path": "packages/rex/src/cli/mcp.ts",
+   "archetype": "cli-command",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/cli/help.ts",
+   "archetype": "cli-command",
+   "source": "llm"
+  },
+  {
+   "path": "packages-private/sfc-playground/src/icons/Share.vue",
+   "archetype": "component",
+   "source": "llm"
+  },
+  {
+   "path": "packages-private/sfc-playground/src/icons/Reload.vue",
+   "archetype": "component",
+   "source": "llm"
+  },
+  {
+   "path": "packages-private/sfc-playground/src/App.vue",
+   "archetype": "component",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/enrich-config.ts",
+   "archetype": "config",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-core/src/compat/compatConfig.ts",
+   "archetype": "config",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/workflow/default.ts",
+   "archetype": "config",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/compat/compatConfig.ts",
+   "archetype": "config",
+   "source": "llm"
+  },
+  {
+   "path": "node_examples/experiments/multiview-encoder-elm-fusion.ts",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "src/pro/workers/prod-worker.ts",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages/vue-compat/src/esm-index.ts",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages/vue/compiler-sfc/index.browser.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/apiCreateApp.ts",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "documentation/examples/pagination.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "node_examples/tfidf-elm-dense-retrieval.ts",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/hooks.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages/vue/index.mjs",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/use-plugin.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/lessons/L02-first-classifier/live-demo.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/plugin.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/lessons/L06-kernels-nystrom/live-demo.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/simple.mjs",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/dev.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/benchmark/parser.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "src/synth/examples/quickstart.ts",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages/vue/compiler-sfc/index.mjs",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "examples/parser.js",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages/vue/server-renderer/index.mjs",
+   "archetype": "entrypoint",
+   "source": "llm"
+  },
+  {
+   "path": "packages-private/sfc-playground/src/vue-dev-proxy.ts",
+   "archetype": "gateway",
+   "source": "llm"
+  },
+  {
+   "path": "packages-private/sfc-playground/src/vue-server-renderer-dev-proxy.ts",
+   "archetype": "gateway",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/viewer/messaging/call-rate-limiter.ts",
+   "archetype": "middleware",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/viewer/messaging/message-coalescer.ts",
+   "archetype": "middleware",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/vnode.ts",
+   "archetype": "model",
+   "source": "llm"
+  },
+  {
+   "path": "examples/view-locals/user.js",
+   "archetype": "route-handler",
+   "source": "llm"
+  },
+  {
+   "path": "examples/content-negotiation/users.js",
+   "archetype": "route-handler",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/server/routes-rex/items.ts",
+   "archetype": "route-handler",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/server/routes-rex/reads.ts",
+   "archetype": "route-handler",
+   "source": "llm"
+  },
+  {
+   "path": "app/sitemap.ts",
+   "archetype": "route-module",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/tool-schema.ts",
+   "archetype": "schema",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/go-imports.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "examples/session/redis.js",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-dom/src/transforms/vText.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/tools/dispatch.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/google-api-provider.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/analyze/acknowledge.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-dom/src/transforms/ignoreSideEffectTags.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/vendor-failover.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/server/aggregation-cache.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/process/lifecycle.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/viewer/polling/tick-timer.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/components.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-sfc/src/script/analyzeScriptBindings.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-sfc/src/script/defineOptions.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-sfc/src/style/preprocessors.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/agent/lifecycle/adapters/codex-cli-adapter.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/agent/lifecycle/task-completion-gate.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-dom/src/transforms/vHtml.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-core/src/tokenizer.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/fix/tree.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/provider-session.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-core/src/parser.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/agent/analysis/summary.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "lib/shopify/queries/collection.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/go-route-detection.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/agent/planning/prompt.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "src/tasks/IntentClassifier.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "components/cart/actions.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/quota/codex-token-retrieval.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/tools/test-runner.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "src/synth/generators/PerfectGenerator.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/callgraph.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/token-usage.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "src/synth/generators/ExactGenerator.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/enrich-per-zone.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-core/src/codegen.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-sfc/src/script/defineProps.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/louvain.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/llms-txt.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "src/pro/infoflow/TransferEntropy.ts",
+   "archetype": "service",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/provider-registry.ts",
+   "archetype": "store",
+   "source": "llm"
+  },
+  {
+   "path": "integration/server.js",
+   "archetype": "test-helper",
+   "source": "llm"
+  },
+  {
+   "path": "packages-private/dts-test/built.test-d.ts",
+   "archetype": "test-helper",
+   "source": "llm"
+  },
+  {
+   "path": "test-token-format.js",
+   "archetype": "test-helper",
+   "source": "llm"
+  },
+  {
+   "path": "integration/test.sh",
+   "archetype": "test-helper",
+   "source": "llm"
+  },
+  {
+   "path": "packages-private/dts-test/compiler.test-d.ts",
+   "archetype": "test-helper",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-test/src/serialize.ts",
+   "archetype": "test-helper",
+   "source": "llm"
+  },
+  {
+   "path": "packages/reactivity/__benchmarks__/ref.bench.ts",
+   "archetype": "test-helper",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/llm-types.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/analyze/batch-types.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/analyze/reshape-reason.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/shared/view-id.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "lib/shopify/fragments/image.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/shared/src/slotFlags.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "examples/lessons/L02-first-classifier/speaker-notes.js",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/vue/server-renderer/index.d.mts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/shared/src/patchFlags.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "lib/shopify/fragments/cart.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/provider-interface.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/analyze/reason.ts",
+   "archetype": "types",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/h.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/cli/token-logging.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/branch-work-filter.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "src/preprocessing/UniversalEncoder.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/decorate.js",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/quota/token-validation.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-core/src/compat/transformFilter.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/log-controller.js",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/utils.js",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/agent/lifecycle/commit-msg-watcher.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/process/limiter.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/reactivity/src/baseHandlers.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-core/src/transforms/vIf.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/recommend/text-similarity-shared.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/process/process-memory-tracker.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/util/merge.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/server/port.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/profiling.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "src/preprocessing/Tokenizer.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "scan_transcripts.py",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-sfc/src/script/context.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/componentPublicInstance.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "src/pro/math/rff.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/viewer/performance/dom-update-gate.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/reactivity/src/computed.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/compat/instanceChildren.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/server/task-usage/register-scheduler.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/customFormatter.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/compiler-core/src/validateExpression.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/plugin-override.js",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/analyzers/zone-hash.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/compat/instanceListeners.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/vendor-header.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/analyze/scanners.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/compat/props.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/process/memory-monitor.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/rex/src/analyze/dedupe.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/hooks.js",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/language/swift.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/componentOptions.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/suppress-deprecations.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/wrap-thenable.js",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/reply.js",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "lib/type-guards.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/shared/src/general.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/shared/view-routing.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/server/pr-markdown-refresh-diagnostics.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/project-dirs.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/llm-client/src/auth-guidance.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "src/synth/encoders/FixedLength.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/validation/completion.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/web/src/viewer/performance/refresh-throttle-memory.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-dom/src/directives/vOn.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/compat/instance.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/shared/src/looseEqual.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/util/exec-cli.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/componentRenderUtils.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/runtime-core/src/component.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/hench/src/queue/format.ts",
+   "archetype": "utility",
+   "source": "llm"
+  },
+  {
+   "path": "packages/sourcevision/src/language/python.ts",
+   "archetype": "utility",
+   "source": "llm"
+  }
+ ],
+ "_note": "GUARD input: exactly the 160 heldOut rows of scripts/data/elm-archetype-corpus-v2.json, in order. Built for TN-N20 certification."
+}
