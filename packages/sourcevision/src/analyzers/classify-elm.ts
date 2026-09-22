@@ -24,6 +24,7 @@ import { dirname, join } from "node:path";
 import { ELM, UniversalEncoder } from "@astermind/astermind-community";
 import { analyzeClassifications } from "./classify.js";
 import { BUILTIN_ARCHETYPES } from "./archetypes.js";
+import { buildFeatureVector, readFileContentSafely } from "./classify-elm-features.js";
 import type {
   Classifications,
   FileClassification,
@@ -511,6 +512,18 @@ export interface ELMGateOptions {
   confidenceThreshold: number;
   /** Seed for fresh per-project training — irrelevant when the bundled baseline is used instead. */
   seed: number;
+  /**
+   * Absolute project root. **Supplying this switches the gate to the content representation**
+   * (`TJ-E1`) — the only one that can resolve anything at this call site, because the evidence
+   * vector is identically all-zero for the entire population that reaches here. Omit it and the
+   * gate uses the legacy evidence representation, which is retained for the existing tests and
+   * the bundled baseline model but resolves nothing in production.
+   *
+   * Required because the content representation reads file bytes, which `inventory.json` and
+   * `imports.json` do not carry. Additive to this interface, so `TJ-R3`'s stable gate signature
+   * is unchanged.
+   */
+  rootDir?: string;
 }
 
 /**
@@ -526,7 +539,118 @@ export function runELMGate(
   imports: Imports,
   options: ELMGateOptions,
 ): ELMClassifyResult {
+  if (options.rootDir !== undefined) {
+    const trained = getContentArchetypeELM(classifications, inventory, options.rootDir, options.seed);
+    if (!trained) return { updatedFiles: [] };
+    return classifyWithContentELM(
+      classifications,
+      trained,
+      options.confidenceThreshold,
+      options.rootDir,
+    );
+  }
   const trained = getArchetypeELM(classifications, inventory, imports, options.seed);
   if (!trained) return { updatedFiles: [] };
   return classifyWithELM(classifications, inventory, imports, trained, options.confidenceThreshold);
+}
+
+// ── Content representation (TJ-E1, ADR-2026-09-17-elon-content-based-elm-classifier.md) ────
+//
+// The representation that actually has signal at this call site. Everything above trains on
+// `classifyFile`'s evidence vector, which is identically all-zero for every file the gate is
+// invoked for (measured across 5 corpora, 2026-08-27, zero exceptions) — so the functions above
+// can only ever resolve files that did not need the ELM in the first place.
+//
+// THE BUNDLED BASELINE MODEL IS NOT USABLE HERE, deliberately. It was trained on 17-dimension
+// evidence vectors; a content vector is `FEATURE_VECTOR_SIZE`-dimensional. Loading one against
+// the other would not throw, it would silently predict from a garbage projection — exactly the
+// failure `FEATURE_VERSION` exists to make impossible. So the content path is fresh-training
+// only until a baseline is retrained under this layout (IMPL step 11).
+
+/**
+ * Training examples under the content representation. Same labeling rules as
+ * `extractNumericExamples` (source-role files, resolved archetype, algorithmic or llm source) —
+ * only the vector differs.
+ *
+ * Files whose content cannot be read still produce an example: `buildFeatureVector` degrades to
+ * metadata-only and sets `contentMissing`, so the model learns from the path half rather than the
+ * row being dropped.
+ */
+export function extractContentExamples(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+): NumericArchetypeExample[] {
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
+  const examples: NumericArchetypeExample[] = [];
+  for (const file of inventory.files) {
+    if (file.role !== "source") continue;
+    const fc = classificationByPath.get(file.path);
+    if (!fc?.archetype) continue;
+    if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
+    examples.push({
+      vector: buildFeatureVector({
+        path: file.path,
+        content: readFileContentSafely(rootDir, file.path),
+      }),
+      archetype: fc.archetype,
+    });
+  }
+  return examples;
+}
+
+/**
+ * Model lifecycle for the content representation. Fresh-training only — see the block comment
+ * above for why the bundled baseline is deliberately excluded rather than reused.
+ */
+export function getContentArchetypeELM(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+  seed: number,
+): TrainedArchetypeELMNumeric | undefined {
+  if (!hasEnoughHistoryForFreshTraining(classifications)) return undefined;
+  const examples = extractContentExamples(classifications, inventory, rootDir);
+  if (examples.length === 0) return undefined;
+  const categories = [...new Set(examples.map((e) => e.archetype))].sort();
+  if (categories.length === 0) return undefined;
+  return trainArchetypeELMNumeric(examples, categories, seed);
+}
+
+/**
+ * Classify the unclassified population using the content representation.
+ *
+ * Note what is deliberately NOT here: the all-zero-vector guard from `classifyWithELM`. That
+ * guard exists because the evidence vector genuinely carries no information for this population.
+ * A content vector always has at least its extension and filename set, so an all-zero vector is
+ * not reachable — and a guard that can never fire would be misleading rather than safe. The
+ * honest equivalent is `contentMissing`, which is a feature the model can weigh rather than a
+ * hard skip: a file we could not read is still classifiable from its path, just less reliably.
+ */
+export function classifyWithContentELM(
+  classifications: Classifications,
+  trained: TrainedArchetypeELMNumeric,
+  confidenceThreshold: number,
+  rootDir: string,
+): ELMClassifyResult {
+  const trainedCategorySet = new Set(trained.categories);
+  const updatedFiles: FileClassification[] = [];
+
+  for (const fc of classifications.files) {
+    if (fc.archetype !== null || fc.source !== "algorithmic") continue;
+    const vector = buildFeatureVector({
+      path: fc.path,
+      content: readFileContentSafely(rootDir, fc.path),
+    });
+    const prediction = predictArchetypeNumeric(trained, vector);
+    if (prediction.confidence < confidenceThreshold) continue;
+    if (!trainedCategorySet.has(prediction.archetype)) continue; // defensive
+    updatedFiles.push({
+      path: fc.path,
+      archetype: prediction.archetype,
+      confidence: prediction.confidence,
+      source: "elm",
+    });
+  }
+  return { updatedFiles };
 }

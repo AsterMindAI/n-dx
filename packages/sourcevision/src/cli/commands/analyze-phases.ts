@@ -244,7 +244,10 @@ export async function runClassificationsPhase(ctx: AnalyzeContext): Promise<void
       info(`  ${bold(String(classifications.summary.totalClassified))} classified, ${bold(String(classifications.summary.totalUnclassified))} unclassified — ${cyan("resolving remaining files...")}`)
       const gateResult = await runClassificationGate(classifications, inventory, importsData, {
         elmEnabled,
-        elm: { confidenceThreshold: elmConfidenceThreshold, seed: 20260812 },
+        // rootDir switches the gate to TJ-E1's content representation, the only one with
+        // signal for this population (the evidence vector is identically all-zero here).
+        // The content path needs file bytes, which inventory.json/imports.json do not carry.
+        elm: { confidenceThreshold: elmConfidenceThreshold, seed: 20260812, rootDir: ctx.absDir },
       });
       if (gateResult.updatedFiles.length > 0) {
         const elmCount = gateResult.updatedFiles.filter((f) => f.source === "elm").length;
