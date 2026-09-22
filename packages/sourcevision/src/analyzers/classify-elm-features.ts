@@ -35,13 +35,22 @@
  * normalize. Fixed width regardless of file length (a 10-line and a 30,000-line file produce the
  * same width), position-independent, and no vocabulary to persist alongside the model.
  *
- * VECTOR LAYOUT (v1) -- see FEATURE_VERSION. A model trained under one layout is meaningless
+ * VECTOR LAYOUT (v2) -- see FEATURE_VERSION. A model trained under one layout is meaningless
  * under another, which is why the version is stamped into the model artifact.
  *
- *   [ extension one-hot ][ path scalars ][ path tokens ][ content tokens ][ structural ]
+ *   [ extension ][ path scalars ][ path tokens ][ content tokens ][ structural ][ indicators ]
  *
- * Each block is L2-normalized independently before concatenation, so the 512-dimension content
- * block cannot swamp the 6-dimension scalar block purely by magnitude.
+ * The first five blocks are L2-normalized independently before concatenation, so the
+ * 512-dimension content block cannot swamp the 4-dimension scalar block purely by magnitude.
+ * The indicator block is raw 0/1 and is never normalized -- see Block 6.
+ *
+ * ON BLOCK ENERGY -- this is a CHOICE, not a neutral default. Team Nolan measured
+ * (ELM-database-ndx, methodology/FEATURES.md § 9) that concatenating unscaled blocks let a
+ * 22-column structural block carry ~2.7x the energy of an entire 2,890-dimension path block,
+ * because an ELM's hidden layer is a random projection and relative block energy decides which
+ * signal dominates. Per-block L2 avoids that failure, but it has its own consequence worth
+ * stating: it gives the 21-dimension extension block the SAME energy as the 512-dimension
+ * content block. Whether that is right is an ablation question (IMPL step 8), not settled here.
  */
 
 import { readFileSync, statSync } from "node:fs";
@@ -52,7 +61,7 @@ import { extname, join } from "node:path";
  * `classify-elm.ts` stamps this into the trained-model artifact so a model trained under v1 can
  * never be silently loaded by code expecting v2 (IMPL step 10).
  */
-export const FEATURE_VERSION = 1;
+export const FEATURE_VERSION = 2;
 
 // -- Block 1: extension -------------------------------------------------------------------
 //
@@ -71,13 +80,20 @@ export const EXT_BLOCK_SIZE = EXT_VOCAB.length + EXT_OTHER_SLOTS;
 
 // -- Block 2: path scalars ----------------------------------------------------------------
 
+// NOTE: `depth`/`segmentCount` were here in v1 and are deliberately GONE in v2. Two reasons,
+// both found by reading Team Nolan's measured feature survey (ELM-database-ndx,
+// methodology/FEATURES.md § 8) rather than by reasoning about it here:
+//   1. They encode monorepo layout, not archetype. Nolan withheld `depthFromRoot` on measured
+//      evidence -- n-dx paths start `packages/x/src/...`, express is flat -- so the feature
+//      fingerprints the repo. That is the same class of leak as their `category`/`zone` findings.
+//   2. They were perfectly collinear with each other (`segmentCount === depth + 1`), so one of
+//      the two was pure redundancy regardless.
+// What is kept below are properties of the FILE, not of the tree it happens to sit in.
 export const PATH_SCALAR_NAMES = [
-  "depth",
   "filenameLength",
   "isIndexFile",
   "inTestPath",
   "hasDotSuffix",
-  "segmentCount",
 ] as const;
 export const PATH_SCALAR_BLOCK_SIZE = PATH_SCALAR_NAMES.length;
 
@@ -117,6 +133,24 @@ export const STRUCTURAL_FEATURE_NAMES = [
 ] as const;
 export const STRUCTURAL_BLOCK_SIZE = STRUCTURAL_FEATURE_NAMES.length;
 
+// -- Block 6: missing indicators ----------------------------------------------------------
+//
+// "ZERO IS NOT MISSING." Adopted from Team Nolan's measured feature survey (ELM-database-ndx,
+// methodology/FEATURES.md § 5), which calls this "the single easiest way to get wrong numbers
+// from this dataset" -- and v1 of this module had exactly the bug.
+//
+// In v1, a file whose content could not be read (deleted, binary, unreadable) and a file whose
+// content contains no identifiers at all BOTH produced an all-zero content block. Those are
+// different facts and the model could not tell them apart: it was being told that an unmeasured
+// file definitively has no content signal. Nolan's convention is a 0 value plus an explicit
+// `<field>Missing = 1` column, and that is what this block is.
+//
+// This block is deliberately NOT L2-normalized -- it is a raw 0/1 fact about measurement, not a
+// magnitude to be balanced against the other blocks.
+
+export const INDICATOR_NAMES = ["contentMissing", "contentEmpty"] as const;
+export const INDICATOR_BLOCK_SIZE = INDICATOR_NAMES.length;
+
 // -- Offsets ------------------------------------------------------------------------------
 
 export const OFFSET_EXT = 0;
@@ -124,7 +158,8 @@ export const OFFSET_PATH_SCALARS = OFFSET_EXT + EXT_BLOCK_SIZE;
 export const OFFSET_PATH_TOKENS = OFFSET_PATH_SCALARS + PATH_SCALAR_BLOCK_SIZE;
 export const OFFSET_CONTENT_TOKENS = OFFSET_PATH_TOKENS + PATH_TOKEN_BUCKETS;
 export const OFFSET_STRUCTURAL = OFFSET_CONTENT_TOKENS + CONTENT_TOKEN_BUCKETS;
-export const FEATURE_VECTOR_SIZE = OFFSET_STRUCTURAL + STRUCTURAL_BLOCK_SIZE;
+export const OFFSET_INDICATORS = OFFSET_STRUCTURAL + STRUCTURAL_BLOCK_SIZE;
+export const FEATURE_VECTOR_SIZE = OFFSET_INDICATORS + INDICATOR_BLOCK_SIZE;
 
 /**
  * Read cap. Bounds worst-case work on a generated or minified file; the vector width is
@@ -232,12 +267,10 @@ function writePathScalarBlock(vec: number[], path: string): void {
   const filename = segments[segments.length - 1] ?? "";
   const base = filename.replace(/\.[^.]*$/, "");
   const o = OFFSET_PATH_SCALARS;
-  vec[o + 0] = Math.log1p(Math.max(0, segments.length - 1));
-  vec[o + 1] = Math.log1p(filename.length);
-  vec[o + 2] = base.toLowerCase() === "index" ? 1 : 0;
-  vec[o + 3] = /(^|[/\\])(tests?|__tests__|spec|e2e)([/\\]|$)/i.test(path) ? 1 : 0;
-  vec[o + 4] = /\.[^./\\]+\.[^./\\]+$/.test(filename) ? 1 : 0; // foo.test.ts, foo.d.ts
-  vec[o + 5] = Math.log1p(segments.length);
+  vec[o + 0] = Math.log1p(filename.length);
+  vec[o + 1] = base.toLowerCase() === "index" ? 1 : 0;
+  vec[o + 2] = /(^|[/\\])(tests?|__tests__|spec|e2e)([/\\]|$)/i.test(path) ? 1 : 0;
+  vec[o + 3] = /\.[^./\\]+\.[^./\\]+$/.test(filename) ? 1 : 0; // foo.test.ts, foo.d.ts
 }
 
 function countMatches(content: string, re: RegExp): number {
@@ -338,7 +371,11 @@ export function buildFeatureVector(input: FeatureInput): number[] {
   hashTokensInto(vec, tokenizePath(input.path), OFFSET_PATH_TOKENS, PATH_TOKEN_BUCKETS);
   l2NormalizeInPlace(vec, OFFSET_PATH_TOKENS, OFFSET_PATH_TOKENS + PATH_TOKEN_BUCKETS);
 
-  if (input.content !== undefined) {
+  if (input.content === undefined) {
+    // Content was not measurable. Say so explicitly rather than letting an all-zero content
+    // block imply "measured, and found nothing" -- see the Block 6 note.
+    vec[OFFSET_INDICATORS + 0] = 1;
+  } else {
     hashTokensInto(
       vec,
       tokenizeContent(input.content),
@@ -350,6 +387,10 @@ export function buildFeatureVector(input: FeatureInput): number[] {
     const structural = structuralFeatures(input.content, input.path);
     for (let i = 0; i < structural.length; i++) vec[OFFSET_STRUCTURAL + i] = structural[i];
     l2NormalizeInPlace(vec, OFFSET_STRUCTURAL, OFFSET_STRUCTURAL + STRUCTURAL_BLOCK_SIZE);
+
+    // Measured, but there was nothing in it. Distinct from both "not measured" above and from
+    // "measured, has content" -- an empty file is a real and different fact.
+    if (input.content.length === 0) vec[OFFSET_INDICATORS + 1] = 1;
   }
 
   return vec;
