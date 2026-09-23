@@ -149,15 +149,94 @@ function main() {
 
   const trained = results.find((r) => r.name.startsWith("held-out split"));
   const fresh = results.find((r) => r.name.includes("gold set #2"));
-  if (trained && fresh) {
-    console.log("\n  ── The finding ────────────────────────────────────────────────────");
-    console.log(`  coverage  ${pct(trained.coverage)} on trained-on ecosystems  ->  ${pct(fresh.coverage)} on fresh ones`);
-    console.log(`  the model's class prior tracks the teacher where it was trained (${pct(trained.elmSuShare)} vs ${pct(trained.teacherSuShare)})`);
-    console.log(`  and collapses where it was not (${pct(fresh.elmSuShare)} vs ${pct(fresh.teacherSuShare)}).`);
-    console.log("  It learned this corpus's archetype prior, not a general path->archetype mapping.");
-    console.log("\n  Consequence: K1' is a property of (model, repo), not of the model alone.");
-    console.log("  That is a limitation of K1' as proposed, and it is recorded rather than buried.");
-  }
+  const perRepo = results.filter((r) => r.name.trim().endsWith("only"));
+  if (trained && fresh) for (const line of formatFinding(trained, fresh, perRepo)) console.log(line);
 }
 
-main();
+/**
+ * The closing interpretation, DERIVED from the numbers rather than asserted.
+ *
+ * ── Why this function exists ────────────────────────────────────────────────
+ * Until 2026-09-23 the two verdict lines here were unconditional `console.log`s
+ * reading "and collapses where it was not" and "It learned this corpus's
+ * archetype prior, not a general path->archetype mapping". They were written
+ * when v1 had in fact collapsed, and they were true of v1. They then printed for
+ * EVERY model regardless of its numbers, so the committed certification logs of
+ * the class-targeted model (`elm-coverage-v3-classtargeted.log`, fresh coverage
+ * 47.2%, 12 labels emitted, collapse gone) end with a sentence announcing the
+ * exact failure the run had just disproved.
+ *
+ * A reader skims the block headed "The finding". That is the whole danger: the
+ * arithmetic above it was always right, and only the narration was wrong.
+ *
+ * Verify with `node scripts/elm-coverage-check.mjs --selftest` (no model work).
+ */
+export function formatFinding(trained, fresh, perRepo = []) {
+  /** Over-predicting service/utility by this much on FRESH repos is the v1 signature. */
+  const COLLAPSE_GAP = 0.15;
+  const pp = (x) => `${(x * 100).toFixed(1)} pp`;
+  const gapT = trained.elmSuShare - trained.teacherSuShare;
+  const gapF = fresh.elmSuShare - fresh.teacherSuShare;
+  const dir = (g) => (g >= 0 ? "over" : "under");
+  const out = [];
+  out.push("\n  ── The finding ────────────────────────────────────────────────────");
+  out.push(`  coverage  ${pct(trained.coverage)} on trained-on ecosystems  ->  ${pct(fresh.coverage)} on fresh ones`);
+  out.push(`  service/utility vs teacher — trained-on ${pct(trained.elmSuShare)} vs ${pct(trained.teacherSuShare)} (${dir(gapT)} by ${pp(Math.abs(gapT))})`);
+  out.push(`                                    fresh ${pct(fresh.elmSuShare)} vs ${pct(fresh.teacherSuShare)} (${dir(gapF)} by ${pp(Math.abs(gapF))})`);
+
+  if (gapF >= COLLAPSE_GAP) {
+    out.push(`  The fresh-ecosystem prior IS collapsed onto service/utility (+${pp(gapF)} over the teacher).`);
+    out.push("  It learned this corpus's archetype prior, not a general path->archetype mapping.");
+  } else {
+    out.push("  The fresh-ecosystem prior is NOT collapsed onto service/utility.");
+    out.push("  ⚠️ Coverage counts predictions outside service/utility WHETHER OR NOT THEY ARE CORRECT,");
+    out.push("     so this shows the prior widened — NOT that the predictions are right. Precision");
+    out.push("     needs labelled ground truth and is capped by the teacher's own agreement with it.");
+  }
+
+  // Opposite biases across the fresh repos are invisible in the aggregate, and the
+  // aggregate is the number people quote. Say so when it happens.
+  const signs = perRepo.filter((r) => r.teacherSuShare !== null && r.teacherSuShare !== undefined)
+    .map((r) => ({ name: r.name.trim().replace(/ only$/, ""), gap: r.elmSuShare - r.teacherSuShare }));
+  if (signs.length > 1 && signs.some((s) => s.gap > 0) && signs.some((s) => s.gap < 0)) {
+    out.push("  ⚠️ The fresh repos carry OPPOSITE biases, which the aggregate above hides:");
+    for (const s of signs) out.push(`       ${s.name}: ${dir(s.gap)}-predicts service/utility by ${pp(Math.abs(s.gap))}`);
+  }
+
+  out.push("\n  Consequence: K1' is a property of (model, repo), not of the model alone.");
+  out.push("  That is a limitation of K1' as proposed, and it is recorded rather than buried.");
+  return out;
+}
+
+/** Fixtures are REAL committed runs, so the test fails on the old code by construction. */
+function selftest() {
+  const V1 = { coverage: 0.349, elmSuShare: 0.723, teacherSuShare: 0.723 };
+  const V1F = { coverage: 0.132, elmSuShare: 0.964, teacherSuShare: 0.484 };
+  const V3 = { coverage: 0.591, elmSuShare: 0.454, teacherSuShare: 0.409 };
+  const V3F = { coverage: 0.472, elmSuShare: 0.588, teacherSuShare: 0.484 };
+  const REPOS = [
+    { name: "  hono only", elmSuShare: 0.222, teacherSuShare: 0.457 },
+    { name: "  trpc only", elmSuShare: 0.763, teacherSuShare: 0.497 },
+  ];
+  const COLLAPSED = "It learned this corpus's archetype prior";
+  let fail = 0;
+  const check = (label, cond) => { console.log(`  ${cond ? "ok  " : "FAIL"}  ${label}`); if (!cond) fail++; };
+
+  const v1 = formatFinding(V1, V1F, []).join("\n");
+  check("v1 (fresh S/U 96.4% vs teacher 48.4%) DOES print the collapse verdict", v1.includes(COLLAPSED));
+
+  const v3 = formatFinding(V3, V3F, REPOS).join("\n");
+  check("v3-classtargeted (fresh 58.8% vs 48.4%) does NOT print the collapse verdict", !v3.includes(COLLAPSED));
+  check("v3-classtargeted states the prior is NOT collapsed", v3.includes("NOT collapsed"));
+  check("v3-classtargeted carries the necessary-not-sufficient caveat", v3.includes("WHETHER OR NOT THEY ARE CORRECT"));
+  check("opposite per-repo biases are named", v3.includes("OPPOSITE biases") && v3.includes("hono") && v3.includes("trpc"));
+  check("hono is reported as UNDER-predicting", /hono: under-predicts/.test(v3));
+  check("trpc is reported as OVER-predicting", /trpc: over-predicts/.test(v3));
+
+  console.log(fail === 0 ? "\nselftest: PASS" : `\nselftest: ${fail} FAILED`);
+  process.exit(fail === 0 ? 0 : 1);
+}
+
+if (process.argv.includes("--selftest")) selftest();
+else main();
+
