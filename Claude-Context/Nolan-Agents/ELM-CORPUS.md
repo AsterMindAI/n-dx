@@ -471,7 +471,16 @@ not a general path→archetype mapping"* — written for the **v1 failure** and 
 so it is printed for **any** model regardless of its numbers. **Both certification logs therefore
 end with a narration that flatly contradicts the PASS printed directly above it. Do not quote that
 closing block.** The numbers in the tables are unaffected; the prose after them is stale text, not
-a finding. Known, filed, awaiting the lead's authorisation to edit that file.
+a finding.
+
+**✅ FIXED 2026-09-23 by Jam (`6d844bd3`).** The block is now `formatFinding()`, which derives
+the interpretation: it prints the collapse verdict only when the fresh-ecosystem prior
+over-predicts `service`/`utility` by ≥ 15 pp (the v1 signature), otherwise states the prior is
+*not* collapsed with the necessary-not-sufficient caveat, and names opposite per-repo biases when
+they occur. Proven red before green; `node scripts/elm-coverage-check.mjs --selftest` asserts it
+against the real committed numbers with no model work. **The already-committed logs still carry
+the stale narration** — they are kept verbatim rather than rewritten, so this note remains their
+correction.
 
 **The refit fingerprint is still unverified.** The frozen artifact carries `refitFingerprint` so a
 certification run can prove it scored the frozen model; the script never checks it. Every coverage
