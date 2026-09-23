@@ -215,6 +215,24 @@ also fails silently.
 
 ## 12. The result you are inheriting
 
+> ## ✅ SUPERSEDED 2026-09-22 — the bar has been cleared. Read this box before the table below.
+>
+> **Corpus v3-classtargeted is certified: fresh-ecosystem coverage 47.2%, K1′ PASS**, with 12
+> distinct labels and v2's own 160 held-out files improving 33.8% → 36.9%. The failure the table
+> below records was **a starved class distribution, not the feature space** — this file's § 4 is
+> still correct about what the columns cannot tell you, but "a path-only model does not
+> generalise" is no longer the state of the art. Full result and its caveats:
+> `ELM-CORPUS.md` § 6a.
+>
+> **Two things changed under this file's own contract, and both are load-bearing:**
+> - **The 4,000-term vocabulary cap now binds.** v2's corpus produced 2,890 terms; v3-classtargeted
+>   fills the cap, so the rarest terms are dropped. The spec is honoured as pinned, but the
+>   effective feature space is not the same between v2 and v3 — a v2-vs-v3 comparison is not a
+>   clean single-variable comparison.
+> - **Coverage is not accuracy, and the pass is necessary rather than sufficient.** The two
+>   evaluation repos now miss in *opposite* directions (hono under-predicts `service`/`utility`,
+>   trpc still over-predicts) and the average hides both. Never quote 47.2% without that sentence.
+
 Measured 2026-09-18, committed at `scripts/data/elm-coverage-v2.log`:
 
 | population | coverage | K1′ (≥30%) |

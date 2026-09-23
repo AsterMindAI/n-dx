@@ -26,6 +26,18 @@
 >    sentence in this document is superseded** — v2 improves on v1 substantially (13.2% → 28.0%)
 >    and still does not clear the bar.
 
+> **Amendment of 2026-09-23 (Nutella), and it is the first good news in this document:**
+> 9. **§ 6a — CORPUS v3-CLASSTARGETED HAS BEEN CERTIFIED. All four pre-registered criteria PASS.**
+>    Fresh-ecosystem coverage **47.2%** against a 30.0% bar, 12 distinct labels, both evaluation
+>    repos improved separately, and v2's own 160 held-out files went **33.8% → 36.9%**. The class
+>    starvation this document has described since 2026-09-16 is **fixed**, at the mechanism named in
+>    § 5a. **It does not follow that any prediction is correct** — read § 6a's second half before
+>    quoting the number, because the two evaluation repos now fail in *opposite directions* and the
+>    47.2% average hides both.
+> 10. **§ 2 — `text` is NOT a unique key across repos.** `lib/request.js` exists in both express and
+>    fastify. De-duplicate on `repo` + `text`, never on `text` alone; a plain `text` de-dup silently
+>    drops rows and can leak a held-out file into train.
+
 This documents the labelled path→archetype corpus so it survives Team Nolan. It was built for
 one specific task — the `sourcevision` ELM classification tier — but it is a general
 **path-string → label** dataset and is reusable by any team's ELM work. **If Team Nolan's tier
@@ -60,18 +72,29 @@ Each row is one source file's **repo-relative path string** and one **archetype 
 Labels come from **an LLM, not from humans.** That is the single most important fact about this
 dataset and § 3 explains what it costs you.
 
-There are two generations. **Both are kept**; v1 is not deleted, because Phase 1 and Phase 2
-results are only reproducible against it.
+There are three generations. **All are kept**; v1 and v2 are not deleted, because Phase 1, Phase 2
+and the GUARD comparison are only reproducible against them.
 
-| | v1 | v2 |
-|---|---|---|
-| File | `scripts/data/elm-archetype-corpus.json` | `scripts/data/elm-archetype-corpus-v2.json` |
-| Rows | 324 | **624** |
-| Ecosystems | 2 | **7** |
-| Classes | 13 | **16** |
-| `service`+`utility` share | 73.8% | **63.6%** |
-| Majority baseline | 37.3% (`service`) | **38.3% (`utility`)** |
-| Status | superseded, kept for reproducibility | **current, but see § 6** |
+| | v1 | v2 | **v3-classtargeted** |
+|---|---|---|---|
+| File | `scripts/data/elm-archetype-corpus.json` | `scripts/data/elm-archetype-corpus-v2.json` | `scripts/data/elm-archetype-corpus-v3-classtargeted.json` |
+| Rows | 324 | 624 | **2,195** |
+| Ecosystems | 2 | 7 | **10 repos** |
+| Classes | 13 | 16 | **16** |
+| `service`+`utility` share | 73.8% | 63.6% | **see § 6a** |
+| Majority baseline | 37.3% (`service`) | 38.3% (`utility`) | **25.5%** |
+| Status | superseded, kept for reproducibility | superseded; **the GUARD baseline** | **current — CERTIFIED, see § 6a** |
+
+**v3-classtargeted carries v2's split forward.** Every v2 row keeps its v2 train/held-out
+assignment (`--carry-split`, `provenance.carriedSplit`: 464 carried into train, 160 into held-out)
+and only the new rows were split. Without that, no before/after comparison on the same files would
+have been possible.
+
+A second artifact ships beside it: **`elm-archetype-corpus-resolved-v3-classtargeted.json`**,
+1,886 rows built from the *algorithmic* labels rather than the teacher's. It is the only artifact
+that covers **all 17 classes** (`page` 37, `component` 425, `hook` 48 — the classes the LLM residue
+structurally cannot supply, see § 5a). **It is a different population with a different warranty:
+do not pool the two.**
 
 Built 2026-09-01 at commit `1a5403c6`. v2 cost **13 classify calls** on top of v1's spend
 (express 1, fastify 2, commerce 1, got 1, Vue core 8).
@@ -123,6 +146,12 @@ be reproduced cannot be used to compare two models.* **Do not re-split.** If you
 numbers are not comparable to anything in `ELM-FINDINGS.txt`.
 
 v2: `train` 464 rows · `heldOut` 160 rows.
+v3-classtargeted: `train` 1,642 rows · `heldOut` 553 rows (resolved: 1,414 / 472).
+
+> 🔴 **`text` is not a unique key across repos.** `lib/request.js` exists in both express and
+> fastify, and the corpus legitimately contains both rows with different labels. **De-duplicate on
+> `repo` + `text`.** A de-dup on `text` alone drops real rows and — worse — can move a held-out
+> file's twin into train, quietly contaminating the split this section tells you not to re-draw.
 
 ## 3. The labels are a teacher, not truth
 
@@ -382,6 +411,77 @@ table above before you trust anything.
 > `--max-old-space-size=6144`, because the frozen artifact stores a recipe rather than weights and
 > the script re-fits nine 4096-unit models.
 
+## 6a. ✅ Corpus v3-classtargeted HAS BEEN CERTIFIED — all four criteria pass
+
+**Measured 2026-09-22 by Jam** against the bar registered at `2f8cb926` **before the corpus
+existed**. Artifacts: `scripts/data/elm-coverage-v3-classtargeted.log`,
+`scripts/data/elm-guard160-v3-classtargeted.log`, frozen model
+`scripts/data/elm-frozen-model-v3-classtargeted.json` (committed at `719dd985`, before any
+certification run).
+
+| criterion | test | result | |
+|---|---|---:|---|
+| **PRIMARY** | fresh-ecosystem coverage ≥ 30.0% | **47.2%** | **PASS** |
+| **SECONDARY** | distinct labels > 7 | **12** | **PASS** |
+| **TERTIARY** | both evaluation repos improve separately | hono 35.8→**80.2**, trpc 24.3→**31.4** | **PASS** |
+| **GUARD** | v2's exact 160 held-out files ≥ 31.8% | **36.9%** | **PASS** |
+
+**The class starvation described in § 5a is fixed.** The tier emits **12 of the teacher's 13
+classes** on repos it has never seen, including every class it previously could not produce at all
+(`model` 8, `gateway` 3, `config` 2, `middleware` 2, `schema` 1, `component` 1). The
+`service`/`utility` collapse eased **96.4% (v1) → 87.2% (v3-structural) → 58.8%**, against a
+teacher's 48.4%.
+
+**The GUARD is the load-bearing result.** 36.9% on the *identical* 160 files where v2 scored
+33.8% — the in-distribution case improved rather than being traded away. The instrument was
+validated before use: the same 160-file path reproduced v2's 33.8% exactly, to the decimal, the
+same S/U share and the same label count (`c2c0b3ed`).
+
+### ⚠️ What this does NOT license — and it is the half that gets dropped in retelling
+
+**Coverage counts predictions outside `service`/`utility` whether or not they are correct.**
+Clearing the bar proves the class prior widened. It does **not** prove a single prediction is
+right. Accuracy needs the blind 250 labelled — the one irreversible spend, still unspent — and is
+capped by the teacher's **72.3%** agreement with human judgement (§ 3).
+
+**The risk was declared in advance and it is live.** A model that merely shifted its bias scores
+well on this metric, and the per-repo split shows exactly that — **in opposite directions**:
+
+| | coverage | ELM says S/U | teacher says | reading |
+|---|---:|---:|---:|---|
+| **hono** | 80.2% | **22.2%** | 45.7% | now **under**-predicts S/U; calls 38 of 81 files `types` |
+| **trpc** | 31.4% | **76.3%** | 49.7% | still **over**-predicts S/U; clears by 1.4 pp |
+
+**The 47.2% average hides both.** hono's 80.2% is not the tier being right about hono; it is the
+prior having swung past the teacher the other way. **trpc is the honest case and it barely
+clears.** Any report of 47.2% that omits this paragraph is misleading.
+
+**Per-class ecosystem dominance is the next thing to test.** The classes that became cheap came
+from one repo each: `config` is **90.8% nest**, `middleware` **80.0%**, `schema` **78.6%**,
+`model` **67.9% typeorm**. Repo shares overall: nest 38.1%, typeorm 24.2%. The tier may have
+learned "a config file looks like a NestJS config file" — v1's failure, reproduced one class down.
+A fourth ecosystem for those classes is the test, and it is a harvest, so it needs a bar declared
+first.
+
+### 🔴 A script defect that contradicts these logs
+
+**`scripts/elm-coverage-check.mjs:156-157` prints a hardcoded verdict.** An unconditional
+`console.log` ending *"and collapses where it was not … It learned this corpus's archetype prior,
+not a general path→archetype mapping"* — written for the **v1 failure** and never made conditional,
+so it is printed for **any** model regardless of its numbers. **Both certification logs therefore
+end with a narration that flatly contradicts the PASS printed directly above it. Do not quote that
+closing block.** The numbers in the tables are unaffected; the prose after them is stale text, not
+a finding. Known, filed, awaiting the lead's authorisation to edit that file.
+
+**The refit fingerprint is still unverified.** The frozen artifact carries `refitFingerprint` so a
+certification run can prove it scored the frozen model; the script never checks it. Every coverage
+figure in this document, **including 28.0% and 47.2%**, is faithful-by-construction rather than
+mechanically verified.
+
+**The vocabulary cap binds for the first time.** v2's corpus produced 2,890 terms under the 4,000
+cap; v3-classtargeted fills it, so the rarest terms are now dropped. The spec is honoured as
+pinned, but the effective feature space changed between v2 and v3.
+
 ## 7. The contamination boundary
 
 Three populations. **Keep them separate or your numbers mean nothing.**
@@ -440,14 +540,17 @@ likely to be lost, so it is inventoried here. "LLM-labelled" rows are the ones t
 | trpc | 498 | 238 | **gold set #2 — do not train on** |
 | hono | 239 | 117 | **gold set #2 — do not train on** |
 | svelte | 388 | **0** | analyzed rules-only — no LLM spend, no usable rows |
-| typeorm | 563 | **0** | analyzed rules-only — no LLM spend, no usable rows |
-| nest, payload, remix | — | — | **cloned, never analyzed** |
+| typeorm | 563 | **531** | **corpus v3-classtargeted** (harvested 2026-09-21) |
+| nest | 844 | **836** | **corpus v3-classtargeted** — the largest single contributor, 38.1% |
+| remix | — | **204** | **corpus v3-classtargeted** (477/485 + 204/213 after the retry) |
+| payload | — | — | **cloned, never analyzed** |
 
-Two things worth noticing: **svelte and typeorm are analyzed but yielded zero LLM rows** (the
-classify pass did not run — a `--fast` run costs nothing and produces nothing usable here), and
-**nest / payload / remix are cloned and untouched.** Those five are exactly the ecosystems
-`TN-J9` asked for — an ORM-backed API, a NestJS app, a Remix app. Whoever extends this corpus
-next has the clones already staged and only needs the classify calls.
+> **Updated 2026-09-21/22.** The class-targeted harvest spent ~55 successful classify calls on
+> **typeorm, nest and remix** — the three `TN-J9` asked for — and they are now the bulk of
+> v3-classtargeted. **svelte and payload remain untouched**, and svelte is the obvious next
+> ecosystem if `component` is ever to be fixed from the LLM side (§ 5 of Jam's 2026-09-23 note).
+> **The staging tree is still not version-controlled**, so this inventory remains the only record
+> that it exists.
 
 ## 9. Rebuilding and extending
 
