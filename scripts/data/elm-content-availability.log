@@ -1,0 +1,80 @@
+=== Content availability for re-featurising — provenance ===
+date            : 2026-09-23T18:55:53Z
+repo commit     : 7abbfe7cdd6ac34d0dfc47ea2b34ddebbe83df62  (tree: 3 modified)
+node            : v22.20.0
+script sha256   : 27bfb93032b3f29c704bc436491a562f4672121e21f49d0bb3abba63827d713c
+corpus          : scripts/data/elm-archetype-corpus-v3-classtargeted.json
+corpus sha256   : ade0890d4062de785a26bf407e0a51c2e956a46f8e4f8003d6186c85a94dcb89
+cap constant    : MAX_CONTENT_BYTES 65536, from classify-elm-features.ts:133 on origin/dev
+method          : blobs read from git at each pinned commit, not from the working tree
+invocation      : node scripts/elm-content-availability.mjs
+=== run output ===
+corpus   scripts/data/elm-archetype-corpus-v3-classtargeted.json
+rows     2195  (train 1642 + heldOut 553)
+cap      65536 bytes
+
+repo                          clone  commit  rows
+────────────────────────────────────────────────────────────
+n-dx-1                        yes    yes       255
+AsterMind-Community-Edition   yes    yes        69
+express                       yes    yes        17
+fastify                       yes    yes        48
+commerce                      yes    yes        15
+got                           yes    yes         8
+core                          yes    yes       212
+typeorm                       yes    yes       531
+nest                          yes    yes       836
+remix                         yes    yes       204
+
+── Availability ────────────────────────────────────────────
+  resolved             2195  100.0%
+  commit unreachable      0  0.0%
+  path gone at commit     0  0.0%
+
+── Content, of the resolved ─────────────────────────────────
+  over the 64 KB cap     17  0.8%  (truncated, not lost)
+  zero bytes              0  0.0%  (all-zero content block)
+  bytes on disk       10.4 MB
+  bytes after cap     9.3 MB  (what the extractor would read)
+
+── Per repo ────────────────────────────────────────────────
+repo                          rows    ok  missing  trunc  empty
+nest                           836   836        0      0      0
+typeorm                        531   531        0     12      0
+n-dx-1                         255   255        0      2      0
+core                           212   212        0      1      0
+remix                          204   204        0      1      0
+AsterMind-Community-Edition     69    69        0      1      0
+fastify                         48    48        0      0      0
+express                         17    17        0      0      0
+commerce                        15    15        0      0      0
+got                              8     8        0      0      0
+
+  largest-file sample (truncated to 64 KB, still usable):
+    n-dx-1  packages/hench/src/agent/lifecycle/shared.ts  79 KB
+    n-dx-1  packages/sourcevision/src/analyzers/zones.ts  109 KB
+    AsterMind-Community-Edition  examples/lessons/L00-elm-primer/live-demo.js  85 KB
+    core  packages/runtime-core/src/renderer.ts  73 KB
+    typeorm  src/query-builder/InsertQueryBuilder.ts  67 KB
+    typeorm  src/query-builder/SelectQueryBuilder.ts  173 KB
+    typeorm  src/driver/sap/SapQueryRunner.ts  141 KB
+    typeorm  src/driver/postgres/PostgresQueryRunner.ts  198 KB
+    typeorm  src/driver/sqlite-abstract/AbstractSqliteQueryRunner.ts  85 KB
+    typeorm  src/driver/cockroachdb/CockroachQueryRunner.ts  167 KB
+    typeorm  src/driver/sqlserver/SqlServerQueryRunner.ts  165 KB
+    typeorm  src/driver/mongodb/typings.ts  343 KB
+
+── Verdict ─────────────────────────────────────────────────
+  100.0% of rows have retrievable content at their pinned commit.
+  Re-featurising is VIABLE.
+=== remote reachability (gh api repos/<slug>/commits/<sha>) ===
+  OK      n-dx-1  AsterMindAI/n-dx  e739cb4d5428
+  OK      AsterMind-Community-Edition  AsterMindAI/AsterMind-Community-Edition  7a2d763f556e
+  OK      express  expressjs/express  023767fe9872
+  OK      fastify  fastify/fastify  4cdb0c5def81
+  OK      commerce  vercel/commerce  3761e52e60df
+  OK      got  sindresorhus/got  64f21e2a4797
+  OK      core  vuejs/core  d63616ca17de
+  OK      typeorm  typeorm/typeorm  3ecf2c8dfccd
+  OK      nest  nestjs/nest  39fbddae5128
+  OK      remix  remix-run/remix  8fcbf7109caf
