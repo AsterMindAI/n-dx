@@ -531,6 +531,12 @@ export interface ELMGateOptions {
    * is unchanged.
    */
   rootDir?: string;
+  /**
+   * Minimum share of the content ensemble that must agree (0-1). Defaults to
+   * `DEFAULT_ELM_MIN_VOTE_SHARE` (unanimity). Ignored by the legacy evidence path, which has no
+   * ensemble. This is deliberately NOT `confidenceThreshold` -- see the note at its use site.
+   */
+  minVoteShare?: number;
 }
 
 /**
@@ -547,12 +553,21 @@ export function runELMGate(
   options: ELMGateOptions,
 ): ELMClassifyResult {
   if (options.rootDir !== undefined) {
-    const trained = getContentArchetypeELM(classifications, inventory, options.rootDir, options.seed);
-    if (!trained) return { updatedFiles: [] };
+    const models = getContentArchetypeELMEnsemble(
+      classifications,
+      inventory,
+      options.rootDir,
+      options.seed,
+    );
+    if (!models) return { updatedFiles: [] };
     return classifyWithContentELM(
       classifications,
-      trained,
-      options.confidenceThreshold,
+      models,
+      // NOT options.confidenceThreshold. That value is a softmax threshold, and softmax
+      // confidence was measured to be uninformative here -- the shipped default of 0.11 sits
+      // below the entire observed distribution, so it would accept EVERY prediction at ~52%
+      // precision. Ensemble agreement is a different quantity with its own default.
+      options.minVoteShare ?? DEFAULT_ELM_MIN_VOTE_SHARE,
       options.rootDir,
     );
   }
@@ -616,12 +631,52 @@ export function getContentArchetypeELM(
   rootDir: string,
   seed: number,
 ): TrainedArchetypeELMNumeric | undefined {
+  return getContentArchetypeELMEnsemble(classifications, inventory, rootDir, seed, 1)?.[0];
+}
+
+/**
+ * Number of independently-seeded models in the content ensemble.
+ *
+ * An ELM's hidden layer is random and never trained, so a different seed is a genuinely
+ * different model, and training is one ridge solve. That makes an ensemble nearly free here --
+ * and measurement says it is necessary, not a refinement: a SINGLE model's confidence does not
+ * predict its own correctness (AUC 0.551-0.595, and incorrect predictions were marginally MORE
+ * confident than correct ones). Agreement across the ensemble is the only signal measured to
+ * produce a monotonic precision curve. See scripts/elm-ensemble-uncertainty.mjs.
+ */
+export const ELM_ENSEMBLE_SIZE = 15;
+
+/**
+ * Minimum share of the ensemble that must agree before a label is accepted.
+ *
+ * Defaults to 1.0 -- UNANIMITY -- because it is the only operating point measured to reach a
+ * precision anywhere near the LLM it would replace (81.3% teacher agreement at 6.3% coverage;
+ * every looser setting lands at 58-72%). It is deliberately the most conservative setting
+ * available rather than a tuned one: at batch 30 it saves roughly one LLM call in nine, and the
+ * settings that save more change a third of the labels. See scripts/elm-savings-curve.mjs.
+ */
+export const DEFAULT_ELM_MIN_VOTE_SHARE = 1.0;
+
+/** Train the content ensemble. Fresh-training only -- see the block comment above. */
+export function getContentArchetypeELMEnsemble(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+  seed: number,
+  size: number = ELM_ENSEMBLE_SIZE,
+): TrainedArchetypeELMNumeric[] | undefined {
   if (!hasEnoughHistoryForFreshTraining(classifications)) return undefined;
   const examples = extractContentExamples(classifications, inventory, rootDir);
   if (examples.length === 0) return undefined;
   const categories = [...new Set(examples.map((e) => e.archetype))].sort();
   if (categories.length === 0) return undefined;
-  return trainArchetypeELMNumeric(examples, categories, seed);
+  const models: TrainedArchetypeELMNumeric[] = [];
+  for (let i = 0; i < size; i++) {
+    // 7919 is an arbitrary large prime -- it just spreads the seeds so consecutive runs do not
+    // produce near-identical random projections.
+    models.push(trainArchetypeELMNumeric(examples, categories, seed + i * 7919));
+  }
+  return models;
 }
 
 /**
@@ -636,11 +691,12 @@ export function getContentArchetypeELM(
  */
 export function classifyWithContentELM(
   classifications: Classifications,
-  trained: TrainedArchetypeELMNumeric,
-  confidenceThreshold: number,
+  models: TrainedArchetypeELMNumeric[],
+  minVoteShare: number,
   rootDir: string,
 ): ELMClassifyResult {
-  const trainedCategorySet = new Set(trained.categories);
+  if (models.length === 0) return { updatedFiles: [] };
+  const trainedCategorySet = new Set(models[0].categories);
   const updatedFiles: FileClassification[] = [];
 
   for (const fc of classifications.files) {
@@ -649,13 +705,26 @@ export function classifyWithContentELM(
       path: fc.path,
       content: readFileContentSafely(rootDir, fc.path),
     });
-    const prediction = predictArchetypeNumeric(trained, vector);
-    if (prediction.confidence < confidenceThreshold) continue;
-    if (!trainedCategorySet.has(prediction.archetype)) continue; // defensive
+
+    // Gate on ENSEMBLE AGREEMENT, not on one model's softmax. Measured: a single model's
+    // confidence is near-uninformative about its own correctness (AUC 0.551), while agreement
+    // produces a monotonic precision curve (57.6% at majority -> 81.3% at unanimity).
+    const votes = new Map<string, number>();
+    for (const m of models) {
+      const [top] = m.elm.predictTopKFromVector(vector, 1);
+      votes.set(top.label, (votes.get(top.label) ?? 0) + 1);
+    }
+    const [archetype, count] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0];
+    const voteShare = count / models.length;
+    if (voteShare < minVoteShare) continue;
+    if (!trainedCategorySet.has(archetype)) continue; // defensive
+
     updatedFiles.push({
       path: fc.path,
-      archetype: prediction.archetype,
-      confidence: prediction.confidence,
+      archetype,
+      // The recorded confidence is the ensemble's agreement, which is the quantity actually
+      // gated on -- storing a softmax value here would record a number nothing acted upon.
+      confidence: voteShare,
       source: "elm",
     });
   }
