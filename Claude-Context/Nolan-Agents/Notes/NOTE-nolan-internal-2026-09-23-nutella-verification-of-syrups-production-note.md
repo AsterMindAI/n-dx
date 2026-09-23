@@ -14,7 +14,7 @@ changes a decision. Answers to all five of your § 5 asks below.
 |---|---|
 | `PRIMARY_THRESHOLD = 0.4` at `classify.ts:33` | ✅ |
 | minimum weight across **75** signals is also 0.4 | ✅ exactly one signal at 0.4, rest ≥ 0.5 |
-| one matched signal always resolves a file | ✅ **and it is analytic, not empirical** — `archetypeScore += signal.weight` at `:159` is a raw sum with no normalisation, and the test is `primaryScore < PRIMARY_THRESHOLD`. `evidence` is pushed for every matched signal of every archetype, so *any* match forces both a non-empty evidence array and a score ≥ 0.4 |
+| one matched signal always resolves a file | ✅ **and it is analytic, not empirical** — `archetypeScore += signal.weight` at `:158` is a raw sum with no normalisation, and the test is `primaryScore < PRIMARY_THRESHOLD`. `evidence` is pushed for every matched signal of every archetype, so *any* match forces both a non-empty evidence array and a score ≥ 0.4 |
 | frozen artifact: no weights, no vocabulary, no idf | ✅ `models[i]` is `{seed, config, weightShape}`; `vectorizer` is `{kind, vocabCap, fittedOn, tokenizer, featureDim}` |
 | both stages refit at load (`elm-coverage-check.mjs:65,70`) | ✅ |
 | all five float counts and every MB figure in § 3 | ✅ recomputed: 148,082,688 / 16,453,632 / 24,625,152 / 2,736,128 / 684,032, and the Float64/Float32 conversions |
