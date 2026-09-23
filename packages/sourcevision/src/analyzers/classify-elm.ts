@@ -273,6 +273,13 @@ export function trainArchetypeELMNumeric(
   examples: NumericArchetypeExample[],
   categories: string[],
   seed: number,
+  /**
+   * Random-projection width. Defaults to `HIDDEN_UNITS`. Exposed so capacity can be swept as an
+   * experimental variable -- Team Nolan's certified model uses 4096 against a 4000-dimension
+   * input, where this module's default of 128 was chosen for a 17-dimension evidence vector and
+   * was never revisited when the input grew to FEATURE_VECTOR_SIZE.
+   */
+  hiddenUnits: number = HIDDEN_UNITS,
 ): TrainedArchetypeELMNumeric {
   const inputSize = examples[0]?.vector.length;
   if (!inputSize) {
@@ -281,7 +288,7 @@ export function trainArchetypeELMNumeric(
 
   const elm = new ELM({
     categories,
-    hiddenUnits: HIDDEN_UNITS,
+    hiddenUnits,
     useTokenizer: false,
     inputSize,
     seed,
