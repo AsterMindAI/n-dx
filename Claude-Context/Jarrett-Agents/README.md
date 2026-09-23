@@ -26,6 +26,7 @@ One row per agent. Set a new agent up with [`../NEW-AGENT.md`](../NEW-AGENT.md).
 | Archer | [`Archer.md`](Archer.md) | _(unassigned)_ | _(none — shared checkout, see below)_ |
 | Knight | [`Knight.md`](Knight.md) | _(unassigned)_ | _(none — shared checkout, see below)_ |
 | Realm | [`Realm.md`](Realm.md) | _(unassigned)_ | _(none — shared checkout, see below)_ |
+| Elon | [`Elon.md`](Elon.md) | Body of `classify-ELM.ts` — the ELM-only classifier behind `runELMGate()`: feature representation (incl. file content), training data, model lifecycle, confidence-gate calibration, retrain loop. **Not** the gate's routing, **not** `classify-LLM.ts`, **not** the archetype catalog. | `../n-dx-elon` |
 
 > `(TBD)` and `(shared checkout)` are not valid worktree entries for an agent that works alongside
 > others. See [`../Command-Structure`](../Command-Structure) → *One agent, one worktree*.

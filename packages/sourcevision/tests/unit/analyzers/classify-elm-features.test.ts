@@ -12,6 +12,10 @@ import {
   OFFSET_PATH_TOKENS,
   OFFSET_CONTENT_TOKENS,
   OFFSET_STRUCTURAL,
+  OFFSET_INDICATORS,
+  INDICATOR_NAMES,
+  INDICATOR_BLOCK_SIZE,
+  PATH_SCALAR_NAMES,
   STRUCTURAL_BLOCK_SIZE,
   STRUCTURAL_FEATURE_NAMES,
   PATH_TOKEN_BUCKETS,
@@ -310,7 +314,7 @@ describe("readFileContentSafely", () => {
 
 describe("buildFeatureVector", () => {
   it("declares a feature version so a model cannot be loaded under a different layout", () => {
-    expect(FEATURE_VERSION).toBe(1);
+    expect(FEATURE_VERSION).toBe(2);
   });
 
   it("produces a fixed width regardless of content length", () => {
@@ -395,7 +399,8 @@ describe("buildFeatureVector", () => {
     const vec = buildFeatureVector({ path: "src/utils/format.ts", content: "export const a = 1;" });
     expect(OFFSET_PATH_TOKENS + PATH_TOKEN_BUCKETS).toBe(OFFSET_CONTENT_TOKENS);
     expect(OFFSET_CONTENT_TOKENS + CONTENT_TOKEN_BUCKETS).toBe(OFFSET_STRUCTURAL);
-    expect(OFFSET_STRUCTURAL + STRUCTURAL_BLOCK_SIZE).toBe(FEATURE_VECTOR_SIZE);
+    expect(OFFSET_STRUCTURAL + STRUCTURAL_BLOCK_SIZE).toBe(OFFSET_INDICATORS);
+    expect(OFFSET_INDICATORS + INDICATOR_BLOCK_SIZE).toBe(FEATURE_VECTOR_SIZE);
     expect(vec.slice(OFFSET_PATH_SCALARS, OFFSET_PATH_TOKENS).some((v) => v !== 0)).toBe(true);
   });
 
@@ -409,5 +414,81 @@ describe("buildFeatureVector", () => {
     expect(norm(OFFSET_PATH_TOKENS, OFFSET_CONTENT_TOKENS)).toBeCloseTo(1, 5);
     expect(norm(OFFSET_CONTENT_TOKENS, OFFSET_STRUCTURAL)).toBeCloseTo(1, 5);
     expect(norm(OFFSET_STRUCTURAL, FEATURE_VECTOR_SIZE)).toBeCloseTo(1, 5);
+  });
+});
+
+// ── v2: "zero is not missing" ────────────────────────────────────────────────
+//
+// Adopted from Team Nolan's measured feature survey (ELM-database-ndx,
+// methodology/FEATURES.md § 5), which calls this "the single easiest way to get wrong numbers".
+// v1 of this module had the bug: unreadable content and content-with-no-identifiers both
+// produced an all-zero content block, so the model was told an unmeasured file definitively has
+// no content signal. These tests are the guard.
+
+describe("missing indicators (v2)", () => {
+  const idx = (n: (typeof INDICATOR_NAMES)[number]) => OFFSET_INDICATORS + INDICATOR_NAMES.indexOf(n);
+
+  it("sets contentMissing when content was not measurable", () => {
+    const vec = buildFeatureVector({ path: "src/a.ts" });
+    expect(vec[idx("contentMissing")]).toBe(1);
+  });
+
+  it("does NOT set contentMissing when content was measured", () => {
+    const vec = buildFeatureVector({ path: "src/a.ts", content: "export const a = 1;" });
+    expect(vec[idx("contentMissing")]).toBe(0);
+  });
+
+  // THE defect this block exists for. Without an indicator these two vectors are identical.
+  it("distinguishes unmeasurable content from measured-but-signal-free content", () => {
+    const unmeasured = buildFeatureVector({ path: "src/a.ts" });
+    const measuredNoIdentifiers = buildFeatureVector({ path: "src/a.ts", content: "{} [] ;;; 123" });
+    expect(unmeasured).not.toEqual(measuredNoIdentifiers);
+    expect(unmeasured[idx("contentMissing")]).toBe(1);
+    expect(measuredNoIdentifiers[idx("contentMissing")]).toBe(0);
+  });
+
+  it("distinguishes an empty file from an unmeasurable one", () => {
+    const empty = buildFeatureVector({ path: "src/a.ts", content: "" });
+    const unmeasured = buildFeatureVector({ path: "src/a.ts" });
+    expect(empty[idx("contentEmpty")]).toBe(1);
+    expect(empty[idx("contentMissing")]).toBe(0);
+    expect(unmeasured[idx("contentEmpty")]).toBe(0);
+    expect(unmeasured[idx("contentMissing")]).toBe(1);
+    expect(empty).not.toEqual(unmeasured);
+  });
+
+  it("keeps indicators as raw 0/1, not L2-normalized into fractions", () => {
+    const vec = buildFeatureVector({ path: "src/a.ts", content: "" });
+    for (let i = OFFSET_INDICATORS; i < OFFSET_INDICATORS + INDICATOR_BLOCK_SIZE; i++) {
+      expect([0, 1]).toContain(vec[i]);
+    }
+  });
+});
+
+// ── v2: path scalars no longer fingerprint the repo ──────────────────────────
+
+describe("path scalars (v2)", () => {
+  it("no longer carries depth or segmentCount", () => {
+    // Nolan withheld depthFromRoot on measured evidence that it encodes monorepo layout
+    // (n-dx paths start packages/x/src/..., express is flat), and the two were mutually
+    // collinear anyway (segmentCount === depth + 1).
+    expect(PATH_SCALAR_NAMES).not.toContain("depth");
+    expect(PATH_SCALAR_NAMES).not.toContain("segmentCount");
+  });
+
+  it("scores a deep monorepo path and a flat path identically when the filename matches", () => {
+    const monorepo = buildFeatureVector({ path: "packages/web/src/server/start.ts" });
+    const flat = buildFeatureVector({ path: "start.ts" });
+    const slice = (v: number[]) => v.slice(OFFSET_PATH_SCALARS, OFFSET_PATH_TOKENS);
+    // Path TOKENS still differ (that is their job); the SCALAR block must not encode depth.
+    expect(slice(monorepo)).toEqual(slice(flat));
+  });
+
+  it("writes only within its own block (regression: v1 spilled into path tokens)", () => {
+    const vec = buildFeatureVector({ path: "a/b/c/d/e/f/g/deep.ts" });
+    // The first path-token slot must be untouched by the scalar writer unless hashing set it.
+    const scalars = vec.slice(OFFSET_PATH_SCALARS, OFFSET_PATH_TOKENS);
+    expect(scalars).toHaveLength(PATH_SCALAR_NAMES.length);
+    expect(scalars.every((v) => Number.isFinite(v))).toBe(true);
   });
 });

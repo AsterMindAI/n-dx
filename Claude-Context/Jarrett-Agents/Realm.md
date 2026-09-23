@@ -35,8 +35,36 @@ Every time you call on me, I reread this file first, then update it before or as
 
 ## Current state
 
-_(Not yet filled in — this charter was migrated from `team/Jarrett/realm.md` on 2026-08-08 per `IMPL-2026-08-05-nolan-migrate-team-profiles-to-charters.md`. No accumulated session content existed at the original file — this is a template baseline. Fill in at the start of the next working session.)_
+**2026-09-07 — mid-investigation on `classify.ts`'s ELM-based classifier.** The project: `classify.ts`
+classifies every source file into an archetype, in two passes today — a free algorithmic pass, then
+an LLM fallback for whatever it can't confidently label. The whole thread of work across
+`TJ-A1`/`TJ-A2`/`TJ-A3`/`TJ-R1`/`TJ-R2`/`TJ-R3` has been about replacing or narrowing that LLM
+fallback with a cheap ELM classifier instead, without silently shipping something that
+misclassifies files with no safety net.
+
+**Where it actually stands:** the first representation (a per-archetype evidence-score vector) was
+independently built by both Archer and Knight, cleared its validation gate, and I reproduced both
+of their results myself before trusting either — then it turned out to be validated against the
+wrong population. Real smoke-testing found the files it's actually invoked for have an all-zero
+evidence vector by construction, so it can't help the population it exists for. The fix in progress
+(`TJ-R2`, Archer) replaces that with path/export text, which is never empty.
+
+**Separately, and this is the live complication:** Team Thomas built the same fix — path-text
+encoding instead of the evidence vector — completely independently, on the same day, and it's
+already merged into `classify.ts` on this branch (`TT-N1`, agent Nala). I found this by fetching
+and diffing their branch directly, since neither team's own status board was visible to the other
+across the divergence. I proposed a reconciliation (`TJ-R3`): split `classify.ts` into a thin gate
+plus two owned classifier files (`classify-ELM.ts`, `classify-LLM.ts`), so either team's
+representation can slot into the same interface instead of the two approaches competing for the
+same file. That proposal is blocked on Team Thomas's sign-off — it reorganizes code they already
+merged, so it isn't Team Jarrett's call to make alone.
 
 ## Next up
 
-- [ ] _(none claimed yet — see `BACKLOG.md`)_
+- [ ] Hear back from Thomas/Nala on the `TJ-R3` gate-split proposal — nothing past that should move
+      on `classify.ts` until it lands one way or another.
+- [ ] Once `TJ-A3` (Knight) produces real classification data against the tightened archetype
+      catalog, re-verify `TJ-R2`'s threshold/representation numbers myself rather than trusting the
+      charter claim — same discipline as every other number in this investigation.
+- [ ] Keep `BACKLOG.md` and `IN-FLIGHT.md` honest as this resolves — the collision existed as long
+      as it did specifically because those boards went stale across branches.

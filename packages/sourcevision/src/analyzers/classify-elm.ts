@@ -24,6 +24,7 @@ import { dirname, join } from "node:path";
 import { ELM, UniversalEncoder } from "@astermind/astermind-community";
 import { analyzeClassifications } from "./classify.js";
 import { BUILTIN_ARCHETYPES } from "./archetypes.js";
+import { buildFeatureVector, readFileContentSafely } from "./classify-elm-features.js";
 import type {
   Classifications,
   FileClassification,
@@ -272,6 +273,13 @@ export function trainArchetypeELMNumeric(
   examples: NumericArchetypeExample[],
   categories: string[],
   seed: number,
+  /**
+   * Random-projection width. Defaults to `HIDDEN_UNITS`. Exposed so capacity can be swept as an
+   * experimental variable -- Team Nolan's certified model uses 4096 against a 4000-dimension
+   * input, where this module's default of 128 was chosen for a 17-dimension evidence vector and
+   * was never revisited when the input grew to FEATURE_VECTOR_SIZE.
+   */
+  hiddenUnits: number = HIDDEN_UNITS,
 ): TrainedArchetypeELMNumeric {
   const inputSize = examples[0]?.vector.length;
   if (!inputSize) {
@@ -280,7 +288,7 @@ export function trainArchetypeELMNumeric(
 
   const elm = new ELM({
     categories,
-    hiddenUnits: HIDDEN_UNITS,
+    hiddenUnits,
     useTokenizer: false,
     inputSize,
     seed,
@@ -511,6 +519,24 @@ export interface ELMGateOptions {
   confidenceThreshold: number;
   /** Seed for fresh per-project training — irrelevant when the bundled baseline is used instead. */
   seed: number;
+  /**
+   * Absolute project root. **Supplying this switches the gate to the content representation**
+   * (`TJ-E1`) — the only one that can resolve anything at this call site, because the evidence
+   * vector is identically all-zero for the entire population that reaches here. Omit it and the
+   * gate uses the legacy evidence representation, which is retained for the existing tests and
+   * the bundled baseline model but resolves nothing in production.
+   *
+   * Required because the content representation reads file bytes, which `inventory.json` and
+   * `imports.json` do not carry. Additive to this interface, so `TJ-R3`'s stable gate signature
+   * is unchanged.
+   */
+  rootDir?: string;
+  /**
+   * Minimum share of the content ensemble that must agree (0-1). Defaults to
+   * `DEFAULT_ELM_MIN_VOTE_SHARE` (unanimity). Ignored by the legacy evidence path, which has no
+   * ensemble. This is deliberately NOT `confidenceThreshold` -- see the note at its use site.
+   */
+  minVoteShare?: number;
 }
 
 /**
@@ -526,7 +552,181 @@ export function runELMGate(
   imports: Imports,
   options: ELMGateOptions,
 ): ELMClassifyResult {
+  if (options.rootDir !== undefined) {
+    const models = getContentArchetypeELMEnsemble(
+      classifications,
+      inventory,
+      options.rootDir,
+      options.seed,
+    );
+    if (!models) return { updatedFiles: [] };
+    return classifyWithContentELM(
+      classifications,
+      models,
+      // NOT options.confidenceThreshold. That value is a softmax threshold, and softmax
+      // confidence was measured to be uninformative here -- the shipped default of 0.11 sits
+      // below the entire observed distribution, so it would accept EVERY prediction at ~52%
+      // precision. Ensemble agreement is a different quantity with its own default.
+      options.minVoteShare ?? DEFAULT_ELM_MIN_VOTE_SHARE,
+      options.rootDir,
+    );
+  }
   const trained = getArchetypeELM(classifications, inventory, imports, options.seed);
   if (!trained) return { updatedFiles: [] };
   return classifyWithELM(classifications, inventory, imports, trained, options.confidenceThreshold);
+}
+
+// ── Content representation (TJ-E1, ADR-2026-09-17-elon-content-based-elm-classifier.md) ────
+//
+// The representation that actually has signal at this call site. Everything above trains on
+// `classifyFile`'s evidence vector, which is identically all-zero for every file the gate is
+// invoked for (measured across 5 corpora, 2026-08-27, zero exceptions) — so the functions above
+// can only ever resolve files that did not need the ELM in the first place.
+//
+// THE BUNDLED BASELINE MODEL IS NOT USABLE HERE, deliberately. It was trained on 17-dimension
+// evidence vectors; a content vector is `FEATURE_VECTOR_SIZE`-dimensional. Loading one against
+// the other would not throw, it would silently predict from a garbage projection — exactly the
+// failure `FEATURE_VERSION` exists to make impossible. So the content path is fresh-training
+// only until a baseline is retrained under this layout (IMPL step 11).
+
+/**
+ * Training examples under the content representation. Same labeling rules as
+ * `extractNumericExamples` (source-role files, resolved archetype, algorithmic or llm source) —
+ * only the vector differs.
+ *
+ * Files whose content cannot be read still produce an example: `buildFeatureVector` degrades to
+ * metadata-only and sets `contentMissing`, so the model learns from the path half rather than the
+ * row being dropped.
+ */
+export function extractContentExamples(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+): NumericArchetypeExample[] {
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
+  const examples: NumericArchetypeExample[] = [];
+  for (const file of inventory.files) {
+    if (file.role !== "source") continue;
+    const fc = classificationByPath.get(file.path);
+    if (!fc?.archetype) continue;
+    if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
+    examples.push({
+      vector: buildFeatureVector({
+        path: file.path,
+        content: readFileContentSafely(rootDir, file.path),
+      }),
+      archetype: fc.archetype,
+    });
+  }
+  return examples;
+}
+
+/**
+ * Model lifecycle for the content representation. Fresh-training only — see the block comment
+ * above for why the bundled baseline is deliberately excluded rather than reused.
+ */
+export function getContentArchetypeELM(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+  seed: number,
+): TrainedArchetypeELMNumeric | undefined {
+  return getContentArchetypeELMEnsemble(classifications, inventory, rootDir, seed, 1)?.[0];
+}
+
+/**
+ * Number of independently-seeded models in the content ensemble.
+ *
+ * An ELM's hidden layer is random and never trained, so a different seed is a genuinely
+ * different model, and training is one ridge solve. That makes an ensemble nearly free here --
+ * and measurement says it is necessary, not a refinement: a SINGLE model's confidence does not
+ * predict its own correctness (AUC 0.551-0.595, and incorrect predictions were marginally MORE
+ * confident than correct ones). Agreement across the ensemble is the only signal measured to
+ * produce a monotonic precision curve. See scripts/elm-ensemble-uncertainty.mjs.
+ */
+export const ELM_ENSEMBLE_SIZE = 15;
+
+/**
+ * Minimum share of the ensemble that must agree before a label is accepted.
+ *
+ * Defaults to 1.0 -- UNANIMITY -- because it is the only operating point measured to reach a
+ * precision anywhere near the LLM it would replace (81.3% teacher agreement at 6.3% coverage;
+ * every looser setting lands at 58-72%). It is deliberately the most conservative setting
+ * available rather than a tuned one: at batch 30 it saves roughly one LLM call in nine, and the
+ * settings that save more change a third of the labels. See scripts/elm-savings-curve.mjs.
+ */
+export const DEFAULT_ELM_MIN_VOTE_SHARE = 1.0;
+
+/** Train the content ensemble. Fresh-training only -- see the block comment above. */
+export function getContentArchetypeELMEnsemble(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+  seed: number,
+  size: number = ELM_ENSEMBLE_SIZE,
+): TrainedArchetypeELMNumeric[] | undefined {
+  if (!hasEnoughHistoryForFreshTraining(classifications)) return undefined;
+  const examples = extractContentExamples(classifications, inventory, rootDir);
+  if (examples.length === 0) return undefined;
+  const categories = [...new Set(examples.map((e) => e.archetype))].sort();
+  if (categories.length === 0) return undefined;
+  const models: TrainedArchetypeELMNumeric[] = [];
+  for (let i = 0; i < size; i++) {
+    // 7919 is an arbitrary large prime -- it just spreads the seeds so consecutive runs do not
+    // produce near-identical random projections.
+    models.push(trainArchetypeELMNumeric(examples, categories, seed + i * 7919));
+  }
+  return models;
+}
+
+/**
+ * Classify the unclassified population using the content representation.
+ *
+ * Note what is deliberately NOT here: the all-zero-vector guard from `classifyWithELM`. That
+ * guard exists because the evidence vector genuinely carries no information for this population.
+ * A content vector always has at least its extension and filename set, so an all-zero vector is
+ * not reachable — and a guard that can never fire would be misleading rather than safe. The
+ * honest equivalent is `contentMissing`, which is a feature the model can weigh rather than a
+ * hard skip: a file we could not read is still classifiable from its path, just less reliably.
+ */
+export function classifyWithContentELM(
+  classifications: Classifications,
+  models: TrainedArchetypeELMNumeric[],
+  minVoteShare: number,
+  rootDir: string,
+): ELMClassifyResult {
+  if (models.length === 0) return { updatedFiles: [] };
+  const trainedCategorySet = new Set(models[0].categories);
+  const updatedFiles: FileClassification[] = [];
+
+  for (const fc of classifications.files) {
+    if (fc.archetype !== null || fc.source !== "algorithmic") continue;
+    const vector = buildFeatureVector({
+      path: fc.path,
+      content: readFileContentSafely(rootDir, fc.path),
+    });
+
+    // Gate on ENSEMBLE AGREEMENT, not on one model's softmax. Measured: a single model's
+    // confidence is near-uninformative about its own correctness (AUC 0.551), while agreement
+    // produces a monotonic precision curve (57.6% at majority -> 81.3% at unanimity).
+    const votes = new Map<string, number>();
+    for (const m of models) {
+      const [top] = m.elm.predictTopKFromVector(vector, 1);
+      votes.set(top.label, (votes.get(top.label) ?? 0) + 1);
+    }
+    const [archetype, count] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0];
+    const voteShare = count / models.length;
+    if (voteShare < minVoteShare) continue;
+    if (!trainedCategorySet.has(archetype)) continue; // defensive
+
+    updatedFiles.push({
+      path: fc.path,
+      archetype,
+      // The recorded confidence is the ensemble's agreement, which is the quantity actually
+      // gated on -- storing a softmax value here would record a number nothing acted upon.
+      confidence: voteShare,
+      source: "elm",
+    });
+  }
+  return { updatedFiles };
 }
