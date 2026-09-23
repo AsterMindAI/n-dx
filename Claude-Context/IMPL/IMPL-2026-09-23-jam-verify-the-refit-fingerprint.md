@@ -15,14 +15,20 @@ Prediction is the expensive operation here, not fitting. One path scored through
 4000→4096 matrix products in plain JavaScript. Derived from two runs that were actually timed, by
 subtracting the nine-fit cost (~90 CPU-min) from each total:
 
-| run | paths scored | implied cost per path |
-|---|---:|---:|
-| GUARD (160 files) | 160 | **3.75 s** |
-| PRIMARY (553 + 250 + 81 + 169) | 1,053 | **4.33 s** |
+| derivation | assumption | cost per path | full 1,642-path probe |
+|---|---|---:|---:|
+| subtract a 90-min fit cost from the GUARD run | fits ≈ 10 min each | 3.75 s | **≈ 103 CPU-min** |
+| solve the freeze and GUARD runs simultaneously | none — two equations, two unknowns | 2.41 s | **≈ 66 CPU-min** |
 
-**The probe set is the full 1,642-row train split.** At ~3.7 s/path that is **≈ 101 CPU-minutes** —
-against a certification run of 100–160 CPU-minutes today. **Verification as the ADR describes it
-adds ~78% to every run.**
+**The probe set is the full 1,642-row train split, so verification costs 66–103 CPU-minutes** —
+against a certification run of 100–160 CPU-minutes today. **It adds something between half again
+and four-fifths to every run.**
+
+⚠️ **Both figures are derived by subtraction from runs that were never instrumented for this, and
+they disagree by ~50%. Neither is a measurement.** I am recording the range rather than picking the
+tidier number, because a figure that reconciles is not a figure that was recorded — this project has
+paid for that twice. **Phase 3 settles it exactly, once, as a by-product of running.** The simultaneous
+solution also yields ~10.4 min per fit, which independently matches the freeze's observed final stage.
 
 That does not kill the decision; it kills "verify on every run, always, by default", which is what
 the ADR implies. The plan below keeps the guarantee and makes the routine case cheap.
@@ -51,7 +57,7 @@ const fingerprint = createHash("sha256")
 where `probe = rows.map((r) => docOf(r.text))` (`:193`) and `rows = corpus.train` (`:156`).
 
 **The coverage script can already reproduce this exactly, and that is the whole reason Phase 1 is
-small.** `loadFrozenTier()` returns `vote(paths)` (`elm-coverage-check.mjs:73-88`), and its
+small.** `loadFrozenTier()` returns `vote(paths)` (`elm-coverage-check.mjs:73-87`, returned at `:88`), and its
 semantics match `voteLabels` line for line:
 
 | | freeze `voteLabels` | coverage `vote` |
@@ -82,7 +88,7 @@ Add to `elm-coverage-check.mjs`:
   actually drift: library version, corpus sha256, node version, vocabCap/featureDim.
 - On `absent`: print `fingerprint ABSENT — not verified` and continue, so v1-era artifacts stay
   runnable and the gap stays visible.
-- Print the cost it just paid, so nobody is surprised by the 101 minutes.
+- Print the cost it just paid, so nobody is surprised by the hour-plus.
 
 **Test:** extend the existing `--selftest` (no model work) with a pure-function test of the digest
 builder: same inputs → same digest; one flipped label → different digest; one `prob` changed in the
@@ -97,19 +103,19 @@ second one over a fixed subset:
   `sampledFingerprint: { sha256, n: 200, selection: "seeded mulberry32(42) over the train split", paths: [...] }`.
 - **The sampled path list is stored in the artifact**, so verification does not depend on
   reproducing a sampling rule.
-- Cost at freeze: **~12 CPU-min**, and the freeze already pays ~101 min for the full probe.
-- Cost at certification: **~12 CPU-min**, ~8% of a run rather than 78%.
+- Cost at freeze: **~5–13 CPU-min** on the same range, and the freeze already pays the full probe cost anyway.
+- Cost at certification: **~5–13 CPU-min**, under 10% of a run rather than 50–80%.
 
 ⚠️ **200 paths is a judgement, not a derivation.** Drift from an RNG or library change would alter
 nearly every prediction, so a 200-path sample detects it with overwhelming probability; a *subtle*
 drift touching a handful of files could slip through. The full check remains the authority, and this
 trade is stated rather than buried.
 
-### Phase 3 — One authoritative verification of the current frozen model *(~101 CPU-min, no spend)*
+### Phase 3 — One authoritative verification of the current frozen model *(66–103 CPU-min, no spend)*
 
 `node --max-old-space-size=6144 scripts/elm-coverage-check.mjs --frozen=…-v3-classtargeted.json --verify-fingerprint=full --no-report`
 
-Run once, commit the output. This converts the certified **47.2%** from
+Run once, commit the output — **and time it, which settles § 0's range for good.** This converts the certified **47.2%** from
 faithful-by-construction to **verified**, retroactively and permanently, without re-running
 certification itself.
 
@@ -145,7 +151,7 @@ and pretending otherwise would defeat it.
 
 | risk | mitigation |
 |---|---|
-| **The 101-minute cost makes people pass `--verify-fingerprint=off`** | Phase 2 exists precisely for this. `off` must print a loud unverified banner. |
+| **The ~1-hour-plus cost makes people pass `--verify-fingerprint=off`** | Phase 2 exists precisely for this. `off` must print a loud unverified banner. |
 | A sampled fingerprint misses subtle drift | Stated above; `full` stays the authority and Phase 3 runs it once. |
 | Mismatch fires at the end of a 2-hour job | Verification runs **before** scoring, not after — it is the first thing after the fits. |
 | Existing artifacts lack `sampledFingerprint` | `absent` is a first-class status, not an error. |

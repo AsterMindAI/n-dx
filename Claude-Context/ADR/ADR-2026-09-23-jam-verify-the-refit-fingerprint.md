@@ -82,9 +82,12 @@ mismatch.**
 the lesson of the hardcoded verdict fixed at `6d844bd3`, where correct arithmetic sat under a false
 sentence and the sentence is what a reader took away.
 
-**Cost:** the probe predictions are 1,642 rows through nine models — the same work the freeze
-already does once, a few minutes, and it is arithmetic over models that have just been built
-anyway. **No new LLM spend. No change to any committed number.**
+**Cost — corrected 2026-09-23, in place, because this ADR had it badly wrong.** I wrote "a few
+minutes". The probe is 1,642 rows through nine models, and prediction is the expensive operation
+here: **66–103 CPU-minutes**, derived two ways from timed runs (see the IMPL § 0, which records the
+range rather than picking one). That is **50–80% on top of a certification run**, not a rounding
+error, and it is why the IMPL adds a cheap sampled fingerprint rather than verifying the full probe
+every time. **No new LLM spend. No change to any committed number.**
 
 ---
 
