@@ -1,0 +1,1013 @@
+File Name: Week 4 Meeting 1
+Date Of Creation: 08/31/26
+Created By: Thomas Addison
+Purpose: To document what was said in the weekly meetings
+
+___SUMMARY___
+
+Team reviewed the non-LLM classifier ADR, established a ~4,000-token baseline, and got shared Claude API access set up. Agreed to split classifier work three ways and converge Friday.
+
+
+
+Classifier ADR & Baseline
+
+Classifier categorizes files into ~17 archetypes (archetypes.ts); LLM handles files it can't confidently place.
+
+Archer hit 100% precision at 59% coverage (46 of 78 held-out files); rest fall through to LLM.
+
+Baseline token estimate: ~4,000 tokens across 3 LLM calls on Astermind unclassified file list.
+
+
+
+Tooling & Access Setup
+
+Julian Wilkison-Duran provisioned shared Anthropic API key ('the boys') with $20, plus team org with $1,000 spend limit.
+
+Team members added as developers on Astermind Claude org; sign in with Astermind emails.
+
+NDX required init in project dir; Claude API key wired via HENCH init command from Nolan Moore.
+
+
+
+Business & Team Direction
+
+Business model: charge based on tokens saved per repo/request.
+
+New hire Tim Blunt handles sales/pricing; team likely becomes cybersecurity pod.
+
+Next project leaning greenfield: open-source cybersecurity tool using Astermind Community Edition + brain API.
+
+
+
+Week Plan
+
+Three parallel classifier efforts converge Friday for head-to-head test; original end date still Friday.
+
+Jarrett Hartsoe noted being unavailable Wednesday.
+
+
+
+Next Steps
+
+(Nolan Moore) Build training dataset for the ELM classifier by Friday
+
+(Nolan Moore) Push transcript to GitHub under dev notes on personal branch
+
+(Nolan Moore) Review merged work Thursday and assess merge difficulty
+
+(Julian Wilkison-Duran) Push classifier work to dev branch by Wednesday
+
+(Julian Wilkison-Duran) Run before/after token experiments comparing baseline vs Astermind classifier
+
+(Julian Wilkison-Duran) Open PR to NDash repo with token-savings results
+
+(Jarrett Hartsoe) Continue current classifier approach; converge Friday for testing
+
+(Julian Wilkison-Duran) Share Swagger YAML for Astermind brain API for the cybersecurity project
+
+
+
+Decisions Made
+
+Build new classifier from scratch to replace existing classify.ts, using Astermind core ELM.
+
+Split classifier work: Julian Wilkison-Duran rebuilds classifier, Jarrett Hartsoe continues current approach, Nolan Moore builds training dataset.
+
+Next team project will be a greenfield open-source cybersecurity product.
+
+
+___RAW-TEXT___
+
+Nolan Moore: Ow. Hello. Halo.
+Nolan Moore:  I said do that. How are you, Thomas?
+Nolan Moore:  I'm doing well, how about yourself? Good.
+Nolan Moore:  So my laptop microphone's working again, apparently.
+Nolan Moore:  Uh, you know what, I totally forgot about that whole thing. I didn't.
+Nolan Moore:  When did it start working again? Uh, just now, after I updated the computer.
+Nolan Moore:  Hmm. Speech.
+Nolan Moore:  So was it a software issue? I have no idea.
+Nolan Moore:  I'll be honest. That's weird.
+Nolan Moore:  I borrowed one of my brother's microphones, so even if it hadn't been working, I got a better microphone so it would've sounded better regardless. Hmm.
+Nolan Moore:  But it's still annoying.
+Nolan Moore:  Yeah.
+Nolan Moore:  Hmm.
+Nolan Moore:  Where's that pen?
+Nolan Moore:  Alrighty.
+Nolan Moore:  Hi, Julian.
+Nolan Moore:  Hey, how's it going? It's going alright.
+Nolan Moore:  Kind of. No, it's going fine.
+Nolan Moore:  Is it the— I mean.
+Nolan Moore:  My life's in shambles. Yeah.
+Nolan Moore:  Yeah.
+Nolan Moore:  Damn.
+Julian Wilkison-Duran:  How are you guys doing?
+Nolan Moore:  I'm doing alright. How about yourself?
+Julian Wilkison-Duran:  Good. Uh, going okay.
+Nolan Moore:  Alright.
+Julian Wilkison-Duran:  The world is, like, kind of shitty right now, so.
+Nolan Moore:  Mm-hmm. The what is kind of shitty?
+Julian Wilkison-Duran:  The whole world.
+Nolan Moore:  Yeah. Yeah.
+Nolan Moore:  Yeah. How was the time with your family?
+Julian Wilkison-Duran:  Oh, it was nice. We were good to get a little break.
+Julian Wilkison-Duran:  Yeah. We went to Wine and Squirrels Game yesterday.
+Nolan Moore:  Oh.
+Julian Wilkison-Duran:  And then before that, we took like a family trip just around Virginia, and, uh, we kind of ended up in North Carolina for a little while, and then we just headed back.
+Nolan Moore:  Hmm. As one casually does.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  I see.
+Julian Wilkison-Duran:  Mostly 'cause running out of money and shit.
+Nolan Moore:  Oh.
+Julian Wilkison-Duran:  Yeah. You, you only get so much vacation money, and then you're like, "Oh, I guess we're done."
+Nolan Moore:  Yeah. That makes sense. Are the, the Flying Squirrels are the, like, the Richmond baseball?
+Nolan Moore:  Yes.
+Julian Wilkison-Duran:  Yeah. It's the closest we have to a major league team.
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  They're kind of.
+Nolan Moore:  Funny enough, it's a-it's a minor league team for, uh, I think San Francisco.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  Is it? Squirrels.
+Julian Wilkison-Duran:  Yep.
+Nolan Moore:  Hmm. So imagine getting called up and then you have to fly 10 hours across the US.
+Julian Wilkison-Duran:  Right. Into a completely different climate.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  With different kinds of people.
+Julian Wilkison-Duran:  I guess baseball's baseball wherever you go now.
+Nolan Moore:  True. Yeah.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  How did your guys's week go? Like.
+Nolan Moore:  Um. I feel like we made a lot of progress from last Monday to Friday. Um.
+Nolan Moore:  Mm-hmm. I don't know how much we've made since then.
+Nolan Moore:  Mm-hmm. I haven't made a lot since then.
+Julian Wilkison-Duran:  Cool. Uh, what have what have you guys done? Like, in general, speaking in terms of.
+Nolan Moore:  So, well, actually, let me pre-fri pre-ugh, let me just say beforehand that, um, I have a notetaker running in the background, so it's actually recording everything we're saying and taking notes. Is that alright before we continue?
+Julian Wilkison-Duran:  Totally fine.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  Yep. Actually encouraged.
+Nolan Moore:  So I have that. So I've been taking transcripts of our meetings, so, um, I actually haven't uploaded the last one, which I apologize in advance for the last one because it wasn't picking up too well because of my microphone issues. But this one should be better.
+Julian Wilkison-Duran:  Oh.
+Nolan Moore:  But, um, so I got that. Then on top of that, I've archived my, um, previous changes on a separate branch, which can be looked at, and then I uploaded my documentation for that. And then since then, I have a separate branch now that I'm working on for the new changes that are going to be added.
+Nolan Moore:  And, um, I've updated the files on said branch to prepare for the work that we're going to do. Um, well, I haven't taken uploaded my documentation, but I've set it up so that I can put my documentation back in, and I have the ADR and the implementation plan ready to go.
+Nolan Moore:  I just am waiting for us to decide on how specifically we're going to do the classification.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  Mm-hmm. I guess that generally is the big issue. Mm-hmm.
+Nolan Moore:  On how we still haven't decided how we're going to do it.
+Julian Wilkison-Duran:  Why don't we start, uh, with an ADR today? Uh.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Does one of you want to share a screen or something, and then we can work through it?
+Nolan Moore:  Sure. Let me go looking.
+Julian Wilkison-Duran:  Alrighty.
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  Who's going to share the screen? I don't know.
+Julian Wilkison-Duran:  Okay. Uh.
+Nolan Moore:  Not e not everybody at once.
+Julian Wilkison-Duran:  Uh, Jared, why don't you go ahead and drive today?
+Nolan Moore:  Alrighty.
+Julian Wilkison-Duran:  Oh, I like your setup.
+Nolan Moore:  Thank you.
+Nolan Moore:  Yes. Uh, but, well, we're just going to start writing an ADR.
+Julian Wilkison-Duran:  We'll use an agent to do it. Uh, let's prompt an agent to say, "Hey, we're creating a new ADR to organize our classifier for the N-Dash " what is it called?
+Nolan Moore:  N-Dash DX?
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  To organize what, uh, the team will do?
+Julian Wilkison-Duran:  Uh, organize.
+Nolan Moore:  Or to organize the implementation.
+Julian Wilkison-Duran:  Yeah. To organize the implementation of a new, uh, non-LOM classifier.
+Julian Wilkison-Duran:  Uh, LOM.
+Nolan Moore:  Uh.
+Julian Wilkison-Duran:  Uh, to replace. Yeah. That works.
+Julian Wilkison-Duran:  I think the first step is to figure out what we're classifying in general. Like, what is the point of the classifier that's currently there, and how is it working?
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  I will say, I don't know how this one might not be the best for this just because he or this agent is so used to something already.
+Nolan Moore:  So if it doesn't seem like the, like, most perfect, I can get a new agent started and have him read, uh, either one of these two ADRs and then prompt it again.
+Julian Wilkison-Duran:  That was good.
+Nolan Moore:  How should we approach it?
+Julian Wilkison-Duran:  Let's read it. What does it say? Um.
+Nolan Moore:  Give them.
+Julian Wilkison-Duran:  What's the question on the top?
+Nolan Moore:  Given the zero evidence population finding, uh, what should the no-new non-LOM classifier core approach be?
+Julian Wilkison-Duran:  Athlete speeches.
+Julian Wilkison-Duran:  Different non-LOM thing. Uh, let's go with the recommendation here 'cause that's what we're building out.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  And we should probably specify to use the Astermind ELM.
+Nolan Moore:  Mm-hmm. I think this, uh, branch here is using the Astermind ELM. If it's not, then after it's done, I'll ask to make sure that it is using the Astermind ELM.
+Julian Wilkison-Duran:  Yeah. Otherwise, it'll try to generate a new ELM, and it's never as good.
+Julian Wilkison-Duran:  Do you guys know what, what this classifier even does? Like, what are they what is it trying to classify?
+Nolan Moore:  It's trying to classify, from what I understand, files that aren't alike. So files that are relatively similar to each other, they sh the it has an easier time classifying those, and then if they aren't similar to each other, then it that's when it brings in the LOM to try and, I guess, uh, that's the furthest I go. I guess, uh, group them the best they can.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  That was.
+Nolan Moore:  That's what.
+Julian Wilkison-Duran:  Classifying what, what type of file a file is based off of its content.
+Nolan Moore:  Yeah.
+Nolan Moore:  That's what I would assume it's classifying. 'Cause, I mean, it's not it'd be pretty stupid to just say, "Oh, this is a TypeScript.
+Nolan Moore:  Let's put it with other TypeScripts."
+Julian Wilkison-Duran:  Let's.
+Nolan Moore:  It'd be way too stupid.
+Julian Wilkison-Duran:  Let's do a couple of experiments using an-another one of your agents. Um, with another agent, uh, let's figure out what exactly the classifier is classifying. And then in the third agent, I want to find out how many tokens is actually being spent, uh, trying to figure out this classification using LOMs.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  That way, we have a good baseline of, like, what we're trying to defeat here.
+Julian Wilkison-Duran:  Does that make sense, Jared?
+Nolan Moore:  Yeah. I think I just asked this one.
+Julian Wilkison-Duran:  Something similar.
+Nolan Moore:  Let's see. If the token usage was too high, did this solve that issue?
+Nolan Moore:  Uh, might not have answered that. Uh.
+Nolan Moore:  What was the second question you want me to ask about the token usage? How did you word it?
+Julian Wilkison-Duran:  Um, what I want to know is exactly how many tokens are being used to classify files right now to have a good baseline.
+Julian Wilkison-Duran:  And I know it's dependent on how many files are in a in a project, but if we could get a general sense of how many tokens are used, like, per file, per normal-sized like, a normal-sized project, like, to get a general baseline of, like, how many tokens are being spent on this task.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  And maybe we use, like, a, a certain project for, for a control, and we always use that same project to measure against.
+Julian Wilkison-Duran:  You know what I mean by control, by the way?
+Nolan Moore:  Yeah. Like a base a standard.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  What was the other question you want me to ask, the first one?
+Julian Wilkison-Duran:  Um, I, I wanted to know exactly what is being classified.
+Nolan Moore:  Like, what are the.
+Julian Wilkison-Duran:  Like, what are the categories?
+Nolan Moore:  Oh.
+Nolan Moore:  Should I say by the classified file or just classified in general?
+Julian Wilkison-Duran:  Uh, just ask it, like, what, what categories do the files get placed in, or is that determined by the LOM?
+Nolan Moore:  I think I.
+Nolan Moore:  Is that right?
+Julian Wilkison-Duran:  Let's go ahead and open up that ADR and take a look at it.
+Nolan Moore:  Okay.
+Nolan Moore:  I need to find this.
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  Mm-hmm. Okay.
+Julian Wilkison-Duran:  Let's put it into preview mode. It's too hard to read like this. Uh, just right-click the, uh, the name of it, and then open preview.
+Julian Wilkison-Duran:  There we go.
+Nolan Moore:  Oh, yeah. That's a lot easier.
+Julian Wilkison-Duran:  All right. Let's read through this.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, again, this might have this agent was basically the manager of the other two, so it'll probably talk about what they've been doing.
+Julian Wilkison-Duran:  I assume that's that's what it'll do.
+Nolan Moore:  Oh, that's awesome.
+Julian Wilkison-Duran:  This is probably the right agent to create ADRs with, uh, uh.
+Julian Wilkison-Duran:  Uh, so Archer got 100% at 59 accuracy. Is that what that what does that mean?
+Julian Wilkison-Duran:  100%.
+Nolan Moore:  Uh, hold on. I can tell you. Uh, at 59% coverage.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  I don't know what it means by coverage, though.
+Julian Wilkison-Duran:  Uh, I would ask it that.
+Julian Wilkison-Duran:  What does coverage mean?
+Julian Wilkison-Duran:  I'd probably copy and paste that sentence there and ask it what coverage means. That way, we have some context into what the hell we're talking about.
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  Account 20.
+Julian Wilkison-Duran:  Uh, what did it say? I'm sorry. I got, uh.
+Nolan Moore:  It is saying precision at coverage, uh, with precision being the files that did resolve what fraction it got right, uh, which in this case, there seem to be however many different archetypes there are that it categorizes it by, it got all of them correct at 100% with a 59% confidence what fraction of files the model was confident enough to make a prediction on at all. 59% coverage means it resolved about 46 of the 78 held-out files.
+Nolan Moore:  The other 41% it left alone.
+Julian Wilkison-Duran:  That's not bad.
+Nolan Moore:  Those would fall those would fall through to the LOM.
+Julian Wilkison-Duran:  Very cool. So that means, like, we covered about 59% of the files the LOM would have had to do on its own.
+Nolan Moore:  Mm-hmm. Do you think that translates directly to a 59% decrease in tokens?
+Julian Wilkison-Duran:  That's an experiment we're going to have to try out.
+Nolan Moore:  Okay. And I'm trying to find there's a specific file, uh, like I just said, the archetypes, um, where it categorizes it. I'm trying to see if I could find that file real quick so I could pull it up.
+Nolan Moore:  But there seem to be 17 categories. Yeah.
+Nolan Moore:  Is that what you got all? Mm-hmm.
+Nolan Moore:  Where'd you go? Let's see.
+Nolan Moore:  Uh.
+Nolan Moore:  Are you going to want us to finish this fully, Julian, before we get started on the next thing? It seemed like the.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  Next thing was more not more important than this, but more relevant.
+Julian Wilkison-Duran:  Let's keep working through these. Uh, but I think it's important to, to finish this out.
+Julian Wilkison-Duran:  That way, you know how to do something end to end.
+Nolan Moore:  Mm-hmm. Mm-hmm.
+Julian Wilkison-Duran:  So I think the next stage here is doing actual experiments to see how many tokens you're actually saving here.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, and then the last final step should be a pull request to en-dash to their repository and then, uh but actually testing it out on a real repo.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, like a before and after. Like, here's the token count before, and here's the token count after, and here's how many tokens we've saved you.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  That's, that's pretty much going to be our business model here, guys. It's like.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, how many tokens can we save you, like, per request, per repo, whatever. Uh, and that's how's also how we're probably going to get paid, uh, in the future.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  It's like, "Hey, we can, uh we can save you, you know, $3,000 worth of token usage, so give us that $3,000 instead."
+Nolan Moore:  I see. Oh, wow. That's kind of great.
+Nolan Moore:  Types of contents.
+Julian Wilkison-Duran:  And ideally, they'd pay that once instead of every month.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  But maybe we'll do, like I don't know. That, that's our new TIMSS, uh, uh, area of expertise. I'm going to charge for this stuff.
+Julian Wilkison-Duran:  Oh, yeah. Did I tell you guys we got a new team member?
+Nolan Moore:  Uh, no. No, you didn't. Yeah, I saw him on LinkedIn.
+Nolan Moore:  Does.
+Julian Wilkison-Duran:  Yeah. We hired another Tim. His name is Tim Blunt.
+Nolan Moore:  Oh. You got two Tims? Yeah.
+Julian Wilkison-Duran:  You got two Tims.
+Nolan Moore:  I saw it. I saw it, and I went, "Tim wasn't Tim wasn't a member?" And I looked at him, and I was like, "That's not that's not the Tim I know."
+Nolan Moore:  Very confused.
+Julian Wilkison-Duran:  We hired him to do, like, the sales guy stuff.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, like, figure out how to price this shit, how to sell it to people.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  How to get real money.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, so that's that's his wheelhouse. It's anything to do with the business side of things and, like, how to sell. If you guys are interested in sales at all, he's the guy to talk to.
+Nolan Moore:  Okay. Mm-hmm.
+Julian Wilkison-Duran:  Like, there's a there's something called the sales engineer where not only do you have the technical chops, but you also get the salesy chops to be able to sell your stuff. Uh.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  It's never been my wheelhouse, if I'm totally honest.
+Nolan Moore:  Uh-huh.
+Julian Wilkison-Duran:  Somebody tried to make me a sales engineer way back when, and it didn't go well. It's, it's certainly a, a different skill set.
+Nolan Moore:  Oh, okay.
+Julian Wilkison-Duran:  Um.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Where are we at?
+Nolan Moore:  Uh, I my agent that I asked the question of how much, um, tokens is it using just finished.
+Julian Wilkison-Duran:  Uh-huh.
+Nolan Moore:  It so I don't have my Claude set up with NDX yet. I never was able to figure that out. But it I reconstructed the actual prompt the tool sends using Astermind's real unclassified file list, which is the, the control that I gave it.
+Nolan Moore:  Or that's just the file I've been telling it to use because that's a rather large file that, um, I've used to test NDX before.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  And it said, uh, about 4,000 tokens is what it ended up using. That's out of three LLM calls.
+Julian Wilkison-Duran:  All right. I would note that down somewhere as your baseline. And then let's replace the classifier with, with ours and figure out how many tokens we've actually saved so far.
+Julian Wilkison-Duran:  And that could be your first experiment there. And then once we've got a good result from there, uh, we can go about, you know, looking at bigger repos, like going and downloading some other open-source project or even doing NDX itself, right?
+Julian Wilkison-Duran:  Because it's a pretty big repo.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Like, make it scan itself, see what happens, see how much tokens it uses up to scan itself.
+Julian Wilkison-Duran:  And then we'll measure it after Astermind and say, "Hey, we saved you 30% tokens," or something like that.
+Nolan Moore:  Oh, wow.
+Nolan Moore:  Oh, how did you use this? What's this?
+Julian Wilkison-Duran:  Also, they do have an update. So I wonder, um, at some point, we're going to have to pull from the original.
+Julian Wilkison-Duran:  Yeah, I'd have Claude just do that for you, have an update from their repo.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  That's the other thing. Uh, like, if you want let me get you a Claude token real quick. Uh, I'll just paste it into the chat, and then you can all you guys can use the same Claude token, okay, uh, for your testing.
+Julian Wilkison-Duran:  Uh, uh.
+Nolan Moore:  Oh, God.
+Nolan Moore:  Yeah.
+Nolan Moore:  What?
+Julian Wilkison-Duran:  I hate working with.
+Nolan Moore:  The more and more I've tried to use this command prompt, the more I realize Windows sucks with it.
+Julian Wilkison-Duran:  Oh.
+Nolan Moore:  I don't know any Windows commands.
+Julian Wilkison-Duran:  Oh, yeah.
+Julian Wilkison-Duran:  I'll look into getting you guys some hardware.
+Nolan Moore:  Sweet.
+Nolan Moore:  Okay. See, I get here I don't know.
+Nolan Moore:  Can you see I don't know.
+Julian Wilkison-Duran:  Okay. I'm back on your screen.
+Nolan Moore:  Oh, it looks like it already doing something.
+Julian Wilkison-Duran:  Well, it's not like I haven't.
+Nolan Moore:  Here.
+Julian Wilkison-Duran:  What did it say?
+Nolan Moore:  It couldn't launch it looks like it couldn't launch this command.
+Julian Wilkison-Duran:  I would paste that into Claude and be like, "Hey, what is this?" Like.
+Nolan Moore:  Okay. But I can do I can do that, right?
+Nolan Moore:  It's going to work?
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  So did it start up Claude, or?
+Nolan Moore:  So I'm able to get it to work, but I, I still don't think it. They have, like, a non. I have it.
+Nolan Moore:  A non what? Like a non-Claude version that it, it starts up automatically.
+Nolan Moore:  I forgot how to how you add the API.
+Julian Wilkison-Duran:  Oh, look, they have a token usage setting I mean, uh, section. I wonder if we can just figure out.
+Nolan Moore:  Like, if Claude. Everything everything that I, I that my agents were telling me was saying that it was broken or that it wasn't accurate. I don't I don't know.
+Nolan Moore:  I think with the our thing with trying to use this token is that we would have to have, um I think it's HENCH start running, start doing stuff.
+Julian Wilkison-Duran:  Uh, go to the settings. See if it allows you to put in an API token.
+Nolan Moore:  Claude settings.
+Julian Wilkison-Duran:  It says, "Use Claude Code CLI or API key," but it doesn't tell you how to add it. Uh, is it inside their documentation, like inside the README or something, how to add the token?
+Nolan Moore:  Let's see.
+Nolan Moore:  One second.
+Nolan Moore:  You would think it'd be, right?
+Julian Wilkison-Duran:  Yeah, I would I would have supposed it would have been in the settings here.
+Nolan Moore:  I think I have.
+Julian Wilkison-Duran:  This is the quick start. See what this says. I think we've read this like multiple times, but okay.
+Julian Wilkison-Duran:  It says LLM vendor Claude. Uh.
+Nolan Moore:  I think it might be oh.
+Julian Wilkison-Duran:  New NDX config and see what happens.
+Julian Wilkison-Duran:  Oh, look, it says there, uh, right above that, uh, it says, ".rex.henc not found. Run NDX in it to initialize to initialize."
+Julian Wilkison-Duran:  Uh, and I don't think okay. Where's that project that, uh, you said you've been using for testing?
+Nolan Moore:  Oh, well, I realized it wouldn't work, so I didn't use it. I've just been using the Astermind Community Edition that I have downloaded to as the tester.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  And that is located on at this, um, directory, DX.
+Julian Wilkison-Duran:  I don't know how to open that.
+Julian Wilkison-Duran:  Wait. Okay.
+Julian Wilkison-Duran:  Uh, all right.
+Julian Wilkison-Duran:  Let's go into the Astermind directory, uh, because I think you're trying to init your desktop right now. Uh, so hit no.
+Julian Wilkison-Duran:  Actually, just hit Control C.
+Julian Wilkison-Duran:  Hit yes. Okay.
+Julian Wilkison-Duran:  And then navigate to yeah.
+Julian Wilkison-Duran:  This next steps, NDX, this didn't serve very nice.
+Julian Wilkison-Duran:  Okay. It looks like it automatically configured something for the Claude.
+Julian Wilkison-Duran:  Uh, it says, "Next steps, NDX start." So let's go ahead and do that.
+Nolan Moore:  There we go. So yeah, I was just trying to do it on the desktop. That's funny.
+Julian Wilkison-Duran:  Okay. Now let's go to the token usage and see what's up with that.
+Julian Wilkison-Duran:  Hasn't used any tokens yet.
+Julian Wilkison-Duran:  Uh, what does it say in the quick start to do next?
+Nolan Moore:  Add feature or to pick up a task.
+Nolan Moore:  I think this work is what this is talking about.
+Nolan Moore:  I want to say that's what.
+Julian Wilkison-Duran:  Uh.
+Nolan Moore:  When we ask HENCH to run something.
+Nolan Moore:  I could be wrong, but.
+Julian Wilkison-Duran:  Yeah. I, I don't know. Uh, what does SourceVision do?
+Nolan Moore:  Uh, as in, you want me to run NDX SourceVision?
+Julian Wilkison-Duran:  Yeah. Let's see what happens.
+Nolan Moore:  I can't do anything.
+Julian Wilkison-Duran:  Maybe you need a new terminal. Yeah. Uh.
+Julian Wilkison-Duran:  Use SourceVision in it and then just do a period.
+Nolan Moore:  Also, script cleanup is not supported on this platform.
+Julian Wilkison-Duran:  Okay. It says, "Run SourceVision analyze." Yes.
+Nolan Moore:  Oh, I just had a data uploaded.
+Julian Wilkison-Duran:  Let's see what would happen here. Uh, go to map. Maybe it has a map now.
+Julian Wilkison-Duran:  I don't know. Cool.
+Julian Wilkison-Duran:  Does it say how many tokens it used to do that, or?
+Nolan Moore:  Nope.
+Julian Wilkison-Duran:  I'm starting to not believe this token page. Um.
+Nolan Moore:  Wonder let me see.
+Nolan Moore:  I thought that this whole thing was more like a, a like mapping out your file system, like this whole concept, but there is really a lot more to this.
+Julian Wilkison-Duran:  Yeah.
+Julian Wilkison-Duran:  Uh.
+Nolan Moore:  It must have to be because I don't have Claude set up in it.
+Julian Wilkison-Duran:  Let's figure out how to set up Claude in it, I guess. Maybe it's that rex thing. Or you think it's HENCH?
+Julian Wilkison-Duran:  I don't know. Uh, go back to the quick start guide on the README.
+Nolan Moore:  Oh, yeah. Uh.
+Julian Wilkison-Duran:  All right.
+Nolan Moore:  Quick tests.
+Julian Wilkison-Duran:  We did the analyze thing.
+Julian Wilkison-Duran:  Oh, NDX recommend dash dash except. Let's see what that does.
+Nolan Moore:  Oh my God.
+Julian Wilkison-Duran:  Let's go back to the UI and see what updated.
+Julian Wilkison-Duran:  Nothing.
+Nolan Moore:  I feel like it would have fixed this. It said I had.
+Julian Wilkison-Duran:  Oh, look, it says, "Start task" there. What happens when we click Start task?
+Julian Wilkison-Duran:  Did you get an error or anything?
+Julian Wilkison-Duran:  Maybe you got to, like, selected the checkbox or something. I don't know.
+Julian Wilkison-Duran:  Okay. It's doing something.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Maybe.
+Nolan Moore:  And it does nothing.
+Julian Wilkison-Duran:  What? See if it spent any tokens or.
+Nolan Moore:  Uh, let me see if I can I feel like it won't start spending tokens until I am signed into Claude.
+Nolan Moore:  Let's crash.
+Julian Wilkison-Duran:  Yeah. Let me know if you need a Claude token. I'll, I'll, I'll work on that right now.
+Julian Wilkison-Duran:  Uh.
+Julian Wilkison-Duran:  Really?
+Nolan Moore:  Huh.
+Julian Wilkison-Duran:  Any luck?
+Nolan Moore:  Oh, there's HENCH in it, I guess. Yeah. I think I think what I sent you should be able to set up the an API key.
+Nolan Moore:  Where'd you send that? On Teams.
+Nolan Moore:  Through.
+Nolan Moore:  And I think you would just paste the API key after that.
+Nolan Moore:  Uh.
+Nolan Moore:  Yeah. It looks like it did.
+Nolan Moore:  Uh, let's see if it changed.
+Nolan Moore:  I don't know what ENV would stand for.
+Nolan Moore:  Something did happen here. It looks like or maybe this is where it stopped working.
+Nolan Moore:  No? It must definitely change to it.
+Nolan Moore:  All right. Uh, oh, yeah, right here.
+Nolan Moore:  Okay. So now has this changed anything?
+Nolan Moore:  Let's try to start task. Failed to fetch.
+Nolan Moore:  Oh, shit.
+Nolan Moore:  It's because I stopped it.
+Nolan Moore:  Oh, no.
+Nolan Moore:  Oh, now it's just going very slow. Okay.
+Nolan Moore:  Maybe, uh, so it has a Claude token now, or?
+Julian Wilkison-Duran:  What does it say?
+Nolan Moore:  It, it should. It does, um, it at least said oh, this can't go.
+Nolan Moore:  It does say it has a API key. I remember what it was saying before, but the command that Nolan gave me worked.
+Julian Wilkison-Duran:  Okay. It looks like there maybe it doesn't print the whole key.
+Julian Wilkison-Duran:  What was the command Nolan sent you?
+Nolan Moore:  I can send it to you too. Thanks. Uh, it said something about, uh, it gave a warning that it would it, it, like, makes a file for, for it to read the API key.
+Julian Wilkison-Duran:  Oh, maybe you got to paste an API key into that file.
+Nolan Moore:  Oh, Lord. Why are there so many steps? I think it might also just be able to put at the end of the, the command.
+Julian Wilkison-Duran:  One sec. I'll get you a key. Uh, I'll put some money on it too.
+Julian Wilkison-Duran:  I already asked you about how much money you guys would need, but, uh, probably hard to say, right?
+Nolan Moore:  Mm-hmm. Mm-hmm.
+Julian Wilkison-Duran:  Oh, let's call it what do you guys want to name this key?
+Julian Wilkison-Duran:  Because you're going to use it for multiple projects, I suppose.
+Nolan Moore:  The boys.
+Julian Wilkison-Duran:  The boys.
+Nolan Moore:  I guess that works. The boys key.
+Julian Wilkison-Duran:  Name, so. What happens if you eventually get a girl on your team now?
+Nolan Moore:  She'll be one of the boys.
+Julian Wilkison-Duran:  That's fair. We'll make a new key. All right.
+Julian Wilkison-Duran:  Create API key.
+Julian Wilkison-Duran:  All right. Are you guys ready for this key?
+Julian Wilkison-Duran:  Where should I put this?
+Julian Wilkison-Duran:  I think it's that same command, but you need to paste this key with it. Uh.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Let me find your guys' chat.
+Nolan Moore:  Do we have one with just us?
+Julian Wilkison-Duran:  Oh.
+Julian Wilkison-Duran:  Yeah. I'll make a new bat promo.
+Julian Wilkison-Duran:  Okay. Uh, Nolan.
+Nolan Moore:  All right.
+Julian Wilkison-Duran:  Did you guys get this one?
+Nolan Moore:  Yeah. Yep.
+Julian Wilkison-Duran:  Okay. Are you ready for the key?
+Nolan Moore:  Are we writing are we writing it down?
+Julian Wilkison-Duran:  Uh, just copy and paste it somewhere. I'll go and put some money on it. Don't lose that key and don't share it.
+Nolan Moore:  Wait, where was it sent to? Don't lose it, don't share it. Gotcha.
+Julian Wilkison-Duran:  Let me know when everybody got it, and then I'll, I'll delete it.
+Nolan Moore:  Ah. I don't think I got it. Oh, never mind.
+Nolan Moore:  I got it. This entire thing is the API key?
+Nolan Moore:  Mm-hmm. Yeah.
+Nolan Moore:  Holy shit.
+Julian Wilkison-Duran:  So that same command that Nolan gave you, but instead of just the sk dash en dash, you, you put this whole thing.
+Julian Wilkison-Duran:  Everybody got it?
+Nolan Moore:  Yep. Yep.
+Julian Wilkison-Duran:  All right. Say bye-bye. Done.
+Julian Wilkison-Duran:  And put some money on it. One sec.
+Nolan Moore:  Why are API keys like, like this?
+Julian Wilkison-Duran:  Um, that one's called the JSON Web Token, and it's a really long story. Uh, so look up JSON Web Tokens.
+Julian Wilkison-Duran:  That's especially important for all you guys.
+Nolan Moore:  Mm-hmm. Oh, this is like, um, oh, yeah. Okay.
+Nolan Moore:  Oh, okay. Wait, wait, wait.
+Nolan Moore:  This is like a key. I'm going to get it.
+Nolan Moore:  Come on. On my laptop.
+Jarrett Hartsoe:  CSE.
+Jarrett Hartsoe:  This is one of those things, like, it's really important for cybersecurity that you never give these away.
+Nolan Moore:  Yep.
+Julian Wilkison-Duran:  And that one's an open key, so, like, really be careful with that one. Uh.
+Nolan Moore:  Okay.
+Nolan Moore:  Um.
+Julian Wilkison-Duran:  I put 20 bucks on it. Let me know if it runs out, and I'll add more. Maybe I should put 100.
+Julian Wilkison-Duran:  I don't know how often you guys are going to use it, though.
+Nolan Moore:  Mm-hmm.
+Jarrett Hartsoe:  Well, what are API keys really used for? Like, how, how are they different from us just prompting our agents?
+Julian Wilkison-Duran:  Um, with that API key, you could yeah. Um, um.
+Nolan Moore:  I could watch a YouTube video.
+Julian Wilkison-Duran:  Yeah. You, you could do that. Um, but, uh, you basically send it like, you can make apps, like, whatever app you want, and make it AI-enabled using that key.
+Nolan Moore:  So as in whoever's using the app, whether or not they have a.
+Julian Wilkison-Duran:  A Claude account.
+Nolan Moore:  They could still use the, the API key?
+Julian Wilkison-Duran:  Yep.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  You, you would put that API key in AWS Secrets Manager or something similar, and then your application will call that key, grab that key, and send it to Anthropic. Anthropic will process your, your prompt and then give you back whatever it is that you asked for. And then you take that, that content that, uh, Anthropic gave you and apply it to your application.
+Nolan Moore:  Hmm.
+Nolan Moore:  And we're using one of yours because your Claude is better than ours?
+Julian Wilkison-Duran:  Yes. My Claude has all the money.
+Nolan Moore:  Gotcha. Time to use Fable.
+Julian Wilkison-Duran:  Oh, if you guys really do want to, uh, explore with Fable, I could give you some credits for it.
+Julian Wilkison-Duran:  Are you guys on, uh, are you guys using AsterMind Cloud accounts, or are you guys using your personal ones still? I can't remember.
+Nolan Moore:  Uh, my personal. I'm on a I'm on a personal one, yeah. Same.
+Julian Wilkison-Duran:  Okay. Let me work on that this week, getting you guys all set up. Uh, yeah.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  I got to talk to Tim about getting you guys hardware, getting you guys set up. I, I already got you all Microsoft stuff, right? Like, you guys should all have, like, Microsoft subscriptions and all that too.
+Julian Wilkison-Duran:  Uh.
+Nolan Moore:  Yeah, it sounds like it. I think so, yeah.
+Julian Wilkison-Duran:  Yeah. Let me get let me get you guys set up on Claude.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  Uh, uh, manage.
+Nolan Moore:  Oh, damn.
+Nolan Moore:  Okay. I got up working with the CLI, and then I ran out of tokens.
+Nolan Moore:  Um.
+Julian Wilkison-Duran:  Oh, just oh, is the $20 already gone? Yeah.
+Nolan Moore:  Uh, no, not, not with the, the API.
+Julian Wilkison-Duran:  Oh. Oh, you made your own token?
+Nolan Moore:  No, I was using like, you could set up set it up with the, um, like, just the CLI or the API.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  And that's what I was talking about on Monday. I think that when you connect the like, not, not the API, it uses an insane amount more tokens.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  So it got it got halfway through. It got halfway through and then stopped.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  All right. I'm trying to figure out how to, like, add you to this thing. It says I'm an admin, but oh, here we go.
+Julian Wilkison-Duran:  Organization settings.
+Julian Wilkison-Duran:  I feel like this is an AsterMind.
+Julian Wilkison-Duran:  It's not. This is my personal account.
+Julian Wilkison-Duran:  Okay.
+Julian Wilkison-Duran:  Convert to team.
+Julian Wilkison-Duran:  Okay.
+Julian Wilkison-Duran:  All right. I'm going to give you guys our organization ID because apparently you need that.
+Julian Wilkison-Duran:  Uh, so same thing, though. Once you all got it copied, let me know, and I'll delete it.
+Julian Wilkison-Duran:  I don't think it's as sensitive as the, uh, the other stuff.
+Nolan Moore:  I see.
+Julian Wilkison-Duran:  Anyone with an AsterMind email, uh, should get auto-approved to use this account.
+Nolan Moore:  Hmm.
+Julian Wilkison-Duran:  You can now create your own API keys as well.
+Nolan Moore:  Oh.
+Julian Wilkison-Duran:  Uh, members. Let me add some.
+Nolan Moore:  With your money?
+Julian Wilkison-Duran:  Yeah, with my money. Uh, don't spend too much, though. Kind of hit me up with a note to let me know.
+Julian Wilkison-Duran:  Uh, can you guys send me your guys' email addresses in that chat?
+Nolan Moore:  Oh. Mm-hmm. Our AsterMind?
+Julian Wilkison-Duran:  That is the fifth ad, yeah.
+Nolan Moore:  Yep.
+Julian Wilkison-Duran:  And I'll add you to the, uh, Claude code as well. That way you can start using that.
+Nolan Moore:  So I don't really remember my AsterMind email.
+Julian Wilkison-Duran:  Uh, let me I'll just look it up. I was kind of confusing.
+Nolan Moore:  Yeah. I'll find it. I'll find it for you.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  I just can't remember if there's a dot in the middle or not.
+Julian Wilkison-Duran:  I think there was.
+Nolan Moore:  I can't remember. There was for me.
+Julian Wilkison-Duran:  I was like, "Oh, they're all the same format," and then I forgot the format.
+Nolan Moore:  Yeah, there is.
+Nolan Moore:  I think I got this all done right, right?
+Nolan Moore:  Thomas, don't misspell your, your name. Come on now.
+Nolan Moore:  Not my name. I meant, um, what comes after that.
+Nolan Moore:  Yeah.
+Nolan Moore:  Also, that lets me know that, yes, my microphone is definitely working.
+Julian Wilkison-Duran:  That.
+Julian Wilkison-Duran:  User, use playground, use Claude code, developer. I'll make you guys developers.
+Julian Wilkison-Duran:  That way you can use the playground, Claude code, and you can manage your own API keys.
+Nolan Moore:  Sweet.
+Julian Wilkison-Duran:  Great. There you go.
+Julian Wilkison-Duran:  You should have all got, I'm guessing, invite emails. Uh.
+Nolan Moore:  Is this a team or an enterprise?
+Julian Wilkison-Duran:  Uh, I made it a team, I believe.
+Nolan Moore:  It's called Free. Make my team team.
+Nolan Moore:  Oh, it's trying to make me. Okay.
+Nolan Moore:  I actually got an invitation.
+Julian Wilkison-Duran:  Cool.
+Nolan Moore:  I have not got the invitation.
+Nolan Moore:  Oh, there it is.
+Julian Wilkison-Duran:  Let me know, like, what kind of plan I put you guys on.
+Julian Wilkison-Duran:  If I need to buy you guys, like, the, the $200 one, let me know.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  I can just add it.
+Nolan Moore:  $200 a month?
+Julian Wilkison-Duran:  Yeah, it's $200 a month.
+Nolan Moore:  Oh.
+Julian Wilkison-Duran:  It's fine. The company covers it.
+Nolan Moore:  And we should sign in with our AsterMind email, or?
+Julian Wilkison-Duran:  Correct, yeah.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  Anytime.
+Nolan Moore:  There we go.
+Julian Wilkison-Duran:  Find your phone again.
+Julian Wilkison-Duran:  Uh, it has made me a developer.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Does it say what your limits are?
+Nolan Moore:  Where would I check that? Um, really, no. General.
+Nolan Moore:  Oh, rate limits?
+Julian Wilkison-Duran:  Yes.
+Nolan Moore:  Um.
+Nolan Moore:  I think it says $1,000 monthly spend limit.
+Julian Wilkison-Duran:  Yeah, that's the that's your guys' spend limit I just said. Uh, but it should let me go to my Claude code thing.
+Julian Wilkison-Duran:  Uh, claude.com, I guess.
+Julian Wilkison-Duran:  If I go to settings and then go to, uh, maybe it's under account.
+Nolan Moore:  I knew it said that. Okay.
+Julian Wilkison-Duran:  Well, that's creepy. That's not what I was looking for.
+Julian Wilkison-Duran:  Uh, I'm trying to see where it, it shows, like, what plan I'm on or whatever.
+Julian Wilkison-Duran:  Anyway, if it ever asks or it says you ran out of tokens or some shit like that, let me know and I'll fix it.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Because I don't see anywhere where I can set your guys' like developer thing.
+Nolan Moore:  Are we on the build tier?
+Julian Wilkison-Duran:  You're on the build tier? What does that mean? Where did you see that?
+Nolan Moore:  Uh, under organization settings, rate limits. This just tells us how much of each, um, how many tokens for each different, uh these aren't agents.
+Nolan Moore:  Whatever, like, Claude's different AIs, it tells us how many we can use of each.
+Julian Wilkison-Duran:  Yeah. Okay. I think you're good to go.
+Julian Wilkison-Duran:  Let me see what other rate limits we have.
+Nolan Moore:  And if I view quota, you know, there's that. There's something I just saw that I think, uh, Nolan saw before, which was the $1,000 limit.
+Julian Wilkison-Duran:  Let's just keep it at this for now.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  And then if it comes down to it, I'll get this, like, 3 grand thing.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Because the, the other one is like, "Oh, if you have 500 seats," I'm like, "Shit, we, we barely got employee number one," like, a few weeks ago. We have 500 seats.
+Nolan Moore:  Apart from apart from yourself and because technically, are you the only coder right now? Because.
+Julian Wilkison-Duran:  No. Uh, so we all code.
+Nolan Moore:  Except for the new 10. The new 10 is not a 10. Um.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  We all wear multiple hats, really. So I have to put on a CTO hat now and then and then but most of the time, I'm a dev. Uh, same thing with Tim.
+Julian Wilkison-Duran:  Although Tim Grant, uh, he's getting pulled more and more into the business side of things, and he kind of hates it. So, uh, we're, we'll probably hire him an assistant or something to deal with all the bureaucracy shit.
+Nolan Moore:  Oh.
+Julian Wilkison-Duran:  Um.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Because, like, he has to file all the business license stuff and all the taxes every month and all that. And he kind of hates it, and I don't blame him.
+Nolan Moore:  I don't blame him either.
+Julian Wilkison-Duran:  Well, we, we probably need to hire an accountant. Uh, I mean, Tim's, Tim's more than capable. He has his MBA or whatever.
+Julian Wilkison-Duran:  And, uh, he knows how to do it. It's not that.
+Julian Wilkison-Duran:  It's just that he doesn't want to do it. That's not what he signed up for.
+Nolan Moore:  I mean, I understand.
+Julian Wilkison-Duran:  Uh, and then Koon, Koon likes front end. So we let him do front end, and we let him do whatever he really wants because, uh, he kind of holds the purse strings right now. So, uh, yeah, whatever Koon wants to work on, we let him work on that.
+Julian Wilkison-Duran:  Uh, and he mostly likes to do the front end stuff. Uh, so making things look pretty, like, all, all our UI, he likes to work on that.
+Julian Wilkison-Duran:  And he likes to work on our, uh, public website. So if you guys are interested in that, reach out to him because he's the one that works on that stuff.
+Nolan Moore:  All righty.
+Julian Wilkison-Duran:  Uh, Tim works on, uh, like, DevOps. You guys know what that is?
+Nolan Moore:  I recognize operations.
+Julian Wilkison-Duran:  Yeah, he does network, uh, stuff, like, in, in AWS land and in Azure and GCP and all that.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  So he likes to connect things together. And he likes making things he likes all the clockwork to it, uh, like connecting everything together and all that.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  And making it fast. Uh, he likes databases and things like that.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  So that's what he works on. I work mostly on the brain. Uh, I will help out Tim where I can, but mostly, I try to stay out of that world so we're not stepping on each other's toes.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, so if you're interested in that kind of stuff, go reach out to Tim. And then, like I said, I work on all the brain stuff, so, like, all the all the anatomy and all that stuff.
+Nolan Moore:  Mm-hmm. Are you working on the stuff that he's connecting?
+Julian Wilkison-Duran:  Yes. Yep.
+Nolan Moore:  All righty. I think I'm in the right area. I agree.
+Julian Wilkison-Duran:  Yeah, and you guys will form your own team and figure out what roles you guys want on your team?
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Uh, because you'll like, Tim and I are kind of pod Tim, Tim, I and Koon are kind of like pod one. But eventually, we will have to delegate our pod to somebody else, which is most likely going to be you guys.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, because we're going to have to do more business stuff and whatever. Like, uh, at some point in time, we're, we're all going to have to give up coding and just hand it off to somebody. Uh, we're not there yet, but we're trying to train you guys up to the point where we could get there.
+Nolan Moore:  Yeah, that makes sense.
+Julian Wilkison-Duran:  And then we're probably going to have multiple pods. Um, I have a feeling you guys are going to be the cybersecurity pod, most likely.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  Uh, and then we'll form another pod for healthcare or something else. Or I think the other Tim wants to do finance next.
+Nolan Moore:  Ooh, you did that. Ooh. Okay.
+Julian Wilkison-Duran:  Yeah.
+Julian Wilkison-Duran:  Uh, but yeah, that that's kind of how it's, it's going to move forward. You guys are going to be the first, like, real team.
+Nolan Moore:  Gotcha.
+Nolan Moore:  I say you guys got to keep up your appearance with the government, so. Mm-hmm.
+Julian Wilkison-Duran:  Yeah. You guys are eventually most likely going to have to get clearances.
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  Is that as simple as it sounds, or? Let's see.
+Julian Wilkison-Duran:  Uh, it depends on the clearance that you need. Public trust is the easiest. And that one, you need obviously, you need a clean record, uh, like, no arrests or anything like that.
+Julian Wilkison-Duran:  Uh, they do check speeding tickets, but as long as you went to court or whatever for it, you're good to go. Uh, they want, like, 10 years of where you lived.
+Julian Wilkison-Duran:  That was the hardest part for me because I lived everywhere, so.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  I had to, like, fill out every fucking address that I ever lived at, and there was, like, 20 of them, so. That was kind of dumb. Um, you do need a license.
+Julian Wilkison-Duran:  That wasn't an issue for me, but it was an issue for somebody else that I knew because they lived in New York and.
+Nolan Moore:  Uh-huh.
+Julian Wilkison-Duran:  Just never got their license.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, and that even that wasn't hard.
+Julian Wilkison-Duran:  It took like a day over at the DMV to get it. I was like, "Man, this is boring," but.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, what else did they ask me for? A birth certificate. They're going to do your fingerprints.
+Nolan Moore:  Did they interview all your all your surrounding peoples?
+Julian Wilkison-Duran:  Uh, for public trust.
+Nolan Moore:  Or your employers?
+Julian Wilkison-Duran:  Uh, they just did a basic background check for public trust. Uh, when you get to top secret level, well, there's a bunch of in-betweens there. And, like, each stage gets harder and worse.
+Julian Wilkison-Duran:  And I'll try to keep you guys out of the, the top secret shit because it, it's kind of pointless for you guys, if I'm totally honest.
+Nolan Moore:  Yeah. Mm-hmm.
+Julian Wilkison-Duran:  Uh, and, like, when you get to that point, it's like I don't know how to explain it. Uh, they basically ask you questions all the way back to your dead great-grandpa kind of shit.
+Nolan Moore:  Great.
+Julian Wilkison-Duran:  And financial history matters the most in that at that point.
+Nolan Moore:  Oh.
+Julian Wilkison-Duran:  And that's the most common reason to get rejected. It's because of financial history. Uh, yeah.
+Nolan Moore:  I see.
+Julian Wilkison-Duran:  Which is a little bit unfair, I think, but, uh.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  For multiple reasons, but it's what it is.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  But at least, like, they, they take into account where you were versus where you're at now. They I guess the concern that they told me was, uh, they want to make sure that you're not hurting for money right now to the point where you would accept a bribe to get out of some debt.
+Nolan Moore:  Mm-hmm. I see.
+Julian Wilkison-Duran:  Because if someone waves a million dollars in front of your nose and you owe, like, half a million to some bank or something.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  You know, they'll be like, "Ooh, net profit," right?
+Nolan Moore:  Right.
+Nolan Moore:  Okay, that makes sense.
+Julian Wilkison-Duran:  Uh, all right. Where are we at with the other stuff? I got you a Claude token.
+Nolan Moore:  Yes.
+Julian Wilkison-Duran:  Were you able to hook it up?
+Nolan Moore:  I'm still going through that process. I should almost be done now.
+Nolan Moore:  Right now, I'm trying uh, I put on here that you guys can create as many tokens as you want.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  But just keep it reasonable.
+Nolan Moore:  Mm-hmm.
+Nolan Moore:  Oh.
+Nolan Moore:  Which one's this going to be doing?
+Julian Wilkison-Duran:  Oh. Can you guys hear me typing?
+Nolan Moore:  I cannot.
+Julian Wilkison-Duran:  Not.
+Nolan Moore:  Okay, good.
+Nolan Moore:  What was it? Can you start?
+Nolan Moore:  To start the thing, yes.
+Nolan Moore:  All right.
+Nolan Moore:  Cool, cool, cool.
+Julian Wilkison-Duran:  I got to drop here shortly, guys. Uh, hey.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Are you guys on a good trajectory now?
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  You know what to do.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Okay. Um, for your experiments, try to have so look this up. You're going to need controls.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, you're going to need a positive control and a negative control in your experiments. Uh, and I'm pretty sure Claude can design the experiment for you. Uh, but the experiment that I want is the before and after of, like, here's, here's how many tokens it took to process, uh, the repo before we added Astermind, and here's how many tokens it took after.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  And then I think that will be our final, like, product to give to NDash.
+Nolan Moore:  Mm-hmm. Mm-hmm.
+Julian Wilkison-Duran:  And then we can, like, push up the PR at some point this week and say, "Hey, guys, we were able to reduce your token count by X amount," right? And then maybe you guys could find I don't know. Uh, well, let's keep it at that.
+Julian Wilkison-Duran:  And, uh, that way, they could see what, what's, what, uh, our capability is.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  And then if they want any more than that, then, uh, then we could talk to them further.
+Nolan Moore:  Sounds good. Okay. Mm-hmm.
+Julian Wilkison-Duran:  And then after this, we can start on getting you actually on some real projects here.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  Uh, I'm kind of flip-flopping on, on what that's going to be.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  Uh, mostly because we have I think the product that you guys would be mostly in tune with is our yeah, is our, uh, our virtual assistant.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  And the virtual assistant needs some work.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, and I think we could make some decent money off of that, like, sooner than later.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  As opposed to creating a whole new product.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Which would be, like, the, the Claude code tokens that were offered to us.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Um, although it, it would be a cool greenfield project for you guys. Uh, that's why I'm flip-flopping. It's like, maybe you guys need a, a whole, like, start-to-finish project to get under your belt.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  And then we hand off something to you. But I don't know what you guys are more comfortable with. Do you want a brand new thing, or do you want to start working on something that already exists?
+Nolan Moore:  Well, this whole thing that we've been working on is a good example of working on something that already exists.
+Julian Wilkison-Duran:  Yeah, I agree.
+Nolan Moore:  Huh, doing something brand new does sound interesting, so. Mm-hmm. I lean towards that.
+Julian Wilkison-Duran:  Yeah, and it's kind of a rare opportunity to get something new.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Especially with you guys being new to the field and everything.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Uh, I think I'm leaning towards that. Start thinking about what you guys want to build because I'm not going to give you any specific design or anything. The assignment is going to be to create a cybersecurity an open-source cybersecurity software.
+Nolan Moore:  Mm-hmm. Okay.
+Julian Wilkison-Duran:  And because it's open-source, the only Astermind tools I can afford to give you right now is going to be, A, the Astermind Community Edition, and B, API access to our actual brain, like the, the one that I work on.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  You won't be able to, uh, work on the brain directly, but what we could do is create API keys to connect to our brain.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  So that's an option as well. And what I could do ahead of time is kind of give you a Swagger file.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Um, uh, that denotes exactly what the capabilities are of the other brain.
+Nolan Moore:  Hmm. Okay. Is a Swagger file almost like a README?
+Julian Wilkison-Duran:  Yeah, like an ET?
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Uh, so let me get you a link to what Swagger is.
+Julian Wilkison-Duran:  You guys can read about this. I'll put it in this chat here.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Unless I'll be lazy and put it back over here. Here we go.
+Nolan Moore:  Also, you can, um, delete the company ID from the chat. I think we all have it, correct?
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  Yeah.
+Julian Wilkison-Duran:  All righty. Uh, so I'm going to give you one of these Swagger files.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  It's basically, uh I think I'm going to give you the JSON version because the, uh, the YAML version, it's kind of really hard to, uh, manage. No, it was the opposite. Uh, the YAML file was easy to manage.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  So I'll give you the YAML file, uh, version of it. All right, I got to go. Tim's already mad.
+Julian Wilkison-Duran:  All right. I'll see you guys.
+Nolan Moore:  All right. Take care.
+Julian Wilkison-Duran:  See you.
+Nolan Moore:  Thank you very much.
+Nolan Moore:  Ah, man.
+Nolan Moore:  Try to start.
+Nolan Moore:  Are you also working on the NDX Nolan? Mm-hmm.
+Nolan Moore:  I think I might have gotten it.
+Nolan Moore:  Ugh, okay, there we go.
+Nolan Moore:  Yeah, yeah.
+Nolan Moore:  Cool. I can share this with y'all.
+Nolan Moore:  Um, so yeah, before the day ends, maybe not necessarily in this meeting, we need to, um, probably merge our work into each other so that we can actually work on the classifier because this we're supposed to be only making one classifier instead of three, so. Mm-hmm.
+Nolan Moore:  We should probably make sure that happens.
+Nolan Moore:  Also, I'm going to expedite getting this particular transcript up because I think this is going to be the most useful transcript so far because I actually caught everything Julian said this time. Mm-hmm.
+Nolan Moore:  I'm trying to think of what else.
+Nolan Moore:  Fucking thank you. Wait, uh, do you export?
+Nolan Moore:  Right.
+Nolan Moore:  Yeah.
+Nolan Moore:  Damn, the UI doesn't even work.
+Nolan Moore:  Whatever, man. So basically, if we're going to use if we're going to use normal is this NDash?
+Nolan Moore:  This is NDash, right? Yeah, the normal NDash.
+Nolan Moore:  We're trying to beat this number, these numbers.
+Nolan Moore:  And that's just for just for the, the source vision. I have no idea how to run Rex or Henge.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  Oh, you actually got it working? Fuck you.
+Jarrett Hartsoe:  I'm like, how did you do this? I, I am struggling. I, I hate Windows.
+Jarrett Hartsoe:  This is so stupid.
+Nolan Moore:  I don't I like I just use the this terminal shit.
+Nolan Moore:  Uh.
+Julian Wilkison-Duran:  But it actually shows, which is cool.
+Nolan Moore:  So there you go, NDX.
+Nolan Moore:  Mm-hmm. I think it saves everything, right?
+Nolan Moore:  Oh.
+Nolan Moore:  Yeah. And then you would put that you would put that command oh, shit.
+Nolan Moore:  Sorry, Thomas, I didn't send that to you, did I?
+Julian Wilkison-Duran:  Oh, that yeah, no.
+Nolan Moore:  Good. Yo.
+Nolan Moore:  Just send this to both of you again. Okay, I got it.
+Nolan Moore:  So you would just put that put this key, like, replace the this sk in it.
+Nolan Moore:  EX, and yet again.
+Nolan Moore:  Uh.
+Nolan Moore:  And EX start.
+Nolan Moore:  And then it should show everything.
+Nolan Moore:  Yeah.
+Nolan Moore:  Dang. Very nice.
+Nolan Moore:  Let's see if this actually worked on here.
+Nolan Moore:  Uh.
+Nolan Moore:  Did you have the API key be the one that Julian gave us? Yes.
+Nolan Moore:  It says it does not work, or it did not work. But also, I believe I'm still out of tokens, so.
+Nolan Moore:  Let's check.
+Nolan Moore:  Yeah, yeah, I am.
+Nolan Moore:  That didn't go up.
+Nolan Moore:  Yeah, I guess this just didn't update. Try refreshing the page.
+Nolan Moore:  Uh-huh. Oh, this is in August.
+Nolan Moore:  We're still in August.
+Nolan Moore:  Ah, cool.
+Nolan Moore:  Okay, it works. Sweet.
+Nolan Moore:  God damn, they use a lot.
+Nolan Moore:  That was in one day?
+Nolan Moore:  Oh, you're using Opus. That makes sense.
+Nolan Moore:  Yeah.
+Nolan Moore:  Okay. But it splits everything.
+Nolan Moore:  It's kind of interesting.
+Nolan Moore:  Hmm.
+Nolan Moore:  So are we going to go ahead and start build well, I guess we kind of have to build the classifier this week because our original end date was Friday, but so actually, let me ask a different question because I kind of just asked a circular question. Um, what do I want to ask?
+Julian Wilkison-Duran:  Our original end date for this whole thing was supposed to be this Friday.
+Nolan Moore:  Yes.
+Julian Wilkison-Duran:  Are you trying to ask, do you think that's true still?
+Nolan Moore:  No, I'm trying to figure out how to map things out and what we need to get done so that we can try and we're probably not going to, but at least try and hit our original end date.
+Nolan Moore:  Because we're going to ask about the classifier and starting to build it, and I was going to ask questions about it, but then I just kind of walked myself right around the corner. Um, gosh, what was well, okay, I guess the basics okay, okay.
+Nolan Moore:  I think what we need to do is we do need to push our work and then merge it into the dev branch. Or we I think we need to start doing that and then start working out the bugs there now so that we have all week to work on it rather than, say, we do that on Friday and then we try and hit all the bugs on Friday.
+Nolan Moore:  Mm-hmm. And then also, I think we need to start I'm trying to figure out how to handle the classifier because we could all just kind of do it our own way and then try and merge it together and then try and take hit the errors then.
+Nolan Moore:  I don't think that's the best way of doing it.
+Nolan Moore:  I think how often would you.
+Julian Wilkison-Duran:  That's.
+Nolan Moore:  Work on this? Like, on a daily like, can you work on it on a daily basis?
+Nolan Moore:  Maybe.
+Julian Wilkison-Duran:  This week this week I can.
+Nolan Moore:  Maybe what we should try and do is that every day or maybe every other day this week, you push or you, you push your work on the classifier to dev branch.
+Nolan Moore:  That way, it can stay up to date with what everybody's doing, and then we can work on and then we can work on the errors, like, every day slash every other day. Does that kind of make sense?
+Nolan Moore:  Mm-hmm. At least with the class with the classifier itself.
+Julian Wilkison-Duran:  The biggest issue I've kind of had with this project is that all three of us are building different.
+Nolan Moore:  Yes.
+Julian Wilkison-Duran:  Class or different ways of going at this, so.
+Nolan Moore:  That's what I'm trying to figure out.
+Julian Wilkison-Duran:  It's not just as simple as being like, "What's the best of yours? Let's mix it with the best of mine."
+Nolan Moore:  Yes.
+Nolan Moore:  Well, it seems like Jared, are you the one you're the one that has the most working version. Do I?
+Nolan Moore:  Well. I assume.
+Nolan Moore:  Yours. Because remember, our whole thing now is we're going to replace the classifier that's already in there with a brand new classifier.
+Nolan Moore:  Isn't yours from the old method of trying to squeeze the ELM into the already existing classifier?
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  That's what I thought. I think that's the best that we can do at the moment.
+Nolan Moore:  Well, I say we go ahead and still try for replacing the old classifier with the new classifier because push comes to shove, we can just take our preexisting work and then push that into main if that is necessary. Does that kind of make sense?
+Nolan Moore:  This is what I'm trying to say. Mm-hmm.
+Nolan Moore:  I don't know. I think to try and make this work, the easiest thing would be to split the classifier up into parts, and then we each work on a part of the classifier rather than saying, "Oh, each of us works on the classifier separately," and then we try and merge it together and watch as all of our different methods crash and burn when met with each other.
+Nolan Moore:  So I can try and work on the dataset.
+Nolan Moore:  That I mean, that work that part works for me. Um.
+Julian Wilkison-Duran:  What do you what do you mean work on the dataset?
+Nolan Moore:  Because remember Julian mentioned last week how, um, to train the ELM to make it classify correctly, you need we will probably need to build or find a dataset. Mm-hmm. I was like, I could prob I can handle that part of the classifier.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  Unless somebody else wants the dataset. I have something that's starting to make one already. Okay, then maybe you should take the dataset since it sounds like you have a foothold.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Wouldn't the dataset for any of this, though, just be whatever file system it's going to be running on?
+Nolan Moore:  Not necessarily. But we need one for its, like, to, to train it. Right.
+Nolan Moore:  To train the model. Need the dataset to train it, and then the, um, data that, um, the file system that it's working on, that is that's what it will actually be sorting after it's already been trained.
+Nolan Moore:  You don't want to train it on the file system itself, at least initially. Am I making sense?
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  Okay.
+Julian Wilkison-Duran:  It seemed like. I mean, it's like what Julian was saying with the categories.
+Nolan Moore:  Mm-hmm.
+Jarrett Hartsoe:  Like, how does this thing originally categorize everything? Um, which, by the way, I found it's a file called art uh, I assume it's called archetypes.ts.
+Nolan Moore:  Mm-hmm. Mm-hmm.
+Julian Wilkison-Duran:  This is the one there's 17. There there's less than 20, but there's different names for each one and what it does.
+Nolan Moore:  Mm-hmm.
+Jarrett Hartsoe:  I found I found this when Julian asked me to prompt one of my agents for that.
+Jarrett Hartsoe:  So I don't know if that's maybe what you sh you're talking about when you say dataset. Because these are more, like, categories, but it sounds like y'all's are more s or a dataset would be more specific.
+Nolan Moore:  Yeah, the dataset would be, like, labeling. Yes. Uh, files with those, uh, those archetypes.
+Jarrett Hartsoe:  So do you guys want to do your dataset based off of what I have created for the classifier?
+Jarrett Hartsoe:  Or with the implementing an ELM?
+Nolan Moore:  Well, are you sure we're going to do the. Probably. Thing, the old classifier with the new classifier, or are we just going to try and brute force our original method of forcing the ELM into the existing classifier?
+Julian Wilkison-Duran:  That's, that's honestly the question.
+Nolan Moore:  I was. I think we would be able to, like, like, classify everything well without the, the LLM.
+Nolan Moore:  I think it's doing a lot more than just, just classifying shit. Okay, how about we put it up to a vote?
+Nolan Moore:  I vote towards replacing the old classifier with a new classifier. Um.
+Julian Wilkison-Duran:  That isn't based off of any of them?
+Nolan Moore:  No, no, no, no. I'm saying we're going to we're going to replace the existing classify the classify.ts with a brand new classify.ts. The new classify.ts will have an ELM in it, like, from the get-go, and we're basically building a new classify.ts from the ground up.
+Nolan Moore:  That's what my vote is.
+Nolan Moore:  Hmm. So I guess all in favor of replacing the old with the new with a new one, say I, all not in favor, remain silent.
+Nolan Moore:  It's coming from a poll we shit.
+Jarrett Hartsoe:  It seemed like Julian wasn't at least today, I feel like if he were worried about us finishing this this week, he would have said something.
+Nolan Moore:  Uh-huh.
+Julian Wilkison-Duran:  So how, how much are you going to work on this, Thomas?
+Nolan Moore:  I mean, I don't know if I.
+Jarrett Hartsoe:  Because I know that you, you'll be busy on Wednesday doing something else.
+Nolan Moore:  Yes, that is true. I mean, I can't quantify it. I could just say, "I'm going to make sure the task I'm given is done by Friday."
+Nolan Moore:  But I can't say, "Oh, I'll go work on it this much this day and this much that day." I'm just going to say, "It'll be done by Friday."
+Julian Wilkison-Duran:  Going ahead and because, of course, all of our things will be separate.
+Nolan Moore:  Uh-huh.
+Jarrett Hartsoe:  Go ahead and do your idea of completely redoing the classifier.
+Jarrett Hartsoe:  I or Nolan will work on the dataset.
+Nolan Moore:  Yeah.
+Jarrett Hartsoe:  And then I'll just continue doing what I'm doing. And then Friday, Nolan, do you think you can have the dataset done by Friday?
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Then on Friday on Friday, we can test ours.
+Nolan Moore:  Mm-hmm. Yeah, that sounds good.
+Julian Wilkison-Duran:  I don't want to make it like a 1v1, but honestly, at this point, that's kind of what it seems like. This will be better.
+Nolan Moore:  Mm-hmm.
+Julian Wilkison-Duran:  Or this will be better.
+Nolan Moore:  If you have everything, like, uh, like, like, pushed on Thursday, I can look at everything and, and see how difficult it would be to, to merge it.
+Julian Wilkison-Duran:  Mm-hmm.
+Nolan Moore:  I don't know. That sounds like a plan.
+Julian Wilkison-Duran:  It's most definitely a plan.
+Nolan Moore:  Is it the best one, then? I don't know, but it gets us moving. And at this point, that's what's important.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  Anything further? I'm fine with it.
+Julian Wilkison-Duran:  I think that's, uh I think my plan is pretty good.
+Nolan Moore:  Yeah, I agree.
+Julian Wilkison-Duran:  Mm-hmm.
+Nolan Moore:  So I guess, uh, I'll push I'll push my stuff by Wednesday.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  Nolan? Mm-hmm. Um, because I guess if we're both technically doing ELMs, uh, of course, the classif or the dataset should work for both.
+Julian Wilkison-Duran:  Yes.
+Nolan Moore:  Yeah. So.
+Julian Wilkison-Duran:  Just to be clear.
+Nolan Moore:  I'm sorry, that's not.
+Julian Wilkison-Duran:  We're using the core ELM for the class for the new classifier, correct? From as from the Astermind.
+Nolan Moore:  Yes.
+Julian Wilkison-Duran:  Okay. Just wanted to.
+Jarrett Hartsoe:  Well, at least I'm hoping I'm hoping my, my agent didn't just create its own ELM, so.
+Julian Wilkison-Duran:  Okay.
+Nolan Moore:  I'm just making sure so that everything works correctly in my new classifier.
+Julian Wilkison-Duran:  Yeah.
+Nolan Moore:  Okay. Sweet.
+Nolan Moore:  Uh, uh, I'll make sure to have this transcript up on GitHub by the end of the day so that you can so the two of you can go over it if need be. It'll be on my branch under dev notes.
+Nolan Moore:  Mm-hmm. And, um, I can't think of anything else.
+Julian Wilkison-Duran:  Mm-hmm.
+Nolan Moore:  Does anyone have anything else?
+Julian Wilkison-Duran:  No, I don't have anything else.
+Julian Wilkison-Duran:  I think we have a pretty good plan for Friday.
+Nolan Moore:  All right. Mm-hmm. Well, if anything else pops up, uh, we can message each other throughout the week.
+Nolan Moore:  And besides that, I'd say meeting adjourned. Have a good rest of your day.
+Julian Wilkison-Duran:  You're welcome.
+Nolan Moore:  Toodles. Take care.

@@ -45,3 +45,7 @@ scripts/HENCH_CALLGRAPH_FINDINGS.md
 
 # macOS
 .DS_Store
+
+# Team Nolan corpus, fetched from origin/Nolan-Work — not duplicated into this branch.
+# See packages/sourcevision/scripts/elm-generalisation-check.mjs for the fetch command.
+scripts/data/elm-archetype-corpus*.json

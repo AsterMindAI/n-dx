@@ -1,20 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { analyzeClassifications, buildClassificationMap, enrichClassificationsWithLLM, mergeClassificationResults } from "../../../src/analyzers/classify.js";
-import { callClaude } from "../../../src/analyzers/claude-client.js";
-import type { Inventory, Imports, Classifications, ArchetypeDefinition } from "../../../src/schema/index.js";
+import { analyzeClassifications, buildClassificationMap, mergeClassificationResults, runClassificationGate } from "../../../src/analyzers/classify.js";
+import { runELMGate } from "../../../src/analyzers/classify-elm.js";
+import { classifyUnclassifiedWithLLM } from "../../../src/analyzers/classify-llm.js";
+import type { Inventory, Imports, Classifications, ArchetypeDefinition, FileClassification } from "../../../src/schema/index.js";
 
-vi.mock("../../../src/analyzers/claude-client.js", async () => {
-  const actual = await import("@n-dx/llm-client");
-  return {
-    callClaude: vi.fn(),
-    ClaudeClientError: actual.ClaudeClientError,
-    setClaudeConfig: vi.fn(),
-    setClaudeClient: vi.fn(),
-    getAuthMode: vi.fn(() => "cli"),
-  };
-});
+vi.mock("../../../src/analyzers/classify-elm.js", () => ({
+  runELMGate: vi.fn(),
+}));
 
-const mockedCallClaude = vi.mocked(callClaude);
+vi.mock("../../../src/analyzers/classify-llm.js", () => ({
+  classifyUnclassifiedWithLLM: vi.fn(),
+}));
+
+const mockedRunELMGate = vi.mocked(runELMGate);
+const mockedClassifyUnclassifiedWithLLM = vi.mocked(classifyUnclassifiedWithLLM);
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -416,11 +415,16 @@ describe("output structure", () => {
   });
 });
 
-// ── LLM enrichment ──────────────────────────────────────────────────────────
+// ── runClassificationGate (TJ-R3) ───────────────────────────────────────────
+// classify.ts is the only caller of either classifier — these tests exercise the gate's own
+// routing logic (ELM first, LLM for whatever's left) with both classifiers mocked at their
+// module boundary. classify-elm.ts's and classify-llm.ts's own internals are covered by
+// classify-elm.test.ts and classify-llm.test.ts respectively.
 
-describe("enrichClassificationsWithLLM", () => {
+describe("runClassificationGate", () => {
   beforeEach(() => {
-    mockedCallClaude.mockReset();
+    mockedRunELMGate.mockReset();
+    mockedClassifyUnclassifiedWithLLM.mockReset();
   });
 
   function makeBaseClassifications(unclassifiedPaths: string[]): Classifications {
@@ -428,138 +432,103 @@ describe("enrichClassificationsWithLLM", () => {
     return analyzeClassifications(inv, emptyImports);
   }
 
-  it("classifies unclassified files via LLM", async () => {
-    const base = makeBaseClassifications(["src/analyzer.ts", "src/processor.ts"]);
-    // Sanity: these files are unclassified
-    expect(base.files.find((f) => f.path === "src/analyzer.ts")!.archetype).toBeNull();
-    expect(base.files.find((f) => f.path === "src/processor.ts")!.archetype).toBeNull();
+  const gateOptions = { elmEnabled: true, elm: { confidenceThreshold: 0.11, seed: 1 } };
 
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([
-        { path: "src/analyzer.ts", archetype: "service", reason: "Analysis engine module" },
-        { path: "src/processor.ts", archetype: "utility", reason: "Data processing utility" },
-      ]),
-    });
-
-    const result = await enrichClassificationsWithLLM(base, makeInventory(["src/analyzer.ts", "src/processor.ts", "src/index.ts"]), emptyImports);
-
-    expect(result.updatedFiles).toHaveLength(2);
-    expect(result.updatedFiles.find((f) => f.path === "src/analyzer.ts")!.archetype).toBe("service");
-    expect(result.updatedFiles.find((f) => f.path === "src/analyzer.ts")!.source).toBe("llm");
-    expect(result.updatedFiles.find((f) => f.path === "src/processor.ts")!.archetype).toBe("utility");
-    expect(result.tokenUsage.calls).toBe(1);
-  });
-
-  it("skips when no unclassified files", async () => {
+  it("skips both stages when there are no unclassified files", async () => {
     const inv = makeInventory(["src/index.ts", "src/utils/a.ts"]);
     const base = analyzeClassifications(inv, emptyImports);
-    // Both should be classified
     expect(base.summary.totalUnclassified).toBe(0);
 
-    const result = await enrichClassificationsWithLLM(base, inv, emptyImports);
+    const result = await runClassificationGate(base, inv, emptyImports, gateOptions);
 
     expect(result.updatedFiles).toHaveLength(0);
-    expect(result.tokenUsage.calls).toBe(0);
-    expect(mockedCallClaude).not.toHaveBeenCalled();
+    expect(mockedRunELMGate).not.toHaveBeenCalled();
+    expect(mockedClassifyUnclassifiedWithLLM).not.toHaveBeenCalled();
   });
 
-  it("handles LLM returning invalid archetype IDs", async () => {
+  it("never calls the ELM stage when elmEnabled is false", async () => {
     const base = makeBaseClassifications(["src/analyzer.ts"]);
-
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([
-        { path: "src/analyzer.ts", archetype: "nonexistent-type", reason: "Made up" },
-      ]),
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValueOnce({
+      updatedFiles: [{ path: "src/analyzer.ts", archetype: "service", confidence: 0.7, source: "llm" }],
+      tokenUsage: { calls: 1, inputTokens: 10, outputTokens: 5 },
     });
 
-    const result = await enrichClassificationsWithLLM(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports);
-
-    // Invalid archetype IDs should be filtered out
-    expect(result.updatedFiles).toHaveLength(0);
-  });
-
-  it("handles LLM returning JSON in markdown fences", async () => {
-    const base = makeBaseClassifications(["src/analyzer.ts"]);
-
-    mockedCallClaude.mockResolvedValueOnce({
-      text: '```json\n[{"path":"src/analyzer.ts","archetype":"service","reason":"Analysis module"}]\n```',
+    const result = await runClassificationGate(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports, {
+      elmEnabled: false,
+      elm: { confidenceThreshold: 0.11, seed: 1 },
     });
 
-    const result = await enrichClassificationsWithLLM(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports);
-
-    expect(result.updatedFiles).toHaveLength(1);
-    expect(result.updatedFiles[0].archetype).toBe("service");
+    expect(mockedRunELMGate).not.toHaveBeenCalled();
+    expect(mockedClassifyUnclassifiedWithLLM).toHaveBeenCalledTimes(1);
+    expect(result.updatedFiles[0].source).toBe("llm");
   });
 
-  it("retries on invalid JSON then succeeds", async () => {
+  it("never reaches the LLM stage once ELM resolves everything", async () => {
     const base = makeBaseClassifications(["src/analyzer.ts"]);
-
-    // First call: garbage
-    mockedCallClaude.mockResolvedValueOnce({ text: "not json at all" });
-    // Second call: valid
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([
-        { path: "src/analyzer.ts", archetype: "service", reason: "Analysis module" },
-      ]),
+    mockedRunELMGate.mockReturnValueOnce({
+      updatedFiles: [{ path: "src/analyzer.ts", archetype: "service", confidence: 0.5, source: "elm" }],
     });
 
-    const result = await enrichClassificationsWithLLM(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports);
+    const result = await runClassificationGate(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports, gateOptions);
 
-    expect(result.updatedFiles).toHaveLength(1);
-    expect(mockedCallClaude).toHaveBeenCalledTimes(2);
+    expect(mockedRunELMGate).toHaveBeenCalledTimes(1);
+    expect(mockedClassifyUnclassifiedWithLLM).not.toHaveBeenCalled();
+    expect(result.updatedFiles).toEqual([{ path: "src/analyzer.ts", archetype: "service", confidence: 0.5, source: "elm" }]);
   });
 
-  it("stops on auth error", async () => {
-    const { ClaudeClientError } = await import("@n-dx/llm-client");
-    const base = makeBaseClassifications(["src/analyzer.ts"]);
+  it("sends only what ELM left unresolved to the LLM stage", async () => {
+    const base = makeBaseClassifications(["src/analyzer.ts", "src/processor.ts"]);
+    mockedRunELMGate.mockReturnValueOnce({
+      updatedFiles: [{ path: "src/analyzer.ts", archetype: "service", confidence: 0.5, source: "elm" }],
+    });
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValueOnce({
+      updatedFiles: [{ path: "src/processor.ts", archetype: "utility", confidence: 0.7, source: "llm" }],
+      tokenUsage: { calls: 1, inputTokens: 10, outputTokens: 5 },
+    });
 
-    mockedCallClaude.mockRejectedValueOnce(
-      new ClaudeClientError("Auth failed", "auth", false),
+    const result = await runClassificationGate(
+      base,
+      makeInventory(["src/analyzer.ts", "src/processor.ts", "src/index.ts"]),
+      emptyImports,
+      gateOptions,
     );
 
-    const result = await enrichClassificationsWithLLM(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports);
+    // Only the still-unresolved file should have been handed to the LLM stage.
+    const llmCallArg = mockedClassifyUnclassifiedWithLLM.mock.calls[0][0] as FileClassification[];
+    expect(llmCallArg.map((f) => f.path)).toEqual(["src/processor.ts"]);
 
-    expect(result.updatedFiles).toHaveLength(0);
-    expect(mockedCallClaude).toHaveBeenCalledTimes(1);
+    expect(result.updatedFiles).toHaveLength(2);
+    expect(result.updatedFiles.find((f) => f.path === "src/analyzer.ts")?.source).toBe("elm");
+    expect(result.updatedFiles.find((f) => f.path === "src/processor.ts")?.source).toBe("llm");
   });
 
-  it("includes evidence with LLM reason", async () => {
+  it("falls through to the LLM stage for everything when ELM resolves nothing", async () => {
     const base = makeBaseClassifications(["src/analyzer.ts"]);
-
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([
-        { path: "src/analyzer.ts", archetype: "service", reason: "Core analysis engine" },
-      ]),
+    mockedRunELMGate.mockReturnValueOnce({ updatedFiles: [] });
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValueOnce({
+      updatedFiles: [{ path: "src/analyzer.ts", archetype: "service", confidence: 0.7, source: "llm" }],
+      tokenUsage: { calls: 1, inputTokens: 10, outputTokens: 5 },
     });
 
-    const result = await enrichClassificationsWithLLM(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports);
+    const result = await runClassificationGate(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports, gateOptions);
 
-    expect(result.updatedFiles[0].evidence).toBeDefined();
-    expect(result.updatedFiles[0].evidence![0].detail).toBe("Core analysis engine");
-    expect(result.updatedFiles[0].evidence![0].archetypeId).toBe("service");
+    expect(mockedRunELMGate).toHaveBeenCalledTimes(1);
+    const llmCallArg = mockedClassifyUnclassifiedWithLLM.mock.calls[0][0] as FileClassification[];
+    expect(llmCallArg.map((f) => f.path)).toEqual(["src/analyzer.ts"]);
+    expect(result.updatedFiles[0].source).toBe("llm");
   });
 
-  it("accumulates token usage across retries", async () => {
+  it("accumulates token usage from the LLM stage only (ELM stage carries none)", async () => {
     const base = makeBaseClassifications(["src/analyzer.ts"]);
-
-    // First call: garbage response with token usage
-    mockedCallClaude.mockResolvedValueOnce({
-      text: "not json",
-      tokenUsage: { input: 100, output: 50 },
-    });
-    // Second call: valid response with token usage
-    mockedCallClaude.mockResolvedValueOnce({
-      text: JSON.stringify([
-        { path: "src/analyzer.ts", archetype: "service", reason: "Analysis module" },
-      ]),
-      tokenUsage: { input: 200, output: 80 },
+    mockedRunELMGate.mockReturnValueOnce({ updatedFiles: [] });
+    mockedClassifyUnclassifiedWithLLM.mockResolvedValueOnce({
+      updatedFiles: [{ path: "src/analyzer.ts", archetype: "service", confidence: 0.7, source: "llm" }],
+      tokenUsage: { calls: 2, inputTokens: 300, outputTokens: 130 },
     });
 
-    const result = await enrichClassificationsWithLLM(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports);
+    const result = await runClassificationGate(base, makeInventory(["src/analyzer.ts", "src/index.ts"]), emptyImports, gateOptions);
 
-    expect(result.tokenUsage.calls).toBe(2);
-    expect(result.tokenUsage.inputTokens).toBe(300);
-    expect(result.tokenUsage.outputTokens).toBe(130);
+    expect(result.tokenUsage).toEqual({ calls: 2, inputTokens: 300, outputTokens: 130 });
   });
 });
 

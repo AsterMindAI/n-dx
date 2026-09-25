@@ -21,8 +21,9 @@ import {
   mergeLanguageConfigs,
   analyzeImports,
   analyzeClassifications,
-  enrichClassificationsWithLLM,
+  runClassificationGate,
   mergeClassificationResults,
+  DEFAULT_ELM_CONFIDENCE_THRESHOLD,
   analyzeZones,
   type ZoneAnchor,
   analyzeComponents,
@@ -48,6 +49,7 @@ import type {
   CallGraph,
   Classifications,
   ConvergenceReport,
+  FileClassification,
   ImportEdge,
   Inventory,
   InventoryResult,
@@ -215,15 +217,46 @@ export async function runClassificationsPhase(ctx: AnalyzeContext): Promise<void
       projectLanguages,
     });
 
-    // LLM enrichment (skip in --fast mode)
+    // Classification gate (TJ-R3) — classify.ts's runClassificationGate is the only place that
+    // decides ELM-vs-LLM routing; this phase just reads the kill switch from .n-dx.json and
+    // hands it in as an option. DEFAULTS TO FALSE (opt-in), found necessary 2026-08-27: every
+    // prior validation (this ADR's, Knight's, Realm's) measured precision/coverage against
+    // held-out files that already had *some* algorithmic evidence signal. Direct testing on
+    // the real target population found that 100% of unclassified files, across all 5
+    // gathered corpora with no exception, have ZERO evidence signal — meaning the
+    // per-archetype score vector is identically all-zero for every file this stage is
+    // actually meant to help with, so the model cannot discriminate between them at all and
+    // produces the same prediction for all of them regardless of confidence threshold. This
+    // is a feature-representation gap, not a calibration one — see
+    // ADR-2026-08-11-jarrett-elm-prefilter-classify.md's "Zero-evidence population" finding.
+    // Opt-in until a representation that doesn't degenerate to an all-zero vector for this
+    // population is validated.
+    const elmConfig = (svOverrides as Record<string, unknown>).classification as
+      | Record<string, unknown>
+      | undefined;
+    const elmPrefilterConfig = elmConfig?.elmPrefilter as
+      | { enabled?: boolean; confidenceThreshold?: number }
+      | undefined;
+    const elmEnabled = elmPrefilterConfig?.enabled ?? false;
+    const elmConfidenceThreshold = elmPrefilterConfig?.confidenceThreshold ?? DEFAULT_ELM_CONFIDENCE_THRESHOLD;
+
     if (!ctx.fastMode && classifications.summary.totalUnclassified > 0) {
-      info(`  ${bold(String(classifications.summary.totalClassified))} classified, ${bold(String(classifications.summary.totalUnclassified))} unclassified — ${cyan("enriching with LLM...")}`)
-      const llmResult = await enrichClassificationsWithLLM(classifications, inventory, importsData);
-      if (llmResult.updatedFiles.length > 0) {
-        classifications = mergeClassificationResults(classifications, llmResult.updatedFiles);
-        info(`  ${cyan("LLM classified")} ${bold(String(llmResult.updatedFiles.length))} additional files`);
+      info(`  ${bold(String(classifications.summary.totalClassified))} classified, ${bold(String(classifications.summary.totalUnclassified))} unclassified — ${cyan("resolving remaining files...")}`)
+      const gateResult = await runClassificationGate(classifications, inventory, importsData, {
+        elmEnabled,
+        // rootDir switches the gate to TJ-E1's content representation, the only one with
+        // signal for this population (the evidence vector is identically all-zero here).
+        // The content path needs file bytes, which inventory.json/imports.json do not carry.
+        elm: { confidenceThreshold: elmConfidenceThreshold, seed: 20260812, rootDir: ctx.absDir },
+      });
+      if (gateResult.updatedFiles.length > 0) {
+        const elmCount = gateResult.updatedFiles.filter((f) => f.source === "elm").length;
+        const llmCount = gateResult.updatedFiles.filter((f) => f.source === "llm").length;
+        classifications = mergeClassificationResults(classifications, gateResult.updatedFiles);
+        if (elmCount > 0) info(`  ${cyan("ELM pre-filter resolved")} ${bold(String(elmCount))} additional files`);
+        if (llmCount > 0) info(`  ${cyan("LLM classified")} ${bold(String(llmCount))} additional files`);
       }
-      accumulateFromAggregate(ctx.tokenUsage, llmResult.tokenUsage);
+      accumulateFromAggregate(ctx.tokenUsage, gateResult.tokenUsage);
     }
 
     const outPath = join(ctx.svDir, DATA_FILES.classifications);

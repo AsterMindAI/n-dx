@@ -1,0 +1,136 @@
+File Name: Thomas's Notes
+Date Of Creation: 08/16/26
+Created By: Thomas Addison
+Purpose: To document my personal notes I have taken while working
+
+
+___MONDAY___
+
+I still having issues with n-dx and when I had Nala plug in an ELM she hit these
+
+issues -> (but two things are still open before it's trustworthy: (1) resolving the
+
+pre-existing undici-types trust-downgrade block so this can actually be
+
+typechecked/tested, and (2) letting shadow mode accumulate enough real
+
+agreement data before flipping ELM_GATE_ENABLED to true.)
+
+
+___TUESDAY___
+
+
+Issue 1 — the trust-downgrade block
+
+    This is more interesting than a generic blocker: I checked pnpm-workspace.yaml
+
+    and .npmrc, and the trust check is a deliberate policy already in the repo —
+
+    minimumReleaseAgeStrict: true, minimumReleaseAge: 4320 (3 days), trustPolicy:
+
+    no-downgrade. It's supply-chain hardening working as designed, correctly
+
+    catching that undici-types@6.21.0 (a transitive dep pulled in by
+
+    @types/node@22.19.8) has weaker trust evidence than an earlier-published
+
+    version. Not a false alarm to just silence.
+
+    But I also found the actual root cause, and it's bigger than this one package:
+
+    package.json's "pnpm": { "overrides": {...} } block — 14 existing entries
+
+    pinning picomatch, postcss, hono, ajv, vite, esbuild, rollup, and others — is
+
+    being silently ignored. pnpm told us so directly in the install output: "The
+
+    'pnpm' field in package.json is no longer read by pnpm." This pnpm version
+
+    reads overrides from pnpm-workspace.yaml, not package.json. So the repo's
+
+    entire override mechanism has been quietly inert, not just for undici-types —
+
+    that's a pre-existing gap independent of my change, worth its own fix.
+    
+
+    My recommendation, in order:
+
+        Migrate the 14 existing overrides from package.json into
+        
+        pnpm-workspace.yaml under an overrides: key — the real fix, restores pins
+        
+        that are currently doing nothing.
+        
+        Add a new undici-types override pinned to a version with valid trust
+        
+        evidence as part of that same move.
+        
+        Treat this as its own change, separate from the ELM work — it's an
+        
+        unrelated pre-existing issue that happens to be blocking verification of
+        
+        what I wrote, not something introduced by it.
+        
+        I'd want to confirm the specific version to pin undici-types to before
+
+        landing it, rather than pick one blind — it's a security-relevant pin, and
+
+        I'd rather verify than guess. Say the word and I'll do the migration +
+
+        pick a version and show you before it lands.
+
+
+Issue 2 — validating shadow mode before flipping the gate
+
+    This is blocked on #1 (can't run ndx analyze at all right now), but the plan
+
+    once unblocked:
+
+        Run it across more than one codebase. n-dx already dogfoods itself
+
+        (.sourcevision/ at root), and AsterMind-Community-Edition is now sitting
+
+        right there as a second, structurally different real codebase. Validating
+
+        against
+
+        just one repo risks overfitting the confidence threshold to that repo's
+
+        archetype mix.
+
+        The shadow-mode log is currently just a console.log — it doesn't persist.t
+
+        Right now agreement data is lost the moment the terminal closes, which
+
+        makes "validate it over multiple runs" hard to actually do. I'd add a small
+
+        append-only log — .sourcevision/elm-shadow-log.jsonl, one line per run — so
+
+        agreement can be tracked and aggregated across runs and repos instead of
+
+        eyeballed once.
+
+        Log coverage alongside agreement. Right now only agreement
+
+        (of the files ELM was confident about, how many matched the LLM) is logged.
+
+        Coverage — what fraction of unclassified files ELM was even confident enough
+
+        to call — matters just as much: high agreement on 2% of files isn't worth much.
+
+        Set a numeric bar up front, not a vibe. I'd propose something concrete like:
+
+        ≥50 compared predictions total, ≥90–95% agreement, across at least 2
+
+        structurally different repos — before ELM_GATE_ENABLED flips. Otherwise
+
+        "validate first" is a plan that never quite concludes.
+
+        Stage the first live rollout conservatively. Even after validation clears that
+
+        bar, I'd raise the margin threshold above shadow mode's 0.3 for the initial
+
+        cutover (e.g. 0.5) — start stricter than what shadow mode was tested at, then
+
+        relax it based on continued monitoring once it's actually skipping calls.
+

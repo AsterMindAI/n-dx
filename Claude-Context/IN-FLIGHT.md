@@ -20,6 +20,8 @@ owner a note before assuming it's stale — don't just delete it.
 | Since | Who | Team | What | Paths / command | Expected release |
 |---|---|---|---|---|---|
 | 2026-08-11 | Fluff | Nolan | `TN-F1` — reconciling the branch-naming / `dev`-branch / base-branch mismatch across the doctrine docs. **This claims shared files:** everything in `Claude-Context/` root is on the "nobody edits unilaterally" list, and these four docs bind all three teams. No doc is edited until the ADR is accepted — this row is claiming the *ADR and the eventual single-pass edit*, so a second agent doesn't start the same reconciliation. | Writes `Claude-Context/Nolan-Agents/Fluff.md`, `Claude-Context/Nolan-Agents/{README,BACKLOG}.md`, one new `Claude-Context/ADR/ADR-2026-08-11-fluff-*.md`, and this row. **Pending leads' acceptance:** `GITHUB-WORKFLOW.md`, `OWNERSHIP.md`, `NEW-AGENT.md`, `claude-context-instruction`, `Command-Structure`. **No source files.** Fluff is on the **shared checkout**, branch `Nolan-Work`, alongside Jam (lead's decision 2026-08-11) — so any state-writing command gets its own claim row here first. This task runs none. | On the leads' decision + single-pass doc edit |
+| 2026-08-12 | Archer | Jarrett | Adding `@astermind/astermind-community` dependency for TJ-A1 (ELM pre-filter prototype) | `packages/sourcevision/package.json`, root `pnpm-lock.yaml` | On IMPL Step 4 completion (eval script working) or sooner if the gate fails and the dep is reverted |
+| 2026-09-17 | Elon | Jarrett | `TJ-E1` — the ELM classifier body behind `runELMGate()`. Reads full file content, which nothing at this call site does today. **Supersedes `TJ-R2`** (Archer). Does **not** touch the gate's routing, `classify-LLM.ts`, or the archetype catalog (`TJ-A3`, Knight) | Writes `packages/sourcevision/src/analyzers/classify-elm.ts` + its tests, and a new seeded eval script under `packages/sourcevision/scripts/`. Working in worktree `../n-dx-elon` on `elm/jarrett/classify-elm-content`, so `ndx analyze` runs are isolated — **no state-writing-command claim needed**. No dependency additions planned (`@astermind/astermind-community` is already present). **No shared files.** | On a representation that clears its gate against the genuinely zero-evidence population, with a committed seeded eval |
 
 | 2026-08-11 | Nolan (lead) | Nolan | **Team Nolan claims Path B** — sourcevision archetype classification, per [`SYNC-001`](Nolan-Agents/syncs/SYNC-001-2026-08-11-elm-path-assignment.md) and [`IMPL-2026-08-11-jam-elm-classification-path-b.md`](IMPL/IMPL-2026-08-11-jam-elm-classification-path-b.md). **Paths A and C remain unclaimed** — this is not a claim on them, and Jarrett/Thomas should take whichever they want. *(Update 2026-08-23, added by Butter: **Path A's measurement half is now claimed by Team Nolan** — see the Butter row below. Path A's other half, the shared ELM inference wrapper, and all of Path C remain genuinely unclaimed.)* | `packages/sourcevision/src/analyzers/**` | On Path B completion or hand-off |
 
@@ -59,8 +61,45 @@ One line per team, updated by that lead. This is the standing answer to "what is
 right now" so nobody has to ask.
 
 - **Team Nolan:** *In flight* — `TN-J32` corpus v2, now **Jam's** (K2 retired 2026-09-04; its open rows absorbed). **Phase 3 certification FAILED and the tier does not generalise:** the v1 model collapses to the majority class on unseen repos (96.4% `service`/`utility` vs the teacher's 48.4%, 5 of 13 labels emitted, coverage 34.9% → 13.2%) — it learned n-dx's archetype prior, not a path→archetype mapping. Caught with **no ground truth and no labelling spend**, so gold set #2's 250 files are still blind and reusable. Fix in progress: corpus v2 (624 rows / 7 ecosystems, was 324 / 2), Phase 1b adopted `elm-4096 tanh` (+2.06 pp, 7 of 9). ⚠️ **v2 is an UNVALIDATED fix — the coverage re-check has not been run on it**, and neither has the corpus-v2 re-freeze (the 4096 fit OOM'd; `69259048` streams it, and the run was never repeated) or the pre-registered Phase 1c capacity arm. **Everything is pushed and the duplicate branch ref is merged (2026-09-04):** local and `origin/Nolan-Work` are both at `76200779`, so the Phase 1c pre-registration — a bar declared before its numbers exist — is now visible to Jarrett and Thomas. The case-duplicated ref (`Nolan-Work` packed at `b0003e7c` vs `nolan-work` loose) is consolidated to a single `Nolan-Work`; it was a fast-forward with 0 unique commits on the stale side, and recovery refs are under `refs/backup/2026-09-04-*`. ⚠️ **The corpus-v2 re-freeze is RUNNING** (`pid 25842`, `nohup`'d, launched by K2 before retirement) — `scripts/data/elm-frozen-model-v2.json` existing is the only success test, and the exit code has already lied once on this job. *Cross-team:* the corpus is documented as a shared asset for anyone's ELM work in [`Nolan-Agents/ELM-CORPUS.md`](Nolan-Agents/ELM-CORPUS.md) — labels are an LLM teacher (72.3% vs truth), not ground truth.
-- **Team Jarrett:** <…>
-- **Team Thomas:** <…>
+- **Team Jarrett:** **correction, 2026-09-07 — the "no classify.ts edits landed yet" line below is
+  stale and was wrong as of the `dev` merge.** `classify.ts` *is* touched now, by Team Thomas's
+  `TT-N1` (see that team's line and § 3's 2026-09-07 entry). Status as of 2026-08-24, otherwise
+  still accurate:
+  - `TJ-A2` (Archer, Knight supporting) — production-wiring the ELM pre-filter engine. Numeric
+    feature representation cleared the gate, independently confirmed by Knight and Realm's
+    from-scratch reproduction. In progress on `elm/jarrett/classify-elm-prefilter` /
+    `../n-dx-jarrett`. Shipped opt-in (disabled by default) — real smoke-testing found a
+    zero-evidence-population gap in the shipped representation, see `TJ-R2` below.
+  - `TJ-A3` (Knight, reassigned from Archer 2026-08-27/claimed 2026-09-03) — extending/tightening
+    `BUILTIN_ARCHETYPES` itself (the archetype *catalog*, orthogonal to which engine classifies
+    against it), plus LLM-reasoning-mining to shrink the zero-evidence population deterministically.
+    New worktree/branch (`../n-dx-jarrett-taxonomy`, `elm/jarrett/archetype-taxonomy-redesign`),
+    deliberately separate from `TJ-A2`.
+  - `TJ-R1` (Realm) — ELM-as-primary-classifier decision, verified by independently reproducing
+    both `TJ-A1`'s and `TJ-K1`'s real committed code. Its threshold-default finding is provisional
+    pending re-verification once `TJ-A3`'s catalog changes land.
+  - `TJ-R2` (Archer) — fixed `TJ-A2`'s zero-evidence gap with a path+export text representation.
+    **SUPERSEDED 2026-09-17 by `TJ-E1`** (user's direction). Its Step 4 encoder work is absorbed,
+    not discarded. Its soft-blocks are moot — `TT-N1` is no longer in the tree.
+  - `TJ-E1` (Elon, new 2026-09-17) — **the ELM classifier body itself**, filling the empty
+    representation slot behind `runELMGate()` that `TJ-R3`'s split left. ELM-only, no LLM
+    knowledge inside it. Reads **full file content**, which nothing at this call site has ever
+    done. Worktree `../n-dx-elon`, branch `elm/jarrett/classify-elm-content`. **Why this is the
+    live item:** `runELMGate` today resolves **zero files by construction** —
+    `classify-elm.ts:350`'s all-zero-vector guard skips 100% of the population that reaches it.
+    The architecture is built and inert; this fills it.
+  - `TJ-R3` (shipped 2026-09-07) — gate split done, see § 4.
+- **Team Thomas:** `TT-N1` (Nala) — text-encoded ELM classifier, originally wired directly into
+  `classify.ts`'s `enrichClassificationsWithLLM`. **Correction, 2026-09-17 (Elon): the line that
+  stood here — "this is live code on the `Jarrett` branch now" — is no longer true.** `TJ-R3`'s
+  gate split (`7ecf69f3`, 2026-09-07) **removed it**. What the `dev` merge actually left on
+  `Jarrett` was `classify.ts` importing `ELM_GATE_ENABLED`/`trainClassifyPathELM`/
+  `predictWithClassifyPathELM` from `classify-elm.js`, which never exported them — a broken build
+  (3× TS2305). Nala's actual implementation body was not on this branch. `TT-N1`'s own findings
+  stand and are still worth reading (90.6% k-fold on n-dx's own data — **not** checked
+  out-of-domain; plus the real `ELM.train()` gotcha). The `TT-N1`/`TJ-R2` collision is **moot**:
+  `TJ-R2` is superseded by `TJ-E1` and `TT-N1` is not in the tree. **Team Thomas has not been told
+  any of this** — see § 6.
 
 **Fork sync:** last `upstream/main` → `origin/main` fast-forward: _<date, by whom>_
 (one person, once a day — see [`GITHUB-WORKFLOW.md`](GITHUB-WORKFLOW.md) § 3)
@@ -211,6 +250,60 @@ direction changes. Link the ADR; don't restate it here.
     § *One agent, one worktree* calls not-optional. The ADR proposes amending the rule to match
     practice and name the mitigation. Notes sent to Teams Jarrett and Thomas.
 - <date> — <what changed, who to ask>
+- 2026-08-31 — Team Thomas: new ADR/IMPL for a text-encoded ELM classifier in sourcevision's
+  `classify.ts`, replacing an earlier (unmerged, different-branch) evidence-vector design that
+  measured zero signal on real unclassified files. Adds `@astermind/astermind-community` to
+  `packages/sourcevision/package.json` only (not root). See
+  `Claude-Context/ADR/ADR-2026-08-31-nala-classify-elm-rewrite.md`. Ask Nala (Team Thomas) with
+  questions.
+- 2026-08-31 — Team Thomas: **`scripts/elm-hello-world.mjs` (and the root `elm:hello` script) don't
+  test what their names claim.** `ELM.train()`'s only parameter is `augmentationOptions`, not a
+  training set — passed `elm-hello-world.mjs`'s `TRAINING_SET` array, every property it reads is
+  `undefined`, so the model trains only on character-augmented variants of the category label
+  strings, never on the example paths the script provides. Confirmed empirically (three models —
+  real/contradictory/no training data — produced byte-identical weights and predictions). The
+  script's 83%-accuracy claim isn't evidence the library learns from labeled examples; don't cite
+  it as such. The API that does work — `UniversalEncoder` → `ELM.trainFromData(X, y)` — is used
+  correctly in the new `scripts/classify-elm-eval.mjs` (90.6% on real n-dx path/archetype data).
+  Full write-up: `scripts/classify-elm-eval-results.md` and the ADR above. Not fixed in
+  `elm-hello-world.mjs` itself — not this team's file; flagged as an open question in the IMPL for
+  whoever owns it.
+- **2026-09-07 — `classify.ts` collision discovered: Team Thomas's `TT-N1` and Team Jarrett's
+  `TJ-R2` are the same fix, built independently, and `TT-N1` is already merged.** Both teams
+  separately found that the original evidence-vector ELM representation produces zero signal on
+  the real unclassified population (empty evidence arrays), and both independently chose to encode
+  path text instead — on the same day (2026-08-31), with no visibility into each other's work.
+  `TT-N1` reached `dev` and merged into `Jarrett` (`107cd344`) before either team noticed the
+  overlap; this also means `classify.ts` is no longer untouched, overriding Team Jarrett's standing
+  design choice by merge order rather than decision. Ask Realm (drafted, Team Jarrett) or Nala
+  (Team Thomas). Notes sent both directions:
+  `Jarrett-Agents/Notes/NOTE-jarrett-internal-2026-09-07-classify-elm-collision.md`,
+  `Thomas-Agents/Notes/NOTE-jarrett-to-thomas-2026-09-07-classify-elm-collision.md`. **Root cause,
+  worth fixing regardless of how this specific collision resolves:** each team's `IN-FLIGHT.md`
+  update was only visible on their own branch — nobody sees it until someone fetches and diffs the
+  other branch directly, which nobody had done since 2026-08-24. This board can go stale exactly
+  when it matters most (long-lived diverged branches) unless someone does that check.
+- **2026-09-17 — the boards were stale again, this time on the same branch, for 10 days.** Found by
+  Elon (Team Jarrett) while onboarding, by reading the code before trusting the docs. Three
+  statements were wrong: `BACKLOG.md` and § 4 here both called `TJ-R3` blocked on Thomas's sign-off
+  when it had **shipped** on 2026-09-07 (`7ecf69f3`), and § 2 called `TT-N1` "live code on the
+  `Jarrett` branch" when that same commit had **removed** it. All three corrected in this update.
+  **The lesson is narrower and worse than 2026-09-07's.** That one was blamed on cross-branch
+  invisibility — a real cause, and this isn't it: `7ecf69f3` landed on `Jarrett`, the boards live
+  on `Jarrett`, and the commit message itself said which doc updates it was deferring. Nobody
+  reconciled them. **A board is only as good as the habit of closing rows when work lands**, and
+  "the code shipped but the row still says blocked" is the failure mode that makes a board
+  actively misleading rather than merely incomplete — a new agent planning off these rows would
+  have built against an architecture that already existed. Ask Elon (Team Jarrett).
+- **2026-09-17 — the ELM slot is built and empty; `runELMGate` resolves zero files by
+  construction.** `TJ-R3`'s split created the right seam, but what sits behind it is still
+  `TJ-A2`'s evidence-vector representation, and `classify-elm.ts:350` unconditionally skips
+  all-zero vectors — which is **100% of the population reaching that stage** (measured across 5
+  corpora, 2026-08-27). The guard is correct; the representation is the gap. Now `TJ-E1` (Elon),
+  which supersedes `TJ-R2` and adds file content as a signal for the first time. **Relevant to
+  every team:** no accuracy number anywhere in this project — 100%@59.0%, 97.0%@42.3%, Nala's
+  90.6% k-fold — was measured on the genuinely zero-signal population. Don't cite them for this
+  call site.
 
 ---
 
@@ -220,7 +313,8 @@ Who is blocked on whom, and the hand-off needed.
 
 | Blocked | Waiting on | What's needed | Note sent? | Since |
 |---|---|---|---|---|
-| | | | | |
+| ~~`TJ-R2` (Team Jarrett, Archer)~~ | — | **RESOLVED/MOOT 2026-09-17.** `TJ-R2` is superseded by `TJ-E1` (Elon), and the thing it was blocked on no longer exists: `TT-N1` was removed from `classify.ts` by `TJ-R3`. Nothing is waiting on Team Thomas here anymore | — | Closed 2026-09-17 |
+| ~~`TJ-R3` (Team Jarrett, Realm)~~ | — | **RESOLVED 2026-09-17 — this row was wrong for 10 days.** `TJ-R3` shipped 2026-09-07 (`7ecf69f3`, merged `ae381889`); it was never blocked in practice. Proceeding without Thomas's sign-off was an explicit user override, recorded in the commit message rather than as a lead decision. **Team Thomas should know this happened** — the split removed `TT-N1`'s inline gate from `classify.ts` (it was a broken build: 3× TS2305 after the `dev` merge) | Original proposal note sent; **the override itself has not been noted to Thomas** — open item below | Closed 2026-09-17 |
 
 > **"Note sent?" is not optional.** A blocker that was only mentioned in conversation is not a
 > hand-off. The owning team reads its `Notes/` inbox; it does not read your mind.
@@ -234,7 +328,7 @@ Changes one team needs in another's territory. The owning team picks these up; t
 
 | Requested | By | Owning team | What's needed | Status |
 |---|---|---|---|---|
-| | | | | |
+| Sign off on `classify.ts` gate-split proposal (`TJ-R3`) — reorganizes `classify.ts`, which owns `TT-N1` | Team Jarrett (Realm) | Team Thomas | Yes/no/counter-proposal on `ADR-2026-09-07-realm-classify-gate-split.md`; Team Thomas doesn't need to pick an implementation, just the file shape | Pending — 2026-09-07 |
 
 ---
 
@@ -242,7 +336,8 @@ Changes one team needs in another's territory. The owning team picks these up; t
 
 | # | Owner | Action | By |
 |---|---|---|---|
-| 1 | | | |
+| 1 | Jarrett (lead) | **Tell Team Thomas that `TT-N1` was removed from `classify.ts`.** `TJ-R3` shipped on a user override of the stated Thomas-sign-off gate, and the split deleted Nala's inline gate (it was a broken build after the `dev` merge). Nobody has told them. Raised by Elon 2026-09-17 while onboarding; **not sent by Elon** — this is a lead-to-lead call about a decision made above the agent level, not an agent's note to write | Before Team Thomas does further `classify.ts` work |
+| 2 | Realm | `IMPL-2026-09-07-realm-classify-gate-split.md` **step 10 is still open** — update `TT-N1`/`TJ-R2` ADR statuses and close the two 2026-09-07 collision notes. Explicitly deferred by `7ecf69f3` rather than decided unilaterally | Open |
 
 ---
 

@@ -1,0 +1,291 @@
+File Name:
+Date Of Creation: 08/24/26
+Created By: Thomas Addison
+Purpose:
+
+You: So, um
+Them: Yeah.
+Them:  Mm-hm.
+Them:  Mm-hm.
+Them:  Hmm.
+Them:  How was your weekend?
+Them:  Hmm.
+Them:  Hello.
+Them:  Hello, hello.
+Them:  Hello, hello.
+Them:  Anybody ever informed Julian?
+Them:  Yes, yes.
+Them:  I reached out to him.
+Them: Hmm.
+You: Uh, understood.
+Them:  I had a busy weekend at work this week, and we'll actually join them.
+Them:  It shows that he's in a meeting.
+Them:  Ah.
+Them:  Shit.
+Them:  So—
+Them:  He's meant to be at our meeting.
+Them:  In a meeting free at 2.
+Them:  Yeah, I think—
+Them:  Uh, how true that is.
+Them: Meeting.
+You: Okay.
+Them:  Might be wrong.
+Them:  I have no idea.
+Them:  It will be funny if we could just check what meeting he's in right now.
+Them:  Just check who he's talking to.
+You: So, um, since the big boss isn't here, we can be a little bit more relaxed.
+You:  Also, I'm letting the two of you know that I'm, uh, using Wispr Flow to, um, re— not so much record, but transcribe what's going on in the meeting. So it's taking notes as we speak.
+Them: You're recording me?
+Them:  It's going to record that.
+You:  Uh,
+Them:  I hope that sounded very dramatic.
+Them:  You just put 30 exclamation points behind it.
+Them:  Mm-hm.
+Them:  That's exactly what I meant.
+You:  oh my—
+You:  Uh, I.
+You:  It didn't even use a single exclamation point, so you're fine.
+Them:  Yeah.
+Them: Mm-hm.
+You: Hey.
+You:  Oh, shoot.
+You: I want to give updates regardless.
+Them: Sure.
+Them:  Mm-hm.
+Them:  Um, I.
+Them: My update is basically: I very much need more—
+Them:  Like guidance from Julian.
+Them:  My two agents are just being stupid.
+Them:  I don't like you.
+Them:  I like you, Julian.
+Them:  What do you mean?
+Them:  I just— they keep on saying the same shit.
+Them:  Ah.
+Them:  And I don't know if that's because my prompting them is bad, which it very well could be, but they just keep on—
+Them:  Saying the same thing.
+Them:  Mm.
+You: Is failing to connect, or making its proper API call, so it's just crashing.
+Them: Mm-hm.
+Them:  I don't think so. Mine's not crashing.
+Them:  Whoa.
+Them:  Per se.
+You:  Yeah, I get you're not having the exact same error, but what I'm saying is I'm wondering if it's related. Is it essentially what I'm saying?
+Them:  Mm-hm.
+Them: And share that with the other, and then have them work off of each other's work to create one.
+You: Mm-hm.
+Them:  And.
+Them:  It looks like they created something.
+Them:  Hmm.
+Them:  It's just, it hasn't—
+Them:  I still can't get it to a working form.
+You:  Oka.
+You:  Oh, dear. Okay.
+You:  Uh, with me... well, okay, so. Yeah, my agent is doing something special.
+You:  Actually, I got it working, and then I broke it again because I'm an idiot. Um, but outside of that, I got NDX to— or I figured— no, I got it to run properly.
+You:  I figured out how to get it to run
+Them: Copy.
+You: I gathered is the test was a success in finding problems, and, um, basically I'm going to have to put in more work to what has already been accomplished in order to fix that problems.
+You:  And I know I basically just said a bunch of nothing, but I mean, there was progress.
+Them: I wonder how much of this we can get done if we had a 40-hour workweek—
+You:  Probably a lot.
+Them:  Mm-hm.
+Them:  Now, when you say you got NDX to work, did you get NDX itself to work, or your version of the NDX to work?
+You:  Uh, I think it's Indiax itself, because I got it running to the point where, um, it was mapping out my, um,
+Them:  Mm-hm.
+You:  file or— okay, the test environment that I put in. I put it in, it was mapping everything out, it was labeling everything, so I assume that's Indiax itself to work.
+Them:  Okay.
+Them:  We assume it could be your version.
+You:  Yeah.
+You:  It— it could be.
+Them:  Just—
+Them:  Should be very nice if it is.
+You:  Oh, I see what you mean when I say "my version." No, it's not Indiax with the ELM implemented, thank goodness, because that— the ELM is currently in its own separate thing, and it's not affecting the current version of N- yet.
+You:  So that it won't, you know, break it.
+You:  Did I make any sense?
+Them:  Yes.
+You:  Okay.
+You:  Thank goodness.
+Them:  Both.
+Them:  Mostly.
+Them:  Yes. Last week I tried to create—
+Them:  I wanted to see if I could create my own sort of dataset.
+Them: And NDX only works with, like, 2 file types, which I think are TypeScript and—
+Them:  TypeScript, Python, Swift, and Go.
+Them:  Hmm.
+You: Interesting.
+Them:  So I wanted to see if it would work with, like, C++ or Java.
+Them:  Just because in
+You:  Yeah.
+Them:  game language sort of thing, I wanted to see what I could do with that.
+You:  Yeah, I know what you mean.
+You:  And I'm assuming the test didn't go— or, not, the test didn't go well. I'm assuming it was not able to map out Java or C++ files.
+Them:  Correct.
+You:  Nice.
+Them:  Well, just asking—asking if it could. It said it couldn't.
+Them:  I didn't even try after seeing it couldn't do C++ or C#.
+You:  Mm-hm.
+Them:  Or Java. I was just like, I—okay, I give up on this sort of idea because I—
+Them:  I guess I don't necessarily have to give up on it. I can—I have a bunch of old Python files from school on this computer.
+Them:  I could try.
+You:  Mm-hm.
+Them:  Mm-hmm.
+You:  Interesting.
+You:  I think you didn't— so now I have a question. Not to you, but just in general, if it can map .
+You: gd files. Because .
+You: gd is files are files for, uh, the Godot game engine for its unique coding language. GDScript.
+You:  But GDScript is a lot like Python. So I wonder with that in mind, could it map GDScript files?
+Them: That is a good question. You should— you should try this attempt.
+Them:  Or try this idea out, Thomas.
+You: I agree that I should. I have to set it up properly, though, because I don't want to just throw it into one of my active environments.
+You:  Like, I— here, run wild, and then it does.
+Them: And it messed up everything.
+You:  Yeah.
+Them:  Barry, bare bones.
+Them:  Yeah.
+Them:  Yes.
+Them:  Mm-hm.
+Them: Yeah. Yeah.
+Them:  What I basically found is not great.
+Them:  I'm going to be honest.
+You: I see.
+Them:  For us.
+Them:  Well, if it's— if it's true.
+Them:  Um,
+Them:  The Claude subscription, or did you get like an API key?
+You:  What are you talking about?
+Them:  You said something about setting up an API.
+Them:  To the— to the N-dash.
+You:  I did?
+Them:  Did he?
+Them:  I could be wrong.
+You:  I remember saying that my agent was failing to make its API call, and that has.
+Them:  Ah, yeah, yeah.
+You:  That's entirely clawed.
+Them:  Yeah.
+You:  Because I do have a clawed subscription, and for what.
+You:  Having or is currently having an issue.
+Them:  So the N-dash does— you can set up an API key and it just sends that shit to Claude and gets back an answer, or it can— you can set up your
+You:  Is this a question or a statement? I'm at a.
+You:  Okay.
+You:  Okay.
+Them: Problem.
+Them:  If there's— if their problem is we're using too many tokens, that's what we were quote-unquote "test-to-fixed."
+Them:  Text-tasked to fix.
+Them:  Um, my.
+Them:  Agent said it uses between 3 and 20 times the amount of tokens.
+Them: IT.
+You: Okay, that's an interesting catch.
+Them:  So, so where do you use an API key? It'd be a little better.
+Them:  Yeah.
+Them:  Which is—
+Them:  Like, I don't really know what to do.
+Them:  With that information.
+You:  That might not actually be— you should keep— you should, um, write that down. Because that might not actually be a bad thing, because it may mean, okay, we failed to implement an ELM, but we could come to them and say, "Hey, we figured out what your problem is with using up all these tokens," and then— so we failed to implement ELM, but we fixed your token usage problem.
+Them: Mm-hm.
+Them:  But an API still costs money.
+Them:  That's— yeah, that's the thought.
+You:  Yeah, but does it cost as much money? And also, that's a—
+You:  And then on top of that, that would be an expense on the company, rather than the customer, so if the customer's not actually paying the extra—
+You:  Mm-hm.
+Them:  No, it would— it would still be like, like the customer would still be setting up their own API.
+You:  Oh, I see what you mean. Okay.
+Them:  But if they're— if they're using 20 times the tokens, it'd make sense to just get an API key.
+You:  Mm-hm.
+You:  Okay.
+You:  This has been interesting meetings so far.
+You:  Unless, say, I did not expect this to be the outcome.
+Them: Payment.
+You:  I mean, I was not expecting that, um, we would meet up and come to the conclusion that maybe the issue is that they just need to have people buy API keys.
+Them:  Yeah, and that could very well be, like, they— low-key could. Know that already?
+Them:  Mm-hm.
+Them:  You just don't want to do that because that's another purchase.
+You:  Mm-hm.
+Them:  But it's— like, it's already set up in there, like.
+Them:  In their thing.
+Them:  Like, it's just whether or not you set up the CLI or the API.
+You:  See, oh gosh. Now I'm coming to the terrifying thought: if it might be possible for us to fix it, but the issue is, in order for us to fix it and still go with putting in ELMs, we might have to actively— not just put in an ELM to the existing code base, but rather rewrite the code base to a degree.
+You:  And that terrifies me because I'm afraid I'm going to break something.
+Them:  Mm-hm.
+You:  I mean, if we build our own test environments— and by that I mean we just take advantage of GitHub branches and then we experiment— I don't think it would hurt.
+You:  The key thing would just be to make sure that whatever we do never gets pushed back to the main, um, branch.
+Them: Got it.
+You:  I'm using the terminology correctly. That never gets pushed back to the main branch.
+You:  And then we can just report our findings, and then say, "Hey, whether or not this would be a good idea based on our experimentation."
+You:  I don't even think I answered the question. Can you ask the question again, please?
+Them:  I
+You:  Mm-hm.
+You:  Mm-hm.
+You:  Mm-hm.
+Them: Like, where—where do they see the most token usage?
+You:  Mm-hm.
+Them:  Like, where specifically, what part, what—how is it happening, why is it happening?
+You:  Mm-hm.
+You:  Ugh.
+You:  Yeah.
+You:  Okay.
+You:  So,
+Them: Mm-hm.
+Them:  Yeah.
+Them:  I think that sounds exactly right.
+You: First:.
+Them: Hmm.
+Them:  I think we ask if.
+Them:  That's a good question, Thomas.
+You:  Mm-hm.
+Them:  I feel like that might be something we bring up to Julian.
+You:  I agree.
+Them:  I don't— I'm sure Julian will still want us to.
+Them:  Put in some type of ELM.
+Them:  Probably.
+You:  And to be fair, I'm kind of in agreement with him on that one.
+Them:  Mm-hmm.
+You:  I mean, we said—
+Them:  Like, theoretically, theoretically it does. It would help.
+You:  Yes.
+Them:  Somewhat.
+You: And ask him a bunch of these questions. Does that sound good?
+Them: Mm-hm.
+Them:  Do you want to meet them on Thursday?
+Them:  Or tomorrow? It doesn't really matter.
+Them:  For me.
+You:  Uh, I said Thursday. I meant Friday, sorry.
+You:  I'm adjusting to the new schedule.
+Them:  Or should we even try and meet him tomorrow and talk to him about it?
+Them:  Because, I mean, you have to remember we kind of did all this without even having him included.
+Them:  I don't know.
+You:  Did we really? I mean, I.
+Them:  Friday is a long ways away.
+Them:  Mm-hm.
+You:  Yeah, and what I was going to propose until then is that we focus this week on trying to track down where the most token usage is.
+You:  And then we can bring that up on, um, Friday.
+You:  Or would you rather we just kind of try and squash this as early as possible, which see if we can try and meet with him today, currently, or tomorrow?
+Them:  Well, if it says that he'll be free after 2
+You:  Yes.
+Them: , that technically is right when this meeting would end.
+Them:  So we could continue doing work and just maybe wait, like, 5 minutes until 2:05 to see what happens.
+Them:  Did either of you guys get a message back from Julian when you talked to him?
+Them:  Mm-hm.
+Them:  What did the message say?
+Them:  Or did he just give a thumbs up?
+Them:  Uh, classic Julian.
+Them:  I said we moved meetings to Mondays and Fridays at 1:00 PM,
+Them:  asked him if he would be back, and he said, "Yeah, I'll be back. I'll be back by then.
+Them: "
+Them:  He's coming back. He came back last Thursday.
+You:  Okay.
+Them:  Hmm.
+Them:  So—
+Them:  Do you guys want to wait? You guys think it's worth waiting?
+Them:  Hmm.
+Them:  I have no idea.
+You:  Mm-hmm. Well,.
+You:  I mean, what else do we have to cover in this meeting? Because I think we about have our marching orders for this meeting.
+Them:  Yeah.
+Them:  I mean, at this point, it'd just be a waiting game and working game.
+You:  Yeah.
+Them:  Mm-hm.
+Them:  Did it change on the calendar?
+You:  I don't think so.
+Them:  I wonder if we can do that.
+Them:  Add calendar.
+Them:  Yeah.

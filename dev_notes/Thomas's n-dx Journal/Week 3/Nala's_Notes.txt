@@ -1,0 +1,54 @@
+File Name: Nala's Notes
+Date Of Creation: 08/23/26
+Created By: Thomas Addison
+Purpose: To document the documented setions with Nala my claude agent
+
+
+### 2026-08-28 — ADR and implementation plan written for the ELM work
+
+Thomas asked for the ELM work to be documented as an ADR plus a
+
+separate implementation plan, in `n-dx/team/Thomas's Agent Work/`
+
+(an existing but previously empty folder). Wrote both, following
+
+the repo's own `Claude-Context/ADR/ADR-000-template.md` format for
+
+the ADR (no prior numbered ADRs existed — this is ADR-001):
+
+- **[ADR-001-elm-classify-gate.md](../n-dx/team/
+    Thomas's%20Agent%20Work/ADR-001-elm-classify-gate.md)** —
+                                   
+    records the shadow-mode ELM gate as actually built
+                                   
+    (2026-08-13/2026-08-20 entries above), with the mandatory
+                                   
+    Evidence section the template requires for any ELM-viability
+                                   
+    claim. States the negative result plainly: the evidence-vector
+                                   
+    input has zero signal for the real unclassified population (0/260
+
+    resolved, all-empty evidence arrays, ~0.002 margins), so the
+                                   
+    gate stays disabled — this is not a "works, pending tuning" ADR.
+                                   
+- **[ELM-Classify-Gate-Implementation-Plan.md](../n-dx/team/
+    Thomas's%20Agent%20Work/ELM-Classify-Gate-Implementation-Plan.md)
+  ** — an 8-step plan for the proposed pivot (evidence vector → path
+
+  text as input), gated behind a defined acceptance bar to be
+                                               
+  checked *before* re-enabling `ELM_GATE_ENABLED`, not after. Left
+                                               
+  three decisions for Thomas rather than assuming them:
+                                               
+  text-mode-only vs. `FeatureCombinerELM` to start, whether a
+                                               
+  human-spot-check proxy accuracy bar is acceptable given the
+                                               
+  `claude` CLI's absence in this environment, and whether the
+                                               
+  eventual result warrants its own ADR-002 or an amendment to
+
+  ADR-001. Not started — awaiting go-ahead.

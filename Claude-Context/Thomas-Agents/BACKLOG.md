@@ -11,4 +11,4 @@ if you collide on rebase, pick another item.
 
 | ID | Item | Related ADR / IMPL | Status | Claimed by |
 |---|---|---|---|---|
-| | | | | |
+| TT-N1 | Text-encoded ELM classifier for `classify.ts`'s unclassified population | `ADR-2026-08-31-nala-classify-elm-rewrite.md` / `IMPL-2026-08-31-nala-classify-elm-rewrite.md` | IN-PROGRESS — Phase 1 + Phase 2 code done, green (89/89 e2e files, 1996 passed); no branch/PR yet — see IMPL Open questions | Nala |

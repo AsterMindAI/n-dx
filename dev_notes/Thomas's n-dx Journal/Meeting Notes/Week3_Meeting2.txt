@@ -1,0 +1,601 @@
+File Name:
+Date Of Creation: 08/28/26
+Created By: Thomas Addison
+Purpose:
+
+
+Them: Hello.
+Them:  Hello.
+Them:  Who did you find?
+Them:  It was—
+Them:  What was that?
+Them:  Thomas.
+Them:  Thomas. Thomas you sound like a microwave.
+Them:  Oh, never mind, you're fine.
+Them:  You get it?
+Them:  Yeah.
+Them:  You get to twist the oxcord a little bit.
+You: Sorry.
+You:  What was—what it is is that the microphone and computer went out, so I'm using an external microphone. It's just far away from me at the time.
+Them:  Bring it closer to you.
+Them:  Do you have to do the do the mic test?
+Them:  Me in 2012 when I bought a $20 headset.
+Them:  And I get on Skype for the first time.
+Them:  And this is what I sound like.
+Them:  Oh.
+Them:  I was.
+Them:  Like, like, my microphone fucked up one time, and I was searching for a microphone, so I was like, "What is the cheapest microphone?" I found a, like, on Amazon, it was like a like a 28-cent microphone, bro.
+Them:  This shit was so bad. It worked for, like, like, 40 minutes worst quality ever, and then never worked again.
+Them:  Like, damn.
+Them:  Do you want to hear what my funny mic sounds like?
+Them:  I would love to.
+Them:  Or anybody else gets in here and we change it.
+Them:  Can you hear?
+Them:  Can you hear?
+Them:  Oh my God.
+Them:  This is it far away from me too.
+Them:  Damn.
+Them:  See, I think I think everyone eats a shitty microphone.
+Them:  Just to I don't know. Just to mess with people.
+Them:  Have the the default in in in games.
+Them:  You know what they say, "Loud is funny."
+Them:  Bro.
+Them:  Of course.
+Them:  How was yours how was yours work going?
+Them:  Now Thomas's.
+Them:  Thomas is gone.
+Them:  I've pushed my work.
+Them:  To whatever I've done to my repository.
+Them:  I I just continued working with a ELM because Julia.
+Them:  Didn't necessarily like disagree with that. He was just like, "That's not what we were supposed to be doing.
+Them: "
+Them:  Hmm.
+Them:  Per se. So but I feel like my agents were too deep.
+Them:  Like, they're I don't know what you would call it.
+Them:  They're focused, I guess, was too deep into the ELM that I couldn't just be like, "Oh, yeah, we're going to pivot to screw the ELM. We're just going to work on the classification.
+Them: "
+Them:  Like, so I just continued with the ELM.
+Them:  I mean, that's what the ELM's doing, right?
+Them:  Yeah.
+Them:  Just like replacing the replacing the classification.
+Them: You guys—
+Them:  To my— to what I—
+Them:  How am I trying to say this?
+Them:  From what I took away from the meeting on Monday was: we weren't necessarily supposed to do it with an ELM, we were supposed to just improve it in general.
+Them:  I think he warned us to it.
+Them:  Yeah.
+Them:  To like, replace everything with an ELM.
+Them:  Like, if it was possible, that's what he was saying.
+Them:  I think.
+Them:  I think I'll tell him it still hasn't returned.
+Them:  He's fidgeting.
+You: I am.
+You:  Just my audio—
+Them:  Oh, it's better now.
+Them:  Mm-hm.
+You:  Does that sound better?
+Them:  Yeah.
+Them:  Yeah.
+Them:  Just stay at that exact distance.
+Them:  You sound like it's, like, 360 feet.
+Them:  Damn.
+Them:  How much work have you gotten done, Nolan?
+Them:  Between this and school?
+Them:  Um, I'm at—
+Them: Like, like, some?
+Them: Um.
+Them:  So like, yesterday—
+Them:  Uh, like, like a big problem with it is that it.
+Them:  Like, we need to— we need to train the ELM, and so yesterday it
+Them:  But then using this dataset with an ELM, it's a— It's a 60%. So we should just not even use it.
+Them:  That's what I was— that's what I kept saying.
+Them:  Did it find something, or did it, like, create its own?
+Them:  What do you mean?
+Them:  Like, the dataset that it used? Did it find something, or did it create its own dataset?
+Them:  Um, it.
+Them:  Created its own.
+Them:  Interesting.
+Them:  Hmm.
+Them:  But the dataset—
+Them:  Or how the—
+Them:  I think how the LLM classifies. I could be completely wrong.
+Them:  Probably am.
+Them:  Is, like, based on the en dash— like, repo?
+Them:  Like, that's— that's kind of its dataset.
+Them:  Um, so it had— I had to get, like, a— like a bot that had— doesn't know anything about the dataset.
+Them:  To— to write the—
+Them:  Hmm.
+Them:  So.
+Them:  So the original dataset was just the original repository?
+Them:  I think so.
+Them:  Can you tell Tom he's just trying to talk?
+Them:  I think he's so wrong.
+Them: Probably am.
+Them:  Um, I.
+Them:  Was about to say—oh, oh, big important thing: big.
+Them:  Important thing.
+Them:  What now?
+You: Yeah.
+Them: Wait, what?
+Them:  So you turned it on and then it started spending money?
+Them:  No, I— I looked it up. Do you remember when they were giving out Fable credits?
+Them:  Yeah.
+Them:  Apparently when you accepted that, it just turned this on.
+Them:  So.
+You:  That's funny because it accepted it.
+Them:  You did accept it, or just in general? Make sure you don't have that on.
+Them:  So you're not accidentally spending money.
+Them:  Um.
+Them:  Uh.
+Them:  Okay.
+Them:  $10 more broke.
+Them:  So this is saying if we go past our limit, it's then— if it's turned on, it would start charging us money? That's insane.
+Them:  Yeah.
+Them:  That's just what the—
+Them:  I guess. It makes sense.
+Them:  It just starts charging you at the API limits.
+Them:  Yeah.
+Them:  API rates.
+You:  Yes.
+Them:  I was kind of thinking of just plugging NDX into Fable and, like, using all $100 of the credits I have to see what it comes up with.
+Them:  Hmm.
+Them:  If I'd have to really formulate a good, uh, prompt for it, though.
+Them:  For your toughest challenges.
+Them:  Mm-hmm.
+Them:  Thomas, have you been working on this?
+Them:  How far have you gotten?
+You: Is important.
+You:  My documentation shows whatever at this point.
+You:  And then I have a second, essentially what I'm doing is I'm keeping my own branch as an archive of my previous work, because purely
+Them: Mm-hm.
+You:  in Salesforce keeping record of what I've discovered is like a branch, and then I'm just using what I've discovered purely as documentation on that branch.
+Them:  Mm-hm.
+Them:  Sorry, are you going away from— are you still trying to implement an ELM, or are you going away from—
+You:  Now I'm still going to use APLM. It's just rather than trying to.
+You:  APLM into the suffixation file to have its own confirmation.
+Them:  Okay.
+You:  I asked that they come out clearly from sticked out.
+Them:  You're still, like, microwave, but, like, we can— we can understand you.
+Them:  It's like as if, like, you're a Soviet, like, radio and, like, the end of the Cold War. Like, you're not— you're not fully working, but you work enough to where we can understand.
+Them:  There's a lot of— there's a lot of background noise.
+You:  Because I'm watching the Notetaker and it is having a feel to my dialogue and.
+Them:  What happened to your built-in? Like, it— it hasn't even been 5 days since we last spoke.
+You:  I don't know. I just hopped on a Discord call with somebody else, and it wasn't picking me up, so I was just fiddling because I thought it was Discord, and then I was fiddling with my computer for a while, and that's when I figured out no, it's the built-in micro interface that's not working.
+Them:  Hmm.
+Them:  How old is your laptop?
+You:  I think it's 6 years old.
+Them:  Damn. Oh, okay.
+Them:  I mean, it's probably just—
+Them:  It's too old.
+Them:  You said 6 years old.
+Them:  Yeah, it's not too old.
+Them:  That's pretty— well, maybe not for a MacBook, but—
+Them:  Yeah, both of y'all use MacBooks.
+Them:  For a Windows laptop, that's pretty damn old.
+Them:  6-year-old thinks that would be fine.
+Them:  What do you mean, his microphone just went out?
+Them:  Huh.
+Them:  It's on— it's on the brink of starting to go out right now.
+Them:  Okay.
+Them:  The micro— the microphone is the first indication.
+Them:  Hmm.
+Them:  Hmm.
+Them:  I will say MacBooks are good, though.
+Them:  I'm a gentleman.
+Them:  Actually, I think I fucking hated this shit at the beginning.
+Them:  Thomas, what— which of your things is the archive?
+Them: Thomas branch, not the Thomas's branch.
+You: No, Tom, it's his point.
+Them:  Okay.
+You:  Tom is right, he's going to start. I think I'm— Hey, you know, it's confusing.
+Them:  I think later.
+Them:  Later tonight I'm going to have my.
+Them:  Second agent that hasn't been working on anything, look at your archive branch and see what it finds.
+You:  Okay.
+You:  I apologize in advance.
+Them:  Nolan, which one are you butter or no butter?
+Them:  No butter.
+Them:  Okay.
+Them:  Why did both of y'all have two branches?
+Them:  When I started doing making the ELM shit, it was like it got mad at me.
+Them:  It said, "We can't have two agents working on the same thing, same branch."
+Them:  So it made its own branch.
+You:  It's been a while.
+You:  Whatever.
+Them:  I see that you uploaded stuff or created stuff not too long ago.
+Them:  Did you just ask us a question, Thomas?
+Them:  I think are we talking about Thomas's or me?
+Them:  No, I just
+You: 58, 8.
+Them:  Okay, what was your question?
+Them:  Oh, I don't even know what I asked. I don't—
+Them:  Yeah, we've both been uploading shit.
+Them:  And I'm going to see where my—
+Them:  Where have I been storing this?
+Them: Mm-hm.
+Them: Tokens.
+Them:  But I'm pretty sure— I'm pretty sure I went over my limit, like, in 2 questions.
+Them:  Like, 2 prompts.
+Them:  Yeah, 3 prompts. Like, starting from 0 to 100.
+Them:  I don't know how I haven't— all of my agents are running on, um, extra high effort.
+Them:  Mm-hm.
+Them:  Surprised I haven't. I guess I really haven't been doing as much as you have.
+Them:  I don't—
+Them:  I think it just makes it—
+Them: Look like I'm doing a lot of work.
+Them:  When I'm just— It's just, they're just being really fucking annoying.
+Them: Is another word that we meet Mondays and Fridays.
+Them:  Yeah.
+You: It's—
+Them:  Do we tell them that on Monday?
+You:  Yes.
+Them:  I think it— I think he, like, the— his availability just changes automatically.
+Them:  Based on his calendar.
+Them:  So if he has the meeting on the calendar, it just automatically puts him in a meeting.
+You: Oh, now they're coming.
+Them: For ingredients.
+You:  What foods have you named them after?
+Them:  We got jam and butter.
+Them:  And we got jam, butter, and fluff.
+You:  Food.
+Them:  So you have, like, spreads.
+You:  Natala.
+Them:  Nah.
+Them:  I don't want to do—well, I've already done, like, a brand thing.
+Them:  Shit.
+Them:  Mm.
+Them:  Like, what is a spread?
+Them:  That's, uh, a spread.
+Them:  We got syrup.
+Them:  It's a condiment.
+Them:  But, like, that's what I mean.
+Them:  That's the difference.
+Them:  Between a spread and a condiment.
+Them:  Damn, that's actually a good question.
+You:  Answer.
+Them:  It's not something for us to solve.
+Them:  Type that into chat.
+You: Yes.
+You:  That is correct.
+Them: You said your archive branch was Thomas's, with the S? Okay.
+Them:  Thomas' branch branch.
+You:  Uh, I was going to say define details, but I think that's enough.
+Them: What do you guys think of all the celebrity deaths that have happened recently?
+Them:  Who else died?
+Them:  I know Dolly Parton.
+Them:  It's been like 4 deaths.
+Them:  This week, I think.
+Them:  Damn.
+Them:  Thomas, I'm sorry, I have no idea what you just said.
+Them:  I think one of them he said was Tim Kerry.
+Them:  Which I think I also knew.
+Them:  What? Oh, oh.
+Them:  That was a—
+Them:  It was a respon
+Them: Like, nowhere you can close.
+You: Okay.
+Them:  Peter Cullen.
+You:  Yes.
+You:  That sounds right.
+Them:  Yeah.
+You: Find out what she is.
+You:  What's her name? Please talk about what she did.
+Them: I found out because, uh, like, Donald Trump said some shit, about how, like, she was a "country singer."
+Them:  Mm-hm.
+Them:  That's the only reason why. No, that time, like, I don't even know if that's true.
+Them:  Because you could— you should go listen to some Dolly Parton.
+Them:  Dolly Parton's fire.
+Them:  Of course.
+Them:  Who was this dude?
+You:  Peter Clark.
+Them:  No, Tim— Tim Curry?
+Them:  How's the other dude?
+You:  He was an actor, a voice actor.
+You:  That's what I think is so beautiful.
+Them:  Yeah, this one was, like,—
+Them:  Like my— my childhood.
+Them:  The Clone Wars?
+Them:  Ben 10?
+Them:  Young Justice?
+Them:  Phineas and Ferb?
+You:  She's—
+Them:  He's evil.
+Them:  He almost looks like, um— Who's that actor that plays House in House?
+You:  Ugh. I don't know.
+Them:  Hugh Larry.
+Them:  Mm.
+You:  Hmm.
+Them: You're going to move you in 75.
+Them:  Damn.
+You:  I didn't know that.
+Them: The cat returns.
+Them: Yeah, it was the cat.
+Them:  Oh, the cat king.
+Them:  I don't remember that dude at all.
+Them:  Yeah.
+Them:  Okay.
+Them:  Um, so.
+Them:  How—how far do we think we are from getting something that works?
+Them:  Individually.
+You: Hello.
+You:  I don't know.
+You:  I can say I can't.
+Them:  I'm going to ask for, like, a—
+Them:  I might be close to testing.
+Them:  Yeah.
+Them:  I don't—I don't know either, though.
+Them:  Like a rough estimate. That could be entirely wrong.
+Them:  Say "good 75%."
+Them:  Okay.
+Them: Like, Astermine isn't that complicated for this whole NDX thing.
+Them:  Mm-hm.
+Them:  No, I don't think it takes up too much token usage.
+Them:  Definitely just find a different.
+Them:  So you think we're supposed to— we were supposed to just.
+Them:  Create a whole ELM that's just for classification?
+You: Okay, I'm going to use an interesting one: I don't know if this technique is going to work, but I mean, it is what we're supposed to. This is what we're supposed to be working together, and this is what we're supposed to do.
+Them: Mm-hm. Yeah.
+Them:  And that starts with us uploading our stuff, which we all have done.
+Them:  So now we can start looking at each other's and come up with ideas.
+Them:  I guess.
+Them: I kind of hate how Claude is, like, because I told it to look at yours and it's finding stuff that it found in mine and I feel— I feel like it shouldn't be.
+Them:  Hmm.
+Them:  Maybe we were all getting the same error.
+You: Um.
+You:  A quick, shortcut into my notes for information.
+You:  Okay, it's just 7 o'clock into either demo.
+You:  Notes and my project. In DevNotes, because that's where I put all my documentation.
+You:  Or into GoToTeam to find a folder there that says "Thomas's Agent Work," and then that's where I put the PDR documentation as we're hitting my agent work. Their ADR documentation, um.
+You:  Yes.
+Them:  Is this inside of your branch or—
+Them:  You said it was in Team—
+You:  Yeah.
+Them:  Thomas's agent work.
+You:  And so you have—
+Them:  And then the dev notes.
+You: I propose to take that out of the document. Got it.
+You:  So I'm going to go and summarize based on what's in there.
+You:  You think I'm going to go to the bank and run a look because there's no—
+You:  I don't think I've given that information.
+You: I need to check in if I still connected.
+Them: Mm-hm.
+You:  I thought I couldn't tell. It got very quiet, and generally I think if it gets quiet it's just quiet.
+You:  Maybe it's off.
+You:  Disconnected.
+Them:  I'm reading the.
+Them:  Dialogue from last meeting to see what exactly Julian said—
+You:  Oh, that part wasn't recorded.
+Them:  Wow, this is the best the microphone has sounded.
+Them:  Yeah.
+Them:  Whatever you're doing right now, Thomas, do not fuck with it.
+You:  I'm not doing anything.
+You:  Uh, gosh.
+Them:  That was the clearest I've heard you all today.
+You:  But yeah, that part wasn't recorded because I had already ended the recording.
+You:  Right before it truly popped in, because we were about to do the Julian show.
+Them:  Damn.
+You:  I don't remember why.
+Them:  Yeah, it most definitely caught.
+Them:  I can't tell what—
+Them:  It doesn't say exactly what was Julian, but I can kind of tell by the wording.
+Them:  Of these sentences. Like, "Oh, this sounds like what I might have said," or "What?
+Them:  No one might have said," or "This is what Julian probably said."
+Them:  Like, "No one was talking about the API calls so I could tell that was him."
+Them:  Damn, I just lost my place.
+You: Yeah, I'm trying to—
+You:  Actually, let me not interrupt you again.
+You:  He left this—
+Them: Can you send the transcript and the Discord?
+You:  No.
+Them:  No, it's in—
+Them:  If you go to his archive,
+Them: This was actually— I mean, it's like keeping minutes for stuff, so.
+You: Why did you feel that way? I can guarantee you this next one is not going to be nearly as useful, because I think it is picking up what to write down based on what the microphone picks up.
+You:  Microphone picks up what it wants.
+Them:  Uh, it's just picking up a lot of static. Is it just saying "static"?
+You:  No, it's just every so often saying, "Yeah, you're wrong."
+You:  So we'll see how it turns out, but you saved me one when you were just going to speed and it's going to jump ahead. That's because the microphone didn't pick up what you said.
+Them: Yeah. I wonder if Julian might— Julian, if we couldn't join the meeting normally, Julian might not be able to join the meeting normally.
+Them:  Hmm.
+You:  But noted, I'll—
+Them:  No, it's a— it's accepted.
+You:  Because I think it—
+You:  Popped up for me.
+Them:  I should've— should pop up.
+Them:  Hmm.
+You:  I said it popped up for me.
+Them:  Yeah.
+Them:  It's almost calendar anyway.
+You:  Yeah.
+Them:  Hmm.
+Them:  He would've joined if he wanted to.
+Them:  Was it the week 3 meeting?
+Them:  Yeah.
+Them:  That's what— that's what it was?
+Them:  Yeah.
+You:  Yeah.
+Them:  Week 3_something.txt.
+Them:  Yeah.
+Them:  He joined after this.
+You:  Yeah.
+Them:  Yeah.
+Them:  Yeah.
+You:  Oh, I remember why I didn't start my backup. One, because it was talking.
+You:  I was listening to it because I figured it was going to be fair. Or I could have legal to let him know first that he couldn't record.
+You:  And I didn't even have a chance to get his signature.
+Them: Which valve?
+You:  In the future, I'll just let
+Them:  Hmm.
+You:  him know that I have to take one of the backup records somewhere. But for the.
+You:  Record, I.
+Them:  Yeah, I think— I would like to think that Jillian would probably be okay with stuff being recorded.
+Them:  Okay.
+Them:  Because—
+You:  Sorry, but y'all can—
+Them:  I'm done. Saying what I had to say.
+Them:  I don't know. I don't really remember.
+You:  But yeah, he's not the only one.
+You:  Thank you.
+You:  I need to log that before I start.
+You:  Exactly.
+You:  Subscribe.
+You:  Probably recorded.
+Them: Mm-hm.
+You:  Me.
+Them:  I'm happy to.
+Them:  And.
+Them: TNB5.
+Them: Updates from.
+Them:  Oh no.
+You: So what did you accidentally delete?
+You:  Did it document the task?
+You:  Take that as no.
+Them: Thomas, I've been really into trying to make a game recently.
+You:  Okay.
+You:  What time again?
+Them:  A bullet hell game.
+Them:  Oh God.
+You:  I'm seeing two defaults again.
+Them:  Yeah.
+Them:  Get 2D.
+Them:  Yeah, top-down.
+Them:  Yeah.
+You:  I know, uh, so—
+You:  Is this—
+Them:  It'll probably be roguelike.
+Them:  With.
+Them:  For now, all I'm going to do is just basically create, like, a spaceship. Like, I'm just going to get the bare bones done.
+Them: I'm going to get called to do it.
+Them:  Because I'm lazy.
+Them:  Yeah.
+You: effort into it.
+Them: They're doing a top-down 2D, you were doing a 3D. If you were trying to integrate Claude into that, I'd say.
+Them:  That's got to at least be 10-fold harder.
+You:  Not.
+You:  I just have to integrate more into the guitar, integrate into the community.
+Them:  Yeah, I— um, I.
+Them:  Didn't— hold on.
+Them:  Let me see what my Claude did. Because I— I did realize that, um, you can't open a Godot file— Can you open?
+Them:  At least it wouldn't let me open it.
+Them:  Mm-hmm.
+You: The opening file.
+You:  Yeah, dude.
+You:  Did I just— I'm going to.
+Them: Videos, then it looks exactly like C.
+You: Yeah.
+You:  Yeah.
+Them:  Or pretty similar. Maybe, maybe not.
+You:  Interesting.
+You:  So I haven't seen it in Python.
+You:  I don't think.
+Them:  I guess Python and C also look pretty similar to a certain degree.
+You:  That makes sense.
+Them:  It's just more like it seems like they have to, I guess—no, this is pretty normal for any coding.
+Them:  Never mind.
+You:  That's it.
+You:  Um, I think good jokes.
+Them:  Nope.
+Them:  It's a C-sharp.
+Them:  No, C, uh, just C or C++.
+Them:  Oh, shit.
+You:  Why is that?
+Them:  I think the one we did at Randolph Macon was C.
+Them:  It wasn't C++.
+Them:  I don't remember.
+Them:  Our teacher always just called it C.
+You: Right.
+Them: Hmm.
+You:  It's mainly app stuff at this moment. I don't know what it's taking, but it's not taking up what I'm saying.
+You:  It seems to pick up the two of you pretty well, but it's not picking me up very well at all.
+Them: Okay.
+Them: Alrighty.
+Them:  Are we done with this meeting?
+Them:  No.
+Them:  Even though—
+Them:  Yeah.
+Them:  Nothing got accomplished?
+Them:  I guess our idea of being able to, uh, put something into our repositories was our end goal for today.
+Them:  Yeah.
+Them:  That's what we set on Monday.
+Them:  And—
+Them:  Trying to—
+Them: Something in a working state.
+You: We are at the press documentary.
+Them:  Good. If you want to, uh, look at mine, Thomas, it's not too, too much, but it's everything that I've handwritten.
+Them:  It's under.
+Them:  My branch. If you go to clawed.
+Them: clawed, it's just handwritten notes.
+You:  Okay.
+You: Yeah.
+Them: I did a little bit, you know? Got to— got to keep them on their toes.
+Them:  Mm-hm.
+You:  Very nice.
+You:  What about you, Notetaker?
+Them:  So.
+Them:  Oh, I've been— I've been writing everything.
+Them:  Like, outside of the VS Code. I mean, fucking import it.
+You:  Yes.
+Them:  But he's been handwriting it.
+Them:  Huh?
+You:  At the end.
+You:  What?
+Them:  Yeah.
+Them:  Did you understand what he just said, Nolan? I ca— I did.
+Them:  If I put it on the branch, it stays in the system or something.
+Them:  I think.
+You:  That's not what I think at all.
+Them:  Oh, never mind then.
+You:  I don't care. Did you put it in a folder or download it from your brand?
+Them:  Oh, it's entirely out of the system. I've been writing it in Google Notes.
+You:  Okay.
+Them:  I need— I need not.
+Them:  Wait, Thomas, that's— if that's what you just said, that's also what Nolan just said.
+You:  That—
+Them:  Look, I don't even remember what I just said. I'm going to be honest.
+Them:  Anyway.
+You:  I heard kids. If you put it in the branch, you put it in the system.
+Them:  Oh, yeah. That— that is what I said.
+Them:  Well, it's not sitting on either of those right now. It's sitting on Google's system.
+You:  Right.
+Them:  Yeah, in my Google Notes.
+You:  In the system.
+Them:  And who—
+Them:  I do feel a little weird.
+Them:  I think I'm going to change all my, like, my— my name and shit on my— on my— my branch.
+Them:  Or all my work.
+Them:  I feel a little weird having my— like, my name and my thoughts written— like.
+Them:  All over the repo.
+You:  Yeah. So you mean—
+Them:  Like, in general, it'd be fine if we were just, like, doing normal work.
+Them:  But it kind of seems like Julian's doing some— you know, you know what I mean.
+Them:  Again, this is free work.
+Them:  I feel like maybe— maybe Julian is not, like, making enemies, but, like, but, like, the work that— that Julian's making.
+Them:  Might be making enemies.
+Them:  Hmm.
+Them:  If that makes sense.
+Them:  I feel a little weird putting my name over something associated.
+Them:  Same.
+You:  Why do you deal with Notetaker like us?
+Them:  Listen, a lot of people don't really like Lockheed Martin, but—
+Them:  Don't bear a tattoo he's working with.
+Them:  Hmm.
+Them: As yet to introduce us to.
+Them:  Alrighty.
+You: Je distrais les dignes employés.
+Them:  I'm going to go get laundry done and—
+Them:  Clean up the house.
+Them:  And fucking hell, work on this shit.
+Them:  Okay.
+Them:  Um, I'll let you know when I'm done. Yeah.
+Them:  I'll have— I'll have all my notes in.
+Them:  Sometime this weekend.
+Them:  Alrighty.
+Them:  I guess we'll just continue working on this, and then we'll find a— set another goal on Monday.
+Them:  Mm-hm.
+Them:  Alright.
+Them:  See you on Monday.
+Them:  Toodles.
+You:  Merci.
+Them:  Have a good weekend.
+Them:  You as well.
+You:  Hey.

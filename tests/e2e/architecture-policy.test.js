@@ -165,7 +165,10 @@ const KNOWN_VIOLATIONS = new Set([
   // rex domain → cli imports (tracked for resolution)
   "packages/rex/src/analyze/guided.ts",
   // sourcevision domain → cli imports (tracked for resolution)
-  "packages/sourcevision/src/analyzers/classify.ts",
+  // Moved from classify.ts to classify-llm.ts (TJ-R3, ADR-2026-09-07-realm-classify-gate-split.md)
+  // — same underlying violation (startSpinner from cli/output.js), relocated along with the
+  // LLM-calling code that uses it, not newly introduced.
+  "packages/sourcevision/src/analyzers/classify-llm.ts",
   "packages/sourcevision/src/analyzers/enrich-batch.ts",
   "packages/sourcevision/src/analyzers/enrich-per-zone.ts",
 ]);

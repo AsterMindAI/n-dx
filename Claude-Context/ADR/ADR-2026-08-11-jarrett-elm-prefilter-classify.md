@@ -1,0 +1,444 @@
+# ADR — Add an ELM pre-filter stage before classify.ts's LLM fallback
+
+- **Status:** Superseded by `ADR-2026-08-24-jarrett-archetype-taxonomy-redesign.md` — confirmed
+  directly by the user 2026-08-24. This corrects a same-day mix-up: Knight's urgent note
+  (`Notes/NOTE-knight-to-archer-and-realm-2026-08-24-hard-pivot-away-from-elm-prefilter.md`) had
+  claimed the pivot was toward *ELM-derived* taxonomy discovery (clustering over learned
+  embeddings, no hand-written catalog at all) — checked directly with the user, and that is **not**
+  the actual direction. The real pivot keeps `BUILTIN_ARCHETYPES` as a hand-curated catalog and
+  extends/tightens it using evidence gathered across this whole investigation, per the new ADR.
+  Realm's `ADR-2026-08-24-realm-elm-primary-classifier-pivot.md` (narrower — ELM as primary
+  classifier against the *existing* fixed catalog, threshold-default only) is not itself wrong, but
+  is superseded in turn by the same taxonomy pivot, since it still assumed the catalog `TJ-A2` was
+  built against stays fixed. Flagged to Realm/Knight, not unilaterally overridden here — see the
+  new ADR's Consequences and today's Notes/ correction.
+  This ADR's Context and Evidence sections remain accurate and are cited in the new one, not
+  redone — do not treat them as invalidated.
+- **Date:** 2026-08-11
+- **Author:** Archer (Team Jarrett)
+- **Supersedes:** none
+- **Backlog item:** `TJ-A1`
+
+## Context
+
+`packages/sourcevision/src/analyzers/classify.ts` classifies every source file into one of ~17
+built-in archetypes (`archetypes.ts`, `BUILTIN_ARCHETYPES`) in two passes:
+
+1. **Algorithmic** (`classifyFile`, `classify.ts:135-208`) — weighted regex/path/filename/export
+   signal matching against the archetype catalog, zero cost, runs on every file. Anything scoring
+   ≥ `PRIMARY_THRESHOLD` (0.4) is resolved here for free.
+2. **LLM fallback** (`enrichClassificationsWithLLM` → `classifyBatchWithLLM`, `classify.ts:328-481`)
+   — files the algorithmic pass leaves at `archetype: null` are sent to `callClaude` in batches of
+   30, one round-trip per batch. Gated on `!ctx.fastMode && totalUnclassified > 0`
+   (`packages/sourcevision/src/cli/commands/analyze-phases.ts:218-221`) — runs on every non-`--fast`
+   `ndx analyze` that has leftover unclassified files after pass 1.
+
+**Verified 2026-08-11** (Archer's session log in this charter): the LLM call's free-text `reason`
+field has no consumer outside `classify.ts` itself — it's only recycled into a later retry
+attempt's prompt as a hint (`classify.ts:500-505`), never surfaced to a user or read by any other
+module (`web/src` viewer and server grepped, zero matches on `signalKind`/`archetypeId`/`.evidence`).
+So a classifier that emits only a label, with no reasoning text, loses nothing any real consumer
+needs.
+
+**Knight's 2026-08-11 survey** of `../AsterMind-Community-Edition/src/core/` (logged in this same
+charter) confirms base `ELM` (text mode) is architecturally the right shape for this: fixed random
+hidden layer, output layer solved analytically via ridge regression, trains in milliseconds, and
+accepts raw text directly via a built-in tokenizer — "file path/snippet → archetype label" maps
+onto it with no hand-rolled feature encoding required.
+
+This ADR proposes the next step: don't replace the LLM fallback, narrow how often it's reached.
+
+## Decision
+
+Insert a new stage **between** the two existing passes, not inside either one: after
+`analyzeClassifications` produces its `archetype: null` files, run a base `ELM` classifier (text
+mode, via `@astermind/astermind-community` — see Evidence) over just that leftover set, before
+`enrichClassificationsWithLLM` is called. Neither existing function is modified — the new stage is
+a pure in-between call reading one function's output and narrowing the other's input. Files the ELM
+resolves above a calibrated confidence threshold are done. Everything else — the ELM's own
+low-confidence remainder — still goes to the LLM exactly as it does today. The LLM remains the
+source of truth for anything the ELM isn't sure about; this is a pre-filter, not a replacement.
+
+Training data comes from files already classified — both `source: "algorithmic"` and prior
+`source: "llm"` — using file path plus the algorithmic pass's partial evidence signals
+(`archetypeId(weight)` pairs, present even on `null`-archetype files per `classify.ts:159-165`) as
+input, and the resolved `archetype` as the label.
+
+**Start with a single base `ELM`, not a chain.** Knight's read on `DeepELM` (stacking `ELM`
+instances as autoencoders) is "overkill... unless base ELM's random features turn out not
+linearly-separable enough." Reach for `ELMChain`/`DeepELM`/`KernelELM` only if the single-model
+held-out accuracy (see Evidence) doesn't clear the acceptance bar.
+
+## Alternatives considered
+
+| Option | Why not |
+|---|---|
+| ELM inside `classifyFile` itself | `classifyFile` already resolves confident cases for free; there's no unclassified population there left to improve on. Same effective target as inserting between passes, but more invasive to a working, deterministic, zero-cost function. |
+| Replace the LLM call outright | Removes the only fallback with actual reasoning ability for genuinely novel files (e.g. archetypes the training data never saw). The 2026-07-30 n-dx-wide classifier survey treats ELM as a pre-filter/cost-cutter throughout, not a wholesale swap — same pattern applies here. |
+| `ELMChain`/`DeepELM` from the start | No evidence yet that a single base ELM's linear-separability is insufficient for ~17 archetype labels. Chaining adds complexity and a second failure surface before the simpler option has been measured. |
+| `KernelELM` | Only relevant if archetype similarity turns out non-linear in the base random-feature space — no evidence of that yet, and `exact` mode is O(N²)/O(N³) without the `nystrom` approximation. |
+
+## Consequences
+
+**Status note (2026-08-12):** none of the below has happened — the gate in Evidence didn't clear,
+so `classify.ts`/`analyze-phases.ts` are untouched and no ELM runs in production. This section
+describes what the Decision *would* cost/save if a future retry (see Evidence, "Read on why")
+clears the gate, kept here so that evaluation doesn't have to be re-derived from scratch.
+
+**Easier:** fewer files reach `callClaude` per `ndx analyze`, directly cutting the token/latency
+cost the LLM fallback already incurs on every non-fast run with leftover unclassified files. The
+retry-and-degrade machinery (`computeLLMClassifyAttempts`, JSON-parse fallback in
+`tryParseClassifyResponse`) sees fewer batches, shrinking its failure surface proportionally.
+
+**Harder:** a new model artifact to train, version, and keep in sync with `archetypes.ts` — if
+custom archetypes are added via `.n-dx.json` overrides, the ELM needs retraining or it silently
+under-serves those labels (falls through to the LLM correctly, but doesn't help until retrained).
+A miscalibrated confidence threshold silently misclassifies instead of correctly falling through
+to the LLM — the same caution Knight raised about `classifyError`'s retry-safety question applies
+here to classification correctness.
+
+**Which teams are affected:** none outside Team Jarrett as currently scoped —
+`packages/sourcevision` isn't on `OWNERSHIP.md`'s shared-files list, and no other team's `Notes/`
+inbox references `classify.ts`. Flagged in `IN-FLIGHT.md` § 2 for visibility per the "claim
+generously while scopes are unassigned" rule. If a new npm dependency is added for the ELM
+implementation, `package.json`/`pnpm-lock.yaml` **are** shared — see the IMPL's Step 1.
+
+**Migration cost:** contained to `packages/sourcevision` — new module(s) plus one new call in
+`runClassificationsPhase`, plus a widened `FileClassification.source` union (`"elm"`). No change to
+the `FileClassification` shape otherwise.
+
+## Evidence
+
+**Measured 2026-08-12 — see "Measured results" below for the numbers.** This section first
+records the planned methodology (kept intact so the run is reproducible by another team), then the
+actual results. Per `ADR-TEMPLATE.md`, an ELM-viability claim — positive or negative — needs both;
+this ADR is making a negative-leaning one, not an unmeasured proposal anymore.
+
+- **Task framing:** input = file path + partial evidence signals (`archetypeId(weight)` pairs from
+  `classifyFile`'s scoring, available even on `null`-archetype files); output = one of
+  `BUILTIN_ARCHETYPES.length` (~17) archetype IDs.
+- **Dependency (resolved 2026-08-12):** `@astermind/astermind-community` (npm, v3.0.0) — **not**
+  `@astermind/astermind-elm` (npm, v2.1.1, older/narrower — confirmed via `registry.npmjs.org`
+  for both). `astermind-community`'s name/version/description are an exact match to the local
+  `AsterMind-Community-Edition/package.json` Knight actually read file-by-file for the
+  2026-08-11 survey (`ELM.ts`/`DeepELM.ts`/`KernelELM.ts`/`OnlineELM.ts`/`ELMChain.ts`/
+  `ELMAdapter.ts`); `astermind-elm` predates that consolidation and isn't guaranteed to have the
+  same API shape. The local `AsterMind-Community-Edition` checkout is also **not** a sibling of
+  this repo's working directory (`Final n-dx/n-dx`) — it only sits at `../AsterMind-Community-Edition`
+  relative to a second, older n-dx checkout on this machine (`GitHub/n-dx`, branch `dev`). The
+  npm dependency is the portable path; no script should hardcode a relative sibling path to the
+  source checkout.
+- **Training / held-out split:** neither this repo nor either held-out candidate has
+  `classifications.json` yet — confirmed by checking `.sourcevision/` in both this repo (only
+  `.gitignore`/`hints.md` present, `ndx analyze` never run here) and `AsterMind-Community-Edition`
+  (no `.sourcevision/` at all). Training source: this repo's own classification history, generated
+  by running `ndx analyze` here first. Held-out set: `AsterMind-Community-Edition` (129 `.ts`/`.tsx`
+  files, genuinely different domain — ML library, not a dev-tooling monorepo — so it actually tests
+  generalization rather than memorization of n-dx's own naming conventions), also requires
+  `ndx analyze` run on it first. Considered the other `GitHub/n-dx` checkout as a zero-prerequisite
+  alternative (it already has `.sourcevision/` output) but rejected it for the held-out role — same
+  codebase, different branch, so it would mostly measure overfitting to n-dx's own conventions
+  rather than true generalization. Exact split ratio still TBD in the IMPL.
+- **Seed:** a fixed seed for the ELM's random `W`/`b` initialization, recorded in the committed
+  script — not left to a default.
+- **Acceptance gate — reframed as precision-at-threshold, not flat accuracy-over-baseline
+  (2026-08-12):** production use only ever trusts an ELM prediction above a chosen confidence
+  threshold — everything below it still falls through to the LLM exactly as today. A flat
+  "beat the majority-class baseline by N points" accuracy number doesn't measure the thing that
+  matters, because a wrong *resolved* prediction has no safety net the way falling through to the
+  LLM does. The eval script should instead produce a precision/coverage curve across confidence
+  thresholds (precision = fraction correct among predictions at-or-above a threshold; coverage =
+  fraction of the held-out set resolved at that threshold), and the production threshold — see the
+  IMPL's confidence-threshold open question — should be picked where precision clears a high bar
+  (proposed: ≥95%), not from a single accuracy-vs-baseline comparison. Majority-class baseline
+  (from `computeSummary`'s `byArchetype`) is still reported for context, just not used as the sole
+  gate.
+- **Committed script:** `packages/sourcevision/scripts/eval-classify-elm.ts`, committed on
+  `elm/jarrett/classify-elm-prefilter` — not a one-off snippet run once and discarded. Training
+  logic lives alongside it in `packages/sourcevision/src/analyzers/classify-elm.ts`.
+
+### Measured results (2026-08-12)
+
+**Data:** the `claude` CLI wasn't available in this environment and no `ANTHROPIC_API_KEY` was
+initially set (see IMPL session log); rather than block on that, real Claude-quality labels were
+generated directly — reasoning over each unclassified file's path against the same archetype
+catalog and instructions `buildLLMClassifyPrompt` uses, then merged via the actual
+`mergeClassificationResults` function so the output is schema-identical to what the production
+pipeline would have written. 94 files labeled this way in this repo (413 training examples total
+after merge, 14 categories), 31 in `AsterMind-Community-Edition` (78 held-out examples total).
+
+**Confidence calibration finding:** the trained ELM's softmax confidence is diffuse — observed
+range ~0.08-0.19 on training data, not the near-0/near-1 spread a threshold sweep starting at 0.5
+assumes. A sweep anchored there shows 0% coverage everywhere and looks like a broken model rather
+than a miscalibrated sweep. **Independently found by Knight too** (`TJ-K1`, observed range
+0.13-0.23 on their build) — two separately-built implementations hitting the same calibration
+issue is itself evidence this is inherent to the base-ELM ridge-regression readout on this task,
+not an implementation bug in either version.
+
+**Evidence-leakage finding, fixed before these numbers:** `classifyBatchWithLLM`
+(`classify.ts:461-469`) writes `evidence: [{archetypeId: item.archetype, ...}]` for LLM-resolved
+files — the evidence *is* the resolved label restated, not independent signal. The training-data
+extraction was initially feeding this into the ELM's input text for every LLM-labeled example,
+leaking the answer. Fixed by only using evidence hints for `source: "algorithmic"` entries (see
+`classify-elm.ts`). Verified the fix doesn't change the qualitative conclusion (numbers moved
+&lt;1 point). **This is a property of the real production schema**, not an artifact of the
+manually-generated labels — any real `classifications.json` with LLM-sourced entries has it.
+Knight independently hit the adjacent form of this same schema gap (evidence for
+algorithmically-then-LLM-relabeled files isn't preserved at all) and worked around it differently
+(recomputing fresh algorithmic evidence rather than dropping it) — both are legitimate fixes to the
+same underlying issue, logged separately so a future ADR on this schema gap has both approaches to
+compare.
+
+**Results**, precision/coverage at a threshold, with a coverage floor (15%) so one lucky resolved
+example can't read as a pass:
+
+| | Best point clearing 95% precision at ≥15% coverage | Verdict |
+|---|---|---|
+| In-domain (this repo, held-out split) | 95.8% precision @ 23.1% coverage (t=0.14) | **Clears the gate** |
+| Out-of-domain (`AsterMind-Community-Edition`) | None — best meaningful-coverage point is 60.9% precision @ 29.5% coverage (t=0.12) | **Does not clear the gate** |
+
+The out-of-domain number is the one this ADR's Decision actually depends on — the pre-filter has to
+work on the population it's meant to help with, which by definition isn't limited to files that
+look like this repo's own conventions. Majority-class baseline (context only): 21.2% in-domain,
+48.7% out-of-domain — the model clearly beats chance, just not by enough at useful coverage.
+
+**Read on why, converging independently with Knight's `TJ-K1`:** most likely training-data
+quantity/representativeness, not the base-ELM approach itself — in-domain results show the model
+*can* learn the signal. 413-494 examples across 11-14 archetypes, generated from two codebases,
+isn't enough to generalize across naming-convention differences. Two independently-built
+implementations reaching the same conclusion from different feature-encoding choices is stronger
+evidence than either alone.
+
+**Per the ADR template's requirement that a negative result gets the same rigor as a positive
+one:** this is being reported as such, not discarded. **Did not proceed to IMPL Steps 6-8**
+(production wiring) — the gate didn't clear.
+
+### Follow-up: pooled-training experiment (2026-08-13) — did not confirm the "needs more data" read
+
+The read above was "training-data quantity/representativeness," so the direct test is: add more,
+more-diverse training data and see if generalization improves. Cloned three small, well-known,
+genuinely different codebases chosen specifically to fill archetype labels neither existing
+dataset had any examples of — `expressjs/express` (route-handler/service), `remix-run/indie-stack`
+(the official Remix starter — sole source of `route-module` examples, zero before), `pmndrs/zustand`
+(literal state-management library — `store` examples, near-zero before). Same `ndx analyze`
+phase 1/2 + manual-classification-for-the-LLM-fallback method as the original run (see
+`packages/sourcevision/scripts/eval-classify-elm.ts`'s new `SV_ELM_EXTRA_TRAINING_CLASSIFICATIONS`
+env var for the pooling mechanism). Full detail in `Archer.md`'s 2026-08-13 session log; shared
+with Knight via `Notes/NOTE-archer-to-knight-2026-08-13-expanded-training-corpora.md` for an
+independent rerun on `TJ-K1`.
+
+**Pooled training (this repo + all three new corpora, 486 examples/16 categories, up from
+413/14) against the same untouched AsterMind held-out set:**
+
+| | Original (2 codebases) | Pooled (5 codebases) |
+|---|---|---|
+| In-domain best point | 95.8% @ 23.1% (t=0.14) — clears gate | 87.3% @ 45.1% (t=0.10) — does **not** clear gate |
+| Out-of-domain best meaningful point | 60.9% @ 29.5% (t=0.12) | ~48% @ 32.1% (t=0.10) |
+
+**Result: pooling more/diverse codebases into training did not improve generalization, and the
+in-domain result — which previously cleared the gate — no longer does either.** Likely mechanism:
+adding categories (14→16) and cross-codebase naming diversity increases the classification task's
+difficulty faster than the added examples increase per-category density; the softmax confidence
+spread compresses further with more categories, same direction as the original calibration finding
+but more pronounced. This does not confirm the "just needs more data" hypothesis in the simple
+pooling form tested here — it may need far more examples per category than three small repos
+provide, or a fundamentally different feature representation, or the base-ELM approach may not be
+the right tool for cross-codebase generalization on this task regardless of data volume. Flagged to
+Knight for independent verification before treating this as settled either way — one pipeline's
+surprising result is a lead, not a conclusion.
+
+### Review (Realm, 2026-08-19) — the pooling experiment confounded two variables
+
+Realm reviewed both `TJ-A1` and Knight's `TJ-K1` at the user's request (full text:
+`Notes/NOTE-realm-to-archer-and-knight-2026-08-19-elm-prefilter-review.md`), independently
+re-checked `classify.ts:461-469` (still confirms the evidence-leakage finding, unchanged), and
+identified a real methodological gap in the 2026-08-13 pooling experiment: **it changed two
+variables in the same run** — added ~73 examples *and* introduced 2 brand-new categories
+(`route-module`, `store`, previously zero/near-zero examples) simultaneously. That means the
+in-domain regression (95.8%→87.3%) can't be attributed to either cause specifically from that data
+alone. My own "categories diluted the softmax" explanation at the time was a stated guess, not a
+measured conclusion — Realm called this out directly.
+
+Realm's recommended sequence, in order of what actually isolates the cause rather than repeating a
+confounded retry:
+
+1. **Controlled data-volume experiment** — add examples only to categories the original two
+   datasets already had (no new categories), rerun against the same untouched held-out set. Not yet
+   run.
+2. **Fix the feature representation before reaching for a bigger/different model.** `classifyFile`
+   already computes a per-archetype weighted numeric score for every file
+   (`classify.ts:135-208`/`159-165`) — right now that reaches the ELM only as a tokenized text hint
+   (`archetypeId(weight)` embedded in a string via `fileToText`), not as a direct numeric feature
+   vector. A ridge-regression readout should work better on structured numeric input than on the
+   same information indirectly encoded as text. Worth trying before `KernelELM`/`DeepELM` — no
+   evidence yet the problem is non-linear separability rather than a weak input encoding.
+3. Only after 1 and 2: revisit `ELMChain`/`KernelELM`/`DeepELM`, per this ADR's own escalation
+   clause.
+4. The evidence-leakage schema gap (see 2026-08-12 Evidence above) still needs its own dedicated
+   ADR, independent of whether this work continues — flagged, still unwritten.
+5. Worktree isolation validated itself independently for both `TJ-A1` and `TJ-K1` — keep doing it.
+
+**Picking up item 2 next** (2026-08-20, this session) — see below for the numeric-feature-vector
+implementation and result, run as a controlled A/B against the *original* two-codebase data (not
+the pooled 5-codebase set) so the feature-representation variable is isolated exactly the way
+Realm's review asks for.
+
+### Numeric feature representation (2026-08-20) — clears the gate
+
+Implemented Realm's item 2: instead of encoding a file as tokenized text ("path +
+`archetypeId(weight)` hints"), feed `classifyFile`'s full per-archetype weighted score
+(`classify.ts:147-171`) as a raw numeric vector — one dimension per archetype in the catalog
+(17), computed fresh from `inventory.json`/`imports.json` rather than read from
+`classifications.json`'s `evidence` field. This sidesteps the evidence-leakage question entirely
+(see 2026-08-12 above) rather than working around it — recomputed from first principles, nothing
+stored to leak.
+
+Reimplemented signal matching independently in `classify-elm.ts`
+(`scoreArchetypeVector`/`matchesSignal`) rather than exporting anything new from `classify.ts` —
+that file stays genuinely untouched (known tradeoff: duplicated matching logic that can drift out
+of sync if `classify.ts`'s regexes change; acceptable for a prototype, would need reconciling for
+production). Trained via `NumericConfig` (`useTokenizer: false`, `inputSize: 17`) instead of
+`TextConfig`.
+
+**Controlled A/B — same two codebases, same seed, same 80/20 split, same coverage floor as the
+2026-08-12 text-mode run. Only the feature representation changed:**
+
+| | Text mode (2026-08-12) | Numeric vector (2026-08-20) |
+|---|---|---|
+| In-domain best point | 95.8% @ 23.1% (t=0.14) | **97.6% @ 79.8%** (t=0.11-0.15), 100% @ 75.0% (t=0.17) |
+| Out-of-domain best point | 60.9% @ 29.5% (t=0.12) — does not clear gate | **100% @ 59.0%** (t=0.11-0.17) — **clears gate by a wide margin** |
+
+Sanity-checked before trusting this — confirmed the resolved out-of-domain predictions aren't a
+degenerate single-class artifact: 46 of 78 held-out examples resolved at t=0.11, spread across 5
+distinct predicted labels (`entrypoint`: 16, `utility`: 26, `types`: 2, `store`: 1, `component`: 1),
+zero incorrect among them.
+
+**This is the first result across both independent implementations (`TJ-A1`, `TJ-K1`) and every
+prior experiment (original run, pooled-training retry, Knight's two runs) that clears the
+out-of-domain gate at meaningful coverage.** Supports Realm's read directly: the bottleneck was
+the indirect text encoding losing signal that the algorithmic pass already computes cleanly, not
+data volume, not category count, and — per this result — not obviously the base-ELM
+architecture's linear-separability either (Alternatives considered's escalation to
+`KernelELM`/`DeepELM` isn't needed yet).
+
+**Not yet done, before this changes the Status field:** this ran only against the original
+2-codebase data, deliberately, to isolate the one variable per Realm's review. Not yet tested
+against the pooled 5-codebase corpora from 2026-08-13, and not yet independently verified by
+Knight the way the original result was cross-checked. One striking result is a strong lead, not
+by itself grounds to move to Steps 6-8 — same discipline as every other measurement in this
+document.
+
+### Independent verification (Knight, 2026-08-20) — confirmed, with a sharper root cause
+
+Knight built the same fix independently in `TJ-K1` (own extraction, own composition — evidence
+vector concatenated with a path-only encoded vector, vs. this ADR's pure evidence vector) and
+confirmed it: out-of-domain precision at the same threshold (t=0.15) went from 7.7% to 97.0%, at
+42.3% coverage. Knight went further and found *why* text mode was so much worse than "indirect
+encoding" would predict: reading `TextEncoder.ts` directly showed `useTokenizer: true` doesn't
+produce real token embeddings — `tokenize().join('')` with no separator destroys word boundaries,
+silently degrading to char-level one-hot on the joined string. The text-mode baseline both
+implementations compared against was measurably broken, not just suboptimal. Full detail:
+`ADR-2026-08-12-knight-elm-prefilter-classify.md`, "Third measurement."
+
+Two independent implementations now agree the fix works on this held-out codebase. Both IMPLs
+independently flagged the same remaining gap before treating this as ready to ship: one held-out
+codebase confirms the approach isn't an implementation-specific artifact, not that it generalizes
+broadly. Neither prototype closed that gap unilaterally — left for the user, per both.
+
+### Reconciling `TJ-A1`/`TJ-K1`'s divergent extraction methods (2026-08-24)
+
+Per the user's decision that Archer leads production wiring with Knight supporting: adopted
+Knight's legitimate critique that `TJ-A1`'s extraction reimplemented `classify.ts`'s private
+matching logic independently (a self-flagged maintenance risk). Reworked `extractNumericExamples`
+to instead call the real, already-exported `analyzeClassifications()` and derive the per-archetype
+vector from its returned evidence array — `classify.ts` still isn't modified (that function was
+already public), this just uses it instead of duplicating what it does.
+
+**Re-ran the original 2-codebase A/B with the reworked extraction: identical result** — 100%
+precision @ 59.0% coverage out-of-domain, byte-for-byte the same as the reimplemented version. This
+confirms the original reimplementation was faithful (no silent discrepancy was hiding in it), while
+removing the drift risk going forward.
+
+**Then used Knight's contribution** (a pooling-retest addition to the eval script, made directly in
+this worktree per the "Knight supports" arrangement) to finally answer the open question from the
+2026-08-13/2026-08-20 gap: does multi-codebase pooling help under the numeric representation, now
+that pooling's only prior test was under the text representation Knight has since shown was
+separately broken?
+
+| | Without pooling (2 codebases) | With pooling (5 codebases) |
+|---|---|---|
+| Categories | 14 | 16 (adds `middleware`, `model`) |
+| In-domain best point | 97.6% @ 79.8% / 100% @ 75.0% | 100% @ 77.0% |
+| Out-of-domain best point | **100% @ 59.0%** | **100% @ 59.0%** — identical |
+
+**Pooling is neutral under the numeric representation** — unlike text mode, where it caused a
+sharp regression, it neither helps nor hurts this held-out result. It does add two archetype
+categories the 2-codebase baseline has zero examples for, which matters for what a shipped
+cold-start model would need to cover even though it doesn't move this specific metric. This
+directly informs `IMPL-2026-08-23-jarrett-classify-elm-production-hardening.md`'s open question
+about what the bundled baseline model (if the hybrid lifecycle design is adopted) should train on.
+
+### Zero-evidence population (2026-08-27) — every prior validation measured the wrong population
+
+Production wiring landed (`IMPL-2026-08-23`'s steps 4-7: model lifecycle, schema, wiring, config
+kill switch) and was smoke-tested against this repo's actual `ndx analyze --phase=3` run — not
+another eval-script invocation, the real `runClassificationsPhase` code path. Two things surfaced
+that no prior eval caught, because every prior eval measured the wrong population.
+
+**First (real, but not the main finding): the coverage-favoring 0.11 threshold cliffs to zero on a
+purely-algorithmic training set.** Training fresh on this repo's own 423 algorithmic-only examples
+(no `source: "llm"` yet — a real, plausible state for a project that hasn't had a non-`--fast` run
+finish LLM enrichment yet) produces a confidence distribution that clusters around ~0.21 on
+training data but ~0.10-0.11 on the genuinely novel unclassified population — a cliff, not a curve:
+0% resolved at t=0.10, effectively all-or-nothing at t=0.11. The validated 0.11-0.15 default was
+calibrated against a training set that included 94 `source: "llm"` examples; it doesn't transfer to
+algorithmic-only training. Fixed by requiring a minimum count of `source: "llm"` examples
+specifically (not just any-source volume) before attempting fresh training —
+`hasEnoughHistoryForFreshTraining` — falling back to the bundled baseline otherwise.
+
+**Second, and decisive: the bundled baseline model showed the identical cliff pattern on this
+repo's unclassified population — which led to checking why, and finding a feature-representation
+gap, not a calibration one.** Direct inspection: **100% of unclassified files, in every one of the
+5 gathered corpora with zero exception, have no evidence signal at all** —
+`classifyFile`'s algorithmic pass matched literally nothing for them, meaning their per-archetype
+score vector is identically all-zero. An all-zero input vector is indistinguishable from every
+other all-zero input vector to the ELM — it produces the exact same prediction and confidence for
+every one of these files, regardless of what the file actually is, and no confidence threshold can
+fix that because the model has no per-file signal to threshold on in the first place.
+
+| Codebase | Unclassified | Zero-evidence |
+|---|---|---|
+| n-dx (this repo) | 260 | 260 (100%) |
+| `AsterMind-Community-Edition` | 83 | 83 (100%) |
+| `express` | 17 | 17 (100%) |
+| `indie-stack` | 12 | 12 (100%) |
+| `zustand` | 10 | 10 (100%) |
+
+**Why every prior measurement in this document missed this:** every held-out set used so far —
+this repo's own internal split, `AsterMind-Community-Edition`'s held-out examples, the pooled
+corpora — was drawn from files that already carried a resolvable label (algorithmic ≥
+`PRIMARY_THRESHOLD` or LLM-resolved), which by construction excludes the true zero-signal
+population. The 100%@59.0% coverage result is real, but it measures "can the ELM predict labels for
+files that have *some* archetype signal," not "can it help with the files
+`enrichClassificationsWithLLM` is actually called for" — those are, by definition, the files the
+algorithmic pass found zero signal for at all. `classifyFile`'s signal weights (0.4-0.9 per match)
+mean a single matched signal usually already clears `PRIMARY_THRESHOLD` (0.4) on its own — there's
+essentially no real "partial signal, still unresolved" middle ground in this archetype catalog's
+current design, which is exactly why the zero-evidence rate is 100% and not, say, 60%.
+
+**This does not mean the pure-numeric-evidence representation was a wrong choice for what it was
+tested on** — it's still the right choice for disambiguating between files that have competing
+partial signals. It means the representation is *incomplete* for the specific population this
+pre-filter exists to help. Knight's `TJ-K1` composition (evidence vector concatenated with a
+path-only encoded vector, not pure evidence) would not degenerate to an all-zero vector for these
+files, since path text is never empty — worth revisiting as the likely direction for a real fix,
+rather than reopening the pure-vs-concatenated composition question that was previously left
+unresolved as "not yet isolated" (see 2026-08-24 entry above).
+
+**Action taken:** `sourcevision.classification.elmPrefilter.enabled` defaults to `false` (opt-in)
+as of this commit — shipping this stage enabled by default, when it provides no benefit
+whatsoever on the exact population it's meant to serve, would be shipping a false sense of safety.
+The wiring, schema, model lifecycle, and config surface are real and correct; what's not yet
+validated is a feature representation that works on zero-evidence files specifically. Per this
+project's own doctrine, a negative/limiting result gets the same rigor as a positive one — this is
+that report, not a footnote.

@@ -1,0 +1,24 @@
+File Name: Nala's Notes
+Date Of Creation: 08/16/26
+Created By: Thomas Addison
+Purpose: To document the documented setions with Nala my claude agent
+
+### 2026-08-13 — AsterMind-Community-Edition added as a second repo
+
+Thomas added `AsterMind-Community-Edition` (previously referenced only as a sibling repo at `../AsterMind-Community-Edition`) directly inside `AsterMind:n-dx/`, alongside `n-dx/`. Read through it: `@astermind/astermind-community` v4.0.0, browser-first zero-runtime-dependency TypeScript ELM library, ESM/UMD/Worker bundles, Node-compatible via CJS. `ARCHITECTURE.md` corroborates the `src/core/ELM.ts` / `OnlineELM.ts` / `src/tasks/VotingClassifierELM.ts` / `ConfidenceClassifierELM.ts` reads from the 2026-08-06 ELM type recommendation above — no changes to that recommendation. Confirmed via git log this repo is shared with the same team as `n-dx`'s `team/Jarrett/` (lesson commits tagged "Jarrett-lane"/"Nolan-lane").
+
+**Correction:** the actual npm package name is `@astermind/astermind-community`, not `@astermind/astermind-elm` as Knight's 2026-08-03 note called it and as this charter's own 2026-08-06 placement decision (above) then repeated. Fixed the dependency name in that entry.
+
+Aside: an empty untracked `n-dx/` folder sits inside this repo (dated Jul 28) — same kind of stray artifact as the `untitled folder` already flagged inside sourcevision's `analyzers/`. Not urgent.
+
+### 2026-08-13 — ELM type recommendation reconfirmed against full component list
+
+Thomas asked, now that the full repo is visible, which ELM actually fits best. Walked every `src/core/` model and `src/tasks/` wrapper against `classify.ts`'s shape (dense precomputed 18-dim numeric evidence vector → 1-of-18 label):
+
+- Ruled out `KernelELM` (kernel tuning surface unjustified by an already-informative low-dim vector), `DeepELM` (autoencoder pretraining is for unstructured/high-dim raw input, not a already-structured feature vector), `ELMChain`/`ELMAdapter` (nothing to chain — input is already final), `EmbeddingStore` (retrieval index, not a classifier).
+- Ruled out `IntentClassifier`/`LanguageClassifier` (text-mode/tokenizer-based — wrong input mode), `AutoComplete`/`RefinerELM`/`CharacterLangEncoderELM`/`EncoderELM` (different problems entirely).
+- Read `FeatureCombinerELM.ts`: confirmed it's a thin numeric-mode `ELM` wrapper with one static helper (`combineFeatures`) for concatenating two feature sources before training — functionally identical to base `ELM` for a single feature source. Noted as the natural v2 path if a future version wants to fold in more than just the evidence vector (e.g. hashed path tokens); not needed for v1.
+
+**Verdict unchanged from 2026-08-06:** plain `core/ELM.ts`, numeric mode, `trainFromData`/`predictFromVector`/`predictProbaFromVector`. No component in the full library beats it for this specific shape.
+
+

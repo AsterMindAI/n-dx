@@ -25,9 +25,9 @@ import type {
 } from "../schema/index.js";
 import { BUILTIN_ARCHETYPES } from "./archetypes.js";
 import { sortClassifications } from "../util/sort.js";
-import { callClaude, ClaudeClientError } from "./claude-client.js";
-import { emptyAnalyzeTokenUsage, accumulateTokenUsage } from "./token-usage.js";
-import { startSpinner } from "../cli/output.js";
+import { emptyAnalyzeTokenUsage } from "./token-usage.js";
+import { runELMGate, type ELMGateOptions } from "./classify-elm.js";
+import { classifyUnclassifiedWithLLM } from "./classify-llm.js";
 
 /** Minimum accumulated score for a primary classification. */
 const PRIMARY_THRESHOLD = 0.4;
@@ -311,245 +311,88 @@ function computeSummary(files: FileClassification[]): ClassificationsSummary {
   return { totalClassified, totalUnclassified, byArchetype, bySource };
 }
 
-// ── LLM-assisted classification ─────────────────────────────────────────────
+// ── Classification gate (TJ-R3, ADR-2026-09-07-realm-classify-gate-split.md) ───────────────
+//
+// classify.ts is the only file that calls either classifier — classify-elm.ts and
+// classify-llm.ts never call each other or know the other exists. For each file the
+// algorithmic pass left at archetype: null: try classify-elm.ts first; whatever it doesn't
+// confidently resolve falls through to classify-llm.ts. This replaces two things that used to
+// exist side by side: TT-N1's shadow-mode ELM attempt that lived inline in this function
+// (dead code — ELM_GATE_ENABLED was hardcoded false, and its trainClassifyPathELM/
+// predictWithClassifyPathELM never actually shipped in classify-elm.ts, so that block never
+// compiled after the dev-branch merge), and analyze-phases.ts's own separate, working,
+// config-driven ELM-then-LLM sequencing (TJ-A2) — moved here so there's exactly one place that
+// makes this decision, per the ADR's Decision #1.
 
-export interface LLMClassifyResult {
+export interface GateOptions {
+  /** Whether to attempt the ELM stage at all (`.n-dx.json`'s elmPrefilter.enabled). Defaults false (opt-in). */
+  elmEnabled: boolean;
+  elm: ELMGateOptions;
+}
+
+export interface GateResult {
   updatedFiles: FileClassification[];
   tokenUsage: AnalyzeTokenUsage;
 }
 
-/** Maximum files per LLM batch. */
-const LLM_BATCH_SIZE = 30;
-
 /**
- * Enrich unclassified files by asking the LLM to assign archetypes.
- * Runs after the algorithmic pass. Files the LLM can't classify stay null.
+ * Route whatever the algorithmic pass left unclassified through the ELM stage, then the LLM
+ * stage for anything ELM didn't confidently resolve. Reads the kill switch (`options.elmEnabled`)
+ * before attempting the ELM call at all — when disabled, behaves exactly as if classify-elm.ts
+ * didn't exist. `inventory`/`imports` are passed straight through to classify-elm.ts, which
+ * needs them to regenerate fresh per-archetype evidence vectors (classify-llm.ts needs neither).
  */
-export async function enrichClassificationsWithLLM(
+export async function runClassificationGate(
   classifications: Classifications,
   inventory: Inventory,
   imports: Imports,
-): Promise<LLMClassifyResult> {
+  options: GateOptions,
+): Promise<GateResult> {
   const tokenUsage = emptyAnalyzeTokenUsage();
   const updatedFiles: FileClassification[] = [];
 
-  // Collect unclassified files (null archetype, algorithmic source)
   const unclassified = classifications.files.filter(
     (f) => f.archetype === null && f.source === "algorithmic",
   );
-
   if (unclassified.length === 0) {
     return { updatedFiles, tokenUsage };
   }
 
-  // Build archetype catalog for the prompt
-  const archetypeCatalog = classifications.archetypes.map((a) => ({
-    id: a.id,
-    name: a.name,
-    description: a.description,
-  }));
+  let current = classifications;
 
-  // Batch unclassified files
-  const batches: FileClassification[][] = [];
-  for (let i = 0; i < unclassified.length; i += LLM_BATCH_SIZE) {
-    batches.push(unclassified.slice(i, i + LLM_BATCH_SIZE));
-  }
-
-  // Valid archetype IDs for validation
-  const validIds = new Set(classifications.archetypes.map((a) => a.id));
-
-  for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
-    const batch = batches[batchIdx];
-    const batchLabel = batches.length > 1 ? ` batch ${batchIdx + 1}/${batches.length}` : "";
-
-    const result = await classifyBatchWithLLM(
-      batch,
-      archetypeCatalog,
-      validIds,
-      batchLabel,
-      tokenUsage,
-    );
-
-    if (result === "auth-error") {
-      // Stop all batches on auth/not-found error
-      break;
-    }
-
-    if (result) {
-      updatedFiles.push(...result);
+  if (options.elmEnabled) {
+    const elmResult = runELMGate(current, inventory, imports, options.elm);
+    if (elmResult.updatedFiles.length > 0) {
+      updatedFiles.push(...elmResult.updatedFiles);
+      current = mergeClassificationResults(current, elmResult.updatedFiles);
     }
   }
+
+  const stillUnclassified = current.files.filter(
+    (f) => f.archetype === null && f.source === "algorithmic",
+  );
+  if (stillUnclassified.length === 0) {
+    return { updatedFiles, tokenUsage };
+  }
+
+  const llmResult = await classifyUnclassifiedWithLLM(stillUnclassified, current.archetypes);
+  updatedFiles.push(...llmResult.updatedFiles);
+  mergeTokenUsageAggregate(tokenUsage, llmResult.tokenUsage);
 
   return { updatedFiles, tokenUsage };
 }
 
-/** Attempt configs for retry degradation. */
-interface LLMClassifyAttemptConfig {
-  includeDescriptions: boolean;
-  maxFiles: number;
-}
-
-function computeLLMClassifyAttempts(batchSize: number): LLMClassifyAttemptConfig[] {
-  return [
-    { includeDescriptions: true, maxFiles: batchSize },
-    { includeDescriptions: false, maxFiles: batchSize },
-    { includeDescriptions: false, maxFiles: Math.min(15, batchSize) },
-  ];
-}
-
-/**
- * Classify a single batch of files via Claude with retry.
- * Returns classified files, null on total failure, or "auth-error" to signal stop.
- */
-async function classifyBatchWithLLM(
-  batch: FileClassification[],
-  archetypeCatalog: { id: string; name: string; description: string }[],
-  validIds: Set<string>,
-  batchLabel: string,
-  tokenUsage: AnalyzeTokenUsage,
-): Promise<FileClassification[] | null | "auth-error"> {
-  const attempts = computeLLMClassifyAttempts(batch.length);
-
-  for (let attempt = 0; attempt < attempts.length; attempt++) {
-    const config = attempts[attempt];
-    const filesToClassify = batch.slice(0, config.maxFiles);
-
-    const prompt = buildLLMClassifyPrompt(filesToClassify, archetypeCatalog, config.includeDescriptions);
-    const promptLevel = config.includeDescriptions ? "full" : "compact";
-    const spinner = startSpinner(
-      `  [classify]${batchLabel} Calling LLM (attempt ${attempt + 1}/${attempts.length}, ${promptLevel} prompt, ${filesToClassify.length} files)...`,
-    );
-
-    let callText: string;
-    try {
-      const callResult = await callClaude(prompt);
-      accumulateTokenUsage(tokenUsage, callResult.tokenUsage);
-      callText = callResult.text;
-    } catch (err) {
-      spinner.stop();
-      if (err instanceof ClaudeClientError) {
-        if (err.reason === "auth" || err.reason === "not-found") {
-          console.warn(`  [classify] ${err.reason === "auth" ? "Authentication error — run 'ndx config' and verify vendor credentials" : "LLM CLI not found"}`);
-          console.warn(`  [classify]   ${err.message.slice(0, 200)}`);
-          return "auth-error";
-        }
-        accumulateTokenUsage(tokenUsage, undefined);
-        const label = attempt < attempts.length - 1 ? "retrying with simpler prompt" : "giving up on this batch";
-        console.warn(`  [classify]${batchLabel} Attempt ${attempt + 1}/${attempts.length} failed (${err.reason}) — ${label}`);
-        continue;
-      }
-      throw err;
-    }
-    spinner.stop();
-
-    // Parse JSON array response
-    const parsed = tryParseClassifyResponse(callText);
-    if (!parsed || parsed.length === 0) {
-      const label = attempt < attempts.length - 1 ? "retrying with simpler prompt" : "giving up on this batch";
-      console.warn(`  [classify]${batchLabel} Attempt ${attempt + 1}/${attempts.length}: invalid response — ${label}`);
-      continue;
-    }
-
-    // Map results back to FileClassification objects
-    const pathSet = new Set(filesToClassify.map((f) => f.path));
-    const results: FileClassification[] = [];
-
-    for (const item of parsed) {
-      if (!item.path || !pathSet.has(item.path)) continue;
-      if (!item.archetype || !validIds.has(item.archetype)) continue;
-
-      results.push({
-        path: item.path,
-        archetype: item.archetype,
-        confidence: 0.7,
-        source: "llm" as const,
-        evidence: item.reason
-          ? [{ archetypeId: item.archetype, signalKind: "path" as const, detail: item.reason, weight: 0.7 }]
-          : undefined,
-      });
-    }
-
-    if (attempt > 0 && results.length > 0) {
-      console.log(`  [classify]${batchLabel} Succeeded on attempt ${attempt + 1}`);
-    }
-
-    return results;
+/** Merge one AnalyzeTokenUsage aggregate into another (classify-llm.ts's result into the gate's). */
+function mergeTokenUsageAggregate(target: AnalyzeTokenUsage, source: AnalyzeTokenUsage): void {
+  target.calls += source.calls;
+  target.inputTokens += source.inputTokens;
+  target.outputTokens += source.outputTokens;
+  if (source.cacheCreationInputTokens) {
+    target.cacheCreationInputTokens = (target.cacheCreationInputTokens ?? 0) + source.cacheCreationInputTokens;
   }
-
-  console.warn(`  [classify]${batchLabel} All attempts exhausted — leaving files unclassified`);
-  return null;
-}
-
-/**
- * Build the LLM prompt for file classification.
- */
-function buildLLMClassifyPrompt(
-  files: FileClassification[],
-  archetypes: { id: string; name: string; description: string }[],
-  includeDescriptions: boolean,
-): string {
-  const archetypeLines = archetypes.map((a) =>
-    includeDescriptions
-      ? `- ${a.id}: ${a.name} — ${a.description}`
-      : `- ${a.id}: ${a.name}`,
-  ).join("\n");
-
-  const fileLines = files.map((f, i) => {
-    const parts = [`${i + 1}. ${f.path}`];
-    // Include partial evidence from algorithmic pass if available
-    if (f.evidence && f.evidence.length > 0) {
-      const hints = f.evidence
-        .slice(0, 3)
-        .map((e) => `${e.archetypeId}(${e.weight})`)
-        .join(", ");
-      parts.push(`  [partial signals: ${hints}]`);
-    }
-    return parts.join("");
-  }).join("\n");
-
-  return `Classify these source files. Assign each the best-fit archetype by path and likely purpose. Omit files with no clear fit.
-
-Archetypes:
-${archetypeLines}
-
-Files:
-${fileLines}
-
-Respond with ONLY a JSON array (no markdown, no explanation):
-[{"path":"<file path>","archetype":"<archetype id>","reason":"<brief reason>"}]`;
-}
-
-/**
- * Parse the LLM response as a JSON array of classification results.
- */
-function tryParseClassifyResponse(
-  response: string,
-): Array<{ path: string; archetype: string; reason?: string }> | null {
-  // Direct parse
-  try {
-    const parsed = JSON.parse(response);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {}
-
-  // Extract from markdown fences
-  const fenceMatch = response.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-  if (fenceMatch) {
-    try {
-      const parsed = JSON.parse(fenceMatch[1].trim());
-      if (Array.isArray(parsed)) return parsed;
-    } catch {}
+  if (source.cacheReadInputTokens) {
+    target.cacheReadInputTokens = (target.cacheReadInputTokens ?? 0) + source.cacheReadInputTokens;
   }
-
-  // Find JSON array in response
-  const arrayMatch = response.match(/\[[\s\S]*\]/);
-  if (arrayMatch) {
-    try {
-      const parsed = JSON.parse(arrayMatch[0]);
-      if (Array.isArray(parsed)) return parsed;
-    } catch {}
-  }
-
-  return null;
 }
 
 /**

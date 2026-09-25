@@ -23,6 +23,7 @@ export type {
   CallGraph,
   Classifications,
   Components,
+  FileClassification,
   ImportEdge,
   Imports,
   Inventory,
@@ -39,7 +40,11 @@ export { detectLanguages, mergeLanguageConfigs } from "../language/detect.js";
 export { analyzeInventory } from "../analyzers/inventory.js";
 export type { InventoryResult } from "../analyzers/inventory.js";
 export { analyzeImports } from "../analyzers/imports.js";
-export { analyzeClassifications, enrichClassificationsWithLLM, mergeClassificationResults } from "../analyzers/classify.js";
+export { analyzeClassifications, runClassificationGate, mergeClassificationResults } from "../analyzers/classify.js";
+export type { GateOptions, GateResult } from "../analyzers/classify.js";
+export { getArchetypeELM, classifyWithELM, runELMGate, predictArchetypeNumeric, DEFAULT_ELM_CONFIDENCE_THRESHOLD } from "../analyzers/classify-elm.js";
+export type { TrainedArchetypeELMNumeric, ELMPrediction, ELMGateOptions } from "../analyzers/classify-elm.js";
+export { classifyUnclassifiedWithLLM } from "../analyzers/classify-llm.js";
 export { analyzeZones } from "../analyzers/zones.js";
 export type { ZoneAnchor, ZonePinSkip } from "../analyzers/zones.js";
 export { analyzeComponents } from "../analyzers/components.js";
