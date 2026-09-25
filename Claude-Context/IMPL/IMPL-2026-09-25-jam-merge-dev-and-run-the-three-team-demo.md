@@ -113,13 +113,43 @@ match — a number quoted from an ADR is not a number I measured.
 
 ### Phase 4 — Run the demo *(~15 min, zero LLM calls)*
 
+> ### ⚠️ CORRECTED 2026-09-25, AFTER IT COST MONEY — do not run `analyze` for this
+>
+> This step originally said to set the flag and run
+> `analyze ~/Work/n-dx-elm-corpus/nest --only=classifications`. **I ran that and it was wrong twice
+> over.**
+>
+> **`--only=classifications` recomputes the phase from scratch.** It discarded nest's existing
+> state — the 8-file residue left after Nutella's retry harvest — and restarted from
+> *"546 classified, 844 unclassified"*, then began re-labelling all 844 through the LLM. **24 of 29
+> batches completed before I killed it: ~175k–460k tokens, roughly $2–5, for nothing.**
+>
+> **And the gate never ran.** Not one gate line appeared; it went straight to `[classify] batch
+> 1/29`. A from-scratch recompute has no `source: "llm"` rows at gate time, so the cold-start floor
+> (`classify-elm.ts:351`, ≥20) bailed silently — gotcha #1 of the ADR, firing on the very plan
+> written to avoid it.
+>
+> **The ADR's own evidence table said zero LLM calls**, because Syrup called `runELMGate` directly
+> against the existing `.sourcevision/`. I read that line and still planned the expensive path.
+>
+> nest was restored from a pre-run backup, verified byte-identical (`9dde48aa…`, 8 unclassified,
+> 836 llm rows), and the target's flag reverted.
+
+**Correct procedure — direct gate invocation, zero LLM calls:**
+
 ```sh
 pnpm --filter sourcevision build
-# flag goes in the TARGET, per § 1(a):
-#   ~/Work/n-dx-elm-corpus/nest/.n-dx.json
-#   -> sourcevision.classification.elmPrefilter.enabled = true
-node packages/sourcevision/dist/cli/index.js analyze ~/Work/n-dx-elm-corpus/nest --only=classifications
+# No flag anywhere. The flag only matters to `analyze`, which we are not using.
+node <runner>   # imports runELMGate from dist, feeds it nest's EXISTING .sourcevision/
 ```
+
+The runner loads `classifications.json`, `inventory.json` and `imports.json` as they are on disk and
+calls `runELMGate(classifications, inventory, imports, { seed: 20260812, rootDir: <nest> })`
+(`classify-elm.ts:549`). With `rootDir` set it takes the content path and defaults to unanimity
+(`DEFAULT_ELM_MIN_VOTE_SHARE = 1.0`). **It reads bytes and writes nothing.**
+
+**Back up the target's `.sourcevision/` first anyway.** The IMPL did not say to, I did it by
+instinct, and it is the only reason the botched run cost money instead of corpus provenance.
 
 **Use nest.** It is the only target with both a usable population (8 routed) and enough history
 (836 LLM rows) to clear the cold-start floor. **Not n-dx** — zero unclassified, so it would show
