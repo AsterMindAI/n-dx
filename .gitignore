@@ -49,3 +49,9 @@ scripts/HENCH_CALLGRAPH_FINDINGS.md
 # Team Nolan corpus, fetched from origin/Nolan-Work — not duplicated into this branch.
 # See packages/sourcevision/scripts/elm-generalisation-check.mjs for the fetch command.
 scripts/data/elm-archetype-corpus*.json
+
+# Derived training matrices: regenerable in ~30s from the corpus + a pinned extractor
+# build (scripts/elm-corpus-featurise.mjs). Not committed because they are tied to a
+# specific FEATURE_VERSION and extractor sha256, and a stale copy in git is worse than
+# no copy. The provenance that makes them reproducible is in elm-corpus-featurise.log.
+scripts/data/elm-corpus-featurised-*.json

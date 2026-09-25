@@ -1,0 +1,34 @@
+=== Corpus -> content-feature bridge (ADR-2026-09-04 step 5) — provenance ===
+date            : 2026-09-25T17:04:11Z
+repo commit     : 9079433dcf25282e939144d5b41fc9bf052ae360  (tree: 3 modified)
+node            : v22.20.0
+script sha256   : 80ab2f71ac34c208595360e9909e669806ad30b8e87e3fdec9fb606e94904a7c
+extractor       : packages/sourcevision/dist/analyzers/classify-elm-features.js
+extractor sha256: 805b5409a5457ae3c6afc37baea8f767635b334a7610dd85161141a4ee47cda7
+corpus sha256   : ade0890d4062de785a26bf407e0a51c2e956a46f8e4f8003d6186c85a94dcb89
+geometry        : ELM_ENSEMBLE_SIZE 15, HIDDEN_UNITS 128 (classify-elm.ts:647,:36)
+content source  : git blobs at each repo's PINNED COMMIT, not the working tree
+invocation      : node scripts/elm-corpus-featurise.mjs --train
+=== run output ===
+corpus          scripts/data/elm-archetype-corpus-v3-classtargeted.json
+rows            2195  (train 1642 + heldOut 553)
+featureVersion  2  (vector 651, cap 65536 bytes)
+
+── Featurised ──────────────────────────────────────────────
+  rows              2195
+  content read      2195
+  content missing   0   (binary or unreadable -> metadata-only vector)
+  truncated at cap  17
+  distinct labels   16
+  elapsed           27.7s
+  written           scripts/data/elm-corpus-featurised-v3-classtargeted.json  (6.9 MB)
+
+── Smoke check ─────────────────────────────────────────────
+  15 models x 128 hidden trained in 4.6s on 1642 rows
+  (production geometry: ELM_ENSEMBLE_SIZE 15, HIDDEN_UNITS 128)
+  train-split agreement  80.0%
+
+  ⚠️  TRAIN-SPLIT ONLY. The model was fitted on these rows, so this number is
+     capacity, not generalisation. It shows the bridge produces learnable
+     matrices and nothing else. Held-out and fresh-ecosystem numbers need a
+     pre-registered bar, committed before the run.
