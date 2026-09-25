@@ -69,6 +69,13 @@ const ALLOWED = new Set([
   // (2026-09-01) WITHOUT this entry, which left this test red on Nolan-Work for
   // 15 days — the entry is the fix, not a new class of exception.
   "scripts/elm-goldset2-packet.mjs",
+  // Content-availability check — shells out to `git` at :21 for per-repo provenance
+  // only (`git -C <dir> …`), exactly like the entries above. Shipped in 0a004992
+  // (2026-09-23) WITHOUT this entry, which left this test red on Nolan-Work; the
+  // merge of `dev` did not cause it and `dev` is green because it lacks the file.
+  // Same recurrence as the TN-J13 and elm-goldset2-packet cases: extending an
+  // existing justified exception by one line, not creating a new class of one.
+  "scripts/elm-content-availability.mjs",
   // Process monitoring — needs raw execFile for system commands (vm_stat, sysctl)
   "packages/hench/src/process/memory-monitor.ts",
   // Git operations — need execFileSync/execFile for git CLI calls
