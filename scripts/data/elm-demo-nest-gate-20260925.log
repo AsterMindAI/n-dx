@@ -1,0 +1,20 @@
+=== three-team demo, Path A — direct gate invocation ===
+date        : 2026-09-25T08:53:43Z
+repo commit : b12bdf76b633ae80cdc641f0a5d0c362dcd370cf  (Nolan-Work, dev merged at a7c34cfe)
+target      : nest @ 39fbdda, .sourcevision restored & verified 9dde48aa…
+gate        : runELMGate(classify-elm.ts:549), rootDir set -> content path, unanimity (DEFAULT_ELM_MIN_VOTE_SHARE=1.0, 15 models)
+LLM calls   : ZERO — reads bytes, writes nothing, no flag set anywhere
+=== run ===
+target            : /Users/nolanmoore/Work/n-dx-elm-corpus/nest
+routed to the gate: 8 files (unclassified after rules + LLM)
+ELM RESOLVED      : 7 of 8  (87.5% at unanimity)   in 4.4s
+labels            : test-helper=7
+   test-helper  conf=1.000  sample/16-gateways-ws/e2e/events/events.e2e-spec.ts
+   test-helper  conf=1.000  sample/17-mvc-fastify/e2e/app/app.e2e-spec.ts
+   test-helper  conf=1.000  sample/19-auth-jwt/e2e/app/app.e2e-spec.ts
+   test-helper  conf=1.000  sample/20-cache/e2e/app/app.e2e-spec.ts
+   test-helper  conf=1.000  sample/21-serializer/e2e/app/app.e2e-spec.ts
+   test-helper  conf=1.000  sample/33-graphql-mercurius/e2e/recipes/recipes.e2e-spec.ts
+   test-helper  conf=1.000  sample/34-hmr-esm/e2e/cats/cats.e2e-spec.ts
+unresolved        : 1
+   sample/18-context/e2e/app/app.e2e-spec.ts
