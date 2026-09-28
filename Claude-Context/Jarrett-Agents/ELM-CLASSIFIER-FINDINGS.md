@@ -191,6 +191,91 @@ is *fewer invocations*:
 **The share of total spend that the classify pass represents has never been measured. It is the
 number that decides whether any of this is worth doing, and it is cheap to get.**
 
+## 5a. Performance benchmarks (added 2026-09-27)
+
+`elm-benchmark.mjs` (free) and `elm-benchmark-llm.mjs` (real calls, ~18 cents spent).
+
+**Speed is the one axis where the ELM wins outright, and it is a LATENCY argument, not a cost
+one.** This is the strongest case *for* the gate in the whole line of work, and the report owes it
+an honest hearing.
+
+| Path | Same 255 files |
+|---|---:|
+| ELM, cold start | **14.0 s** |
+| Claude, 9 sequential calls | **~10-17 min** |
+
+Roughly **50-70x faster**. Where the 14 s goes:
+
+| Stage | Per file | 255 files |
+|---|---:|---:|
+| File read | 1.253 ms | 320 ms |
+| Vectorise | 0.301 ms | 77 ms |
+| Train 15-model ensemble | - | **5,962 ms** |
+| Inference (x15) | 29.99 ms | **7,649 ms** |
+
+Training dominates and is unavoidable: no persisted per-project model, so the ensemble retrains
+every run by design.
+
+**Artifact size is a shipping blocker.** The 15-model ensemble the gate *requires* is **25.5 MB**
+at 128 units (1,739 KB each), against the **136 KB** baseline shipped today - 187x. At 4096 units
+it is 832 MB. A bundled cold-start model is not viable at this shape. 4096 units is now dead on
+every axis: -6.2 pp accuracy, 248x slower to train, 33x larger.
+
+**Measurement honesty:** LLM timings were 71.2 / 172.6 / 101.7 / 75.9 s - a **2.4x spread on
+n=4** - and include Claude CLI startup, which in this repo loads 43 permission entries and MCP
+servers. Order of magnitude, not a constant. The script fails loudly rather than substituting an
+estimate when the CLI cannot be spawned, which it did twice before a Windows `.cmd` fix.
+
+## 5b. Would more training data fix it? (added 2026-09-27)
+
+Data is the only lever that moved the number meaningfully (+10.8 pp for 7.6x), so it deserves a
+real answer. It splits in two.
+
+**The structural no: the ELM cannot beat the LLM on accuracy at any data volume, because the LLM
+is its teacher.** Every label came from Claude; a student converges toward *agreement with its
+teacher*, not toward truth. More data approaches 72.3%-correct behaviour asymptotically and cannot
+pass it. Two things make that worse rather than merely flat:
+
+- **The teacher's errors are directional** - 6 of 7 collapse a rare label into `service`/`utility`.
+  Random noise averages out with scale; systematic bias is learned *more confidently*.
+- **The ELM does no feature learning** - more data fits the readout better but cannot discover a
+  feature we did not hand-encode. That is the LLM's real advantage, and the gap data cannot close.
+
+**Accuracy scaling**, extrapolated at the measured +12.3 pp per 10x:
+
+| Target | Rows | vs today | Cost | Wall clock |
+|---|---:|---:|---:|---:|
+| Beat majority baseline (44.2%) | 3,400 | 2x | **$2-7** | 4 h |
+| 50% | 10,100 | 5x | $7-21 | 11 h |
+| 60% | 65,900 | 34x | $46-134 | 70 h |
+| Teacher parity (72.3%) | 662,000 | 342x | $464-1,347 | 705 h |
+
+**Clearing the majority baseline costs about $5 and an afternoon** - the most actionable finding
+here. We are 2x away from passing the bar this work has been failing.
+
+**But accuracy is not the binding constraint - calibration is**, and it scales worse
+(+0.050 AUC per 10x):
+
+| AUC target | Rows | vs today | Cost |
+|---|---:|---:|---:|
+| 0.70 weakly usable | 50,900 | 26x | $36-104 |
+| **0.75 worth shipping** | **509,000** | **263x** | **$357-1,036** |
+| 0.80 reliable | 5,100,000 | 2,634x | $3,567-10,362 |
+
+A gate worth shipping needs ~half a million labelled files, every one labelled by the teacher
+whose ceiling it is stuck under.
+
+**Two points, log-linear, ignoring every ceiling named above. Directional, not predictive** -
+learning curves usually flatten sooner. **And a caveat on our own result:** the "4096 units hurts"
+finding was measured at 1,935 rows where it overfits. Capacity and data interact; at 65,000 rows a
+bigger model might win. If anyone scales the data, that sweep must be re-run - the result does not
+transfer to a different data regime.
+
+**What it means:** the realistic best case is *"nearly as accurate, 50-70x faster, free per call"* -
+a legitimate product, just not *better than the LLM*. Breaking that ceiling needs a different
+answer key (human labels, multi-model consensus, or the rule pass's own high-confidence output),
+which converts the project from *compress the LLM* into *learn the task*.
+
 ## 6. Why the labels matter (the cost side of the trade)
 
 Archetypes are not cosmetic. `callgraph-findings.ts` reads `analysisHints` to **multiply severity
