@@ -214,6 +214,42 @@ for (const [name, keep] of [
   console.log(`${name.padEnd(34)} ${pct(cov).padStart(9)} ${pct(a).padStart(10)} ${((a - majority >= 0 ? "+" : "") + (100 * (a - majority)).toFixed(1)).padStart(12)}`);
 }
 
+// ── F. CALIBRATION CURVE ─────────────────────────────────────────────────────────────────
+// The binding constraint is not accuracy but calibration -- the gate must know WHICH answers to
+// trust. The published projection for it rested on two points, the same weakness section C just
+// corrected for accuracy. Measuring the real curve instead.
+line("=");
+console.log("F. CALIBRATION CURVE — does knowing-when-you're-wrong improve with data?");
+line();
+console.log(`${"train rows".padStart(11)} ${"AUC".padStart(7)} ${"spread".padStart(8)}`);
+const aucPts = [];
+for (const n of [250, 500, 800, 1200, 1600, pool.length]) {
+  const runs = [0, 1, 2].map((k) => {
+    const sub = shuffled(pool, SEED + k * 104729).slice(0, n);
+    const ms = [0, 1, 2, 3, 4].map((i) => train(sub, SEED + (k * 10 + i) * 7919));
+    const scored = predictAll(ms, test).map((p) => ({ ok: p.predicted === p.actual, s: p.share }));
+    const pos = scored.filter((x) => x.ok).map((x) => x.s);
+    const neg = scored.filter((x) => !x.ok).map((x) => x.s);
+    if (!pos.length || !neg.length) return null;
+    let w = 0;
+    for (const a of pos) for (const b of neg) w += a > b ? 1 : a === b ? 0.5 : 0;
+    return w / (pos.length * neg.length);
+  }).filter((x) => x !== null);
+  const m = runs.reduce((a, b) => a + b, 0) / runs.length;
+  aucPts.push([n, m]);
+  console.log(`${String(n).padStart(11)} ${m.toFixed(3).padStart(7)} ${(Math.max(...runs) - Math.min(...runs)).toFixed(3).padStart(8)}`);
+}
+{
+  const [q1, b1] = aucPts[0], [q2, b2] = aucPts[aucPts.length - 1];
+  const sl = (b2 - b1) / (Math.log10(q2) - Math.log10(q1));
+  console.log(`
+measured slope: ${sl >= 0 ? "+" : ""}${sl.toFixed(3)} AUC per 10x data`);
+  console.log(`  A two-point extrapolation of this previously gave +0.050 and a "500,000 rows"`);
+  console.log(`  projection. Across six points the curve is FLAT and the per-point spread exceeds`);
+  console.log(`  its total range -- so calibration does not improve with data on this`);
+  console.log(`  representation. That is not "needs more data"; it is not on the trajectory.`);
+}
+
 // ── E. SEED VARIANCE ─────────────────────────────────────────────────────────────────────
 line("=");
 console.log("E. SEED VARIANCE — how much of this project's spread is real?");
