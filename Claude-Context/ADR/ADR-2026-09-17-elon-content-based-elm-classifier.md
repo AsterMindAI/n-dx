@@ -1,10 +1,10 @@
 # ADR — Content-based feature representation for the ELM classifier (fills `classify-ELM.ts`)
 
-- **Status:** Proposed — **no accuracy claim is made here.** Per `ADR-TEMPLATE.md`, the Evidence
-  section below states methodology only and is deliberately unmeasured; Status does not move to
-  Accepted until `IMPL-2026-09-17-elon-content-based-elm-classifier.md`'s eval runs and clears its
-  gate. Team Jarrett-internal — this changes the body of a function Team Jarrett owns, not an
-  interface or a shared file, so it needs no cross-team sign-off (contrast `TJ-R3`).
+- **Status:** **Accepted for the representation decision; the gate it serves is NOT recommended
+  for production.** Updated 2026-09-23 once the Evidence section below was measured. The encoding
+  decisions (points 1-3, 5-8) held up and shipped. Point 4's ablation was NOT run and is recorded
+  as an open gap. The approach does not clear a usability bar: see Evidence and
+  `Jarrett-Agents/ELM-CLASSIFIER-FINDINGS.md`. `elmPrefilter.enabled` stays `false`.
 - **Date:** 2026-09-17
 - **Author:** Elon (Team Jarrett)
 - **Supersedes:** `ADR-2026-08-31-realm-path-based-elm-classifier.md` (`TJ-R2`) — supersedes its
@@ -182,41 +182,83 @@ point 4), not thrown away.
 
 ## Evidence
 
-**Unmeasured by design. This section states methodology only** — per `ADR-TEMPLATE.md`, Status
-stays Proposed until the committed eval script runs and clears the gate. **No accuracy number
-appears here, and none of the four historical numbers in Context is inherited.**
+**MEASURED 2026-09-17 → 2026-09-23.** This section replaces the methodology-only placeholder the
+ADR shipped with. Every number has a committed seeded script; full write-up with caveats in
+`Jarrett-Agents/ELM-CLASSIFIER-FINDINGS.md`.
 
-**Task framing.** Input: one source file (path + inventory metadata + file content). Output: one of
-the 17 `BUILTIN_ARCHETYPES` labels, or abstain. 17 classes.
+**Task framing.** One source file (path + inventory metadata + file content) → one of 17
+`BUILTIN_ARCHETYPES`, or abstain. Labels are Team Nolan's certified corpus v3-classtargeted
+(2,195 rows, 10 repos, `source: "llm"`), an **LLM teacher measured at 72.3% against human
+judgement**. Agreement with it is not accuracy, and every figure below is agreement.
 
-**Population — the part that has been wrong four times.** The train and held-out sets are drawn
-**exclusively from files with an all-zero evidence vector**, i.e. the population that actually
-reaches `runELMGate`. A held-out set containing any file the algorithmic pass could already resolve
-invalidates the result. The eval asserts this property on its own inputs rather than assuming it.
+**Seeds.** 20260922 throughout; Nolan's seed-42 stratified split reused, not re-split.
 
-**Baselines — two, both required.** Majority-class over the labeled zero-evidence population
-(17-class floor is ~5.9%, but the realized majority class will be higher and is the honest bar), and
-`TJ-R2`'s path+export representation on the identical split. "Beats random" is not the claim;
-"beats the best metadata-only representation" is.
+**Baselines.** Per-repo majority class (39.6–45.3% depending on repo), *not* the 5.9% uniform
+floor. "Beats random" was never the claim.
 
-**Splits.** In-domain: seeded held-out split of n-dx's own zero-evidence population.
-Out-of-domain: a codebase absent from training, `AsterMind-Community-Edition` for continuity with
-`TJ-A1`/`TJ-K1`, with `express`/`indie-stack`/`zustand` available. **The out-of-domain number is the
-one that decides this** — the in-domain number has passed before while the out-of-domain number
-failed, and that is what the bundled baseline model ships against for downstream users.
+### What the decision got right
 
-**Seed.** Fixed and recorded in the script. Every reported number carries its seed and its baseline
-(`Command-Structure`'s ELM corollary).
+| Decision | Outcome |
+|---|---|
+| 1. Read file content | **Confirmed necessary.** All-zero vectors on the real 263-file residue: 263/263 under the evidence representation, **0/263** under content. Distinct classes predicted: 1 → 10 of 11. |
+| 2. Do not use `UniversalEncoder` | **Confirmed.** Verified in the installed bundle: one-hot per character position, `maxLen × charSize`, hard-truncated. Plus a charSet-as-regex-range defect that only bites on source text. |
+| 3. Fixed-width feature hashing | **Works.** 651 dims, length-independent, 56 unit tests including red-verified degradation paths. |
+| 5. Reuse the numeric training path | **Held.** No change to `runELMGate`'s signature. |
+| 7. Derive the gate, do not pick it | **Vindicated, and load-bearing.** Absolute confidence is unusable: distribution 0.1013–0.2208, so the shipped 0.11 default sat *below the entire distribution* and would have accepted everything at ~52% precision. Fixed to gate on ensemble agreement, defaulting to unanimity. |
+| 8. Retrain loop is phase 2 | **Held.** Not built. |
 
-**Gate.** Precision/coverage curves for absolute confidence and for top1/top2 margin, reported
-together so the trade-off is visible rather than pre-decided. A coverage floor is applied so a
-single lucky resolution cannot read as a pass — `TJ-A1` used 15%.
+### What it got wrong or left open
 
-**The script.** `packages/sourcevision/scripts/eval-classify-elm-content.ts`, committed, seeded,
-and runnable by another team against their own corpora. Per `Command-Structure`: if it is not a
-committed seeded script someone else can run, it did not happen.
+- **Decision 4's ablation was never run.** `TJ-R2`'s path+export encoder was ported and is present,
+  but content-vs-path-only was not measured head-to-head. The gate this ADR set itself — "beats the
+  best metadata-only representation out-of-domain" — is therefore **unmet, not failed**. Honest gap.
+- **Block-energy choice is unvalidated.** Per-block L2 gives the 21-dim extension block the same
+  energy as the 512-dim content block. Never swept.
 
-**Labels.** Generated through the real pipeline — `claude` is on PATH and `ANTHROPIC_API_KEY` is
-set as of 2026-09-17, so unlike `TJ-A1` (which hand-labeled as a documented stand-in) these are
-real `enrichClassificationsWithLLM` outputs. This also means the diagram's retrain arrow and the
-training-data source are the same mechanism, which is a property worth keeping.
+### The results that decide it
+
+**Gate calibration** — the measurement the whole architecture rests on. A single model's confidence
+does not predict its own correctness: margin **AUC 0.595**, confidence **AUC 0.551**, and incorrect
+predictions were marginally *more* confident. Ensembling 15 seeds raises precision 52.5% → 57.6% and
+makes the curve monotonic (57.6% at majority → **81.3% at unanimity**), but AUC gains only +0.026,
+inside the standard error.
+
+**Cross-repo transfer fails.** Trained on n-dx, evaluated on unseen ecosystems: 31.3% (fastify,
+majority 39.6%) and 29.7% (core, majority 45.3%) — **below a constant predictor**.
+
+**The starved-corpus confound was tested and eliminated.** Team Nolan reversed their own conclusion
+to "starved class distribution, not the feature space". Retested with all 9 corpus repos cloned at
+pinned commits, 2,195/2,195 rows with content, identical held-out set:
+
+| corpus | hidden | rows | precision | vs majority |
+|---|---:|---:|---:|---:|
+| n-dx only | 128 | 255 | 30.4% | −13.8 |
+| **all repos** | **128** | **1,935** | **41.2%** | **−3.1** |
+| all repos | 4096 | 1,935 | 36.9% | −7.3 |
+
+Corpus **+10.8 pp** (their diagnosis holds here too, and is understated — the larger corpus adds two
+classes). Capacity **−6.2 pp** and ~100× slower: their certified 4096 is matched to a 4,000-dim
+TF-IDF input and overfits a 651-dim one. **Still at or below the majority baseline** (SE ≈ 3.0 pp),
+so the model is statistically indistinguishable from guessing the most common label.
+
+**Economics.** Per-call cost 22k–46k tokens; the reconstructed prompt is ~924 tokens, so **96–98% of
+a classify call is fixed spawn overhead**. Batching at 30 makes savings step-wise (~11.8% coverage
+per call saved). At unanimity the gate saves **1 of 9 calls**; the settings that save more change a
+third of the labels. Raising `LLM_BATCH_SIZE` 30 → 255 would save **8 of 9 with no quality cost**.
+The classify pass is 1 of 22 LLM call sites and its share of total spend has never been measured.
+
+### Corrections to numbers this branch previously reported
+
+An 80.4% in-domain figure was **in-sample** (trained and evaluated on the same rows); the honest
+held-out figure is 52–67%. A "~40% token reduction" claim matched no measured row. A first
+"best operating point" heuristic optimised calls-saved only and recommended never calling the LLM.
+All three are corrected in the findings report rather than quietly dropped.
+
+### Scripts
+
+`elm-content-diagnostic.mjs` · `elm-generalisation-check.mjs` · `elm-savings-curve.mjs` ·
+`elm-gate-separability.mjs` · `elm-ensemble-uncertainty.mjs` · `elm-capacity-corpus-sweep.mjs`
+— all under `packages/sourcevision/scripts/`, seeded and runnable by another team.
+
+**Contamination:** `hono` and `trpc` are Team Nolan's blind certification set — absent from every
+corpus, script and measurement here.

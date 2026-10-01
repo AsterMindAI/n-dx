@@ -142,7 +142,14 @@ describe("classification gate wiring in runClassificationsPhase", () => {
     await runClassificationsPhase(ctx);
 
     expect(mockedRunELMGate).toHaveBeenCalledTimes(1);
-    expect(mockedRunELMGate.mock.calls[0][3]).toEqual({ confidenceThreshold: DEFAULT_ELM_CONFIDENCE_THRESHOLD, seed: 20260812 });
+    // rootDir is what selects TJ-E1's content representation over the legacy evidence one,
+    // so asserting it is present is asserting that production does not silently run the
+    // representation that resolves nothing.
+    expect(mockedRunELMGate.mock.calls[0][3]).toEqual({
+      confidenceThreshold: DEFAULT_ELM_CONFIDENCE_THRESHOLD,
+      seed: 20260812,
+      rootDir: tmpDir,
+    });
     // Nothing left unclassified — the LLM fallback must not run at all.
     expect(mockedClassifyUnclassifiedWithLLM).not.toHaveBeenCalled();
 
@@ -164,7 +171,11 @@ describe("classification gate wiring in runClassificationsPhase", () => {
 
     await runClassificationsPhase(ctx);
 
-    expect(mockedRunELMGate.mock.calls[0][3]).toEqual({ confidenceThreshold: 0.5, seed: 20260812 });
+    expect(mockedRunELMGate.mock.calls[0][3]).toEqual({
+      confidenceThreshold: 0.5,
+      seed: 20260812,
+      rootDir: tmpDir,
+    });
   });
 
   it("skips the ELM stage when there are no unclassified files", async () => {

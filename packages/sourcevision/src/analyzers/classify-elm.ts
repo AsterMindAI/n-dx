@@ -21,12 +21,14 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { ELM } from "@astermind/astermind-community";
+import { ELM, UniversalEncoder } from "@astermind/astermind-community";
 import { analyzeClassifications } from "./classify.js";
 import { BUILTIN_ARCHETYPES } from "./archetypes.js";
+import { buildFeatureVector, readFileContentSafely } from "./classify-elm-features.js";
 import type {
   Classifications,
   FileClassification,
+  ImportEdge,
   Imports,
   Inventory,
 } from "../schema/index.js";
@@ -126,6 +128,141 @@ export function extractNumericExamples(
   return examples;
 }
 
+// PROVENANCE: the block below is ported verbatim from commit ae9dc463 on branch
+// elm/jarrett/classify-elm-prefilter (Archer, TJ-R2 step 4, 2026-09-04). Absorbed under
+// TJ-E1 per IMPL-2026-09-17-elon-content-based-elm-classifier.md step 1. It is the measured
+// path-only BASELINE the content representation must beat (ADR-2026-09-17, Decision point 4)
+// -- not dead code. Do not remove it without a replacement baseline.
+
+// ── Path/export text representation (TJ-R2, ADR-2026-08-31-realm-path-based-elm-classifier.md)
+//
+// The evidence-vector representation above is real, validated infrastructure — for contexts
+// where evidence isn't uniformly zero. At classifyWithELM's actual call site (files where
+// analyzeClassifications already produced archetype: null), it's provably always the
+// all-zero vector (ADR-2026-08-11's "Zero-evidence population," 2026-08-27). Path/filename
+// text is never empty for a real file, so it can't degenerate the same way — that's the
+// entire premise of this section. Design-only for now (TJ-A3/TJ-R2 sequencing, see
+// Notes/NOTE-archer-to-knight-and-realm-2026-09-04-tj-r2-claimed-design-only-for-now.md):
+// the functions below are not yet wired into classifyWithELM or trained/evaluated against
+// real data — that's gated on TJ-A3's re-measurement of the zero-evidence population.
+//
+// Encoding shape, resolved 2026-09-04 by reading the installed
+// @astermind/astermind-community v3.0.0 source directly (not assumed):
+//
+// - ELM's own text mode (`new ELM({ useTokenizer: true, ... })`, TextConfig) routes through
+//   TextEncoder.textToVector's tokenizer branch, which still does
+//   `this.tokenizer.tokenize(text).join('')` — no separator — before slicing/padding to
+//   maxLen and one-hot-encoding character by character. Confirmed present in the currently
+//   installed dist (astermind.esm.js), same bug Knight's TJ-K1 found in the now-retired
+//   text-mode code above. TextConfig's `useTokenizer` is typed as the literal `true` — the
+//   type system doesn't offer a way to reach char-mode encoding through ELM's own config.
+// - UniversalEncoder (exported from the package root, not an ELM-internal type) supports
+//   char-mode directly via `mode: "char"`, which never touches the tokenizer at all
+//   (`useTokenizer = merged.mode === "token"` in the bundled source) — this is what's used
+//   below, constructed independently of ELM and fed through the existing NumericConfig path
+//   (trainArchetypeELMNumeric/predictArchetypeNumeric, unchanged — they only consume
+//   {vector, archetype} pairs and don't care what produced the vector).
+// - The encoder's encode() takes a single string, full stop (`encode(text: string): number[]`,
+//   UniversalEncoder.d.ts) — there is no structured multi-field input option. Resolves the
+//   IMPL's Open Question 1: path and export names are concatenated into one string, the same
+//   pattern the retired fileToText used for path + evidence hints.
+// - The default charSet ("abcdefghijklmnopqrstuvwxyz", 26 lowercase letters) silently drops
+//   every other character — digits, "/", ".", "-", "_" — which would destroy exactly the
+//   directory/extension structure that makes a path meaningful (e.g. "/utils/" would become
+//   indistinguishable from adjoining path segments). Expanded below to keep that structure.
+// - The default maxLen (15) is far shorter than a real path. Widened below to a reasoned
+//   starting point, not a validated one — the exact value belongs in the (currently gated)
+//   eval, where actual path-length distributions can be checked against coverage, not
+//   asserted here as final.
+
+const PATH_EXPORT_CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789/.-_ ";
+const PATH_EXPORT_MAX_LEN = 80;
+
+let pathExportEncoder: UniversalEncoder | undefined;
+
+function getPathExportEncoder(): UniversalEncoder {
+  if (!pathExportEncoder) {
+    pathExportEncoder = new UniversalEncoder({
+      mode: "char",
+      charSet: PATH_EXPORT_CHARSET,
+      maxLen: PATH_EXPORT_MAX_LEN,
+    });
+  }
+  return pathExportEncoder;
+}
+
+/**
+ * Mirrors classify.ts's private buildExportMap (classify.ts:256-274) — duplicated, not
+ * imported, to keep this module standalone (see file header). Low drift risk relative to
+ * extractNumericExamples's choice to call through analyzeClassifications() instead of
+ * reimplementing: this is a simple grouping pass with no scoring/regex logic to drift from.
+ */
+function buildExportMap(edges: ImportEdge[]): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (edge.type !== "reexport") continue;
+    let list = result.get(edge.to);
+    if (!list) {
+      list = [];
+      result.set(edge.to, list);
+    }
+    for (const sym of edge.symbols) {
+      if (!list.includes(sym)) list.push(sym);
+    }
+  }
+  return result;
+}
+
+/**
+ * The single string fed to the encoder for one file: its path plus any raw export names —
+ * not classifyFile's matched signals (which are what's zero at this call site; see ADR
+ * Decision point 2) — concatenated, since the encoder only accepts one string (see design
+ * note above).
+ */
+function pathExportText(path: string, exportMap: Map<string, string[]>): string {
+  const exports = exportMap.get(path);
+  return exports && exports.length > 0 ? `${path} ${exports.join(" ")}` : path;
+}
+
+/**
+ * Extract (path/export-text-vector, archetype) pairs — the TJ-R2 counterpart to
+ * extractNumericExamples above. Same labeling rules (algorithmic/llm source, source-role
+ * files only), different input representation. Vector length is fixed by the shared
+ * encoder's config, independent of the archetype catalog size (unlike the evidence-vector
+ * representation, whose length is the catalog size).
+ */
+export function extractPathExportExamples(
+  classifications: Classifications,
+  inventory: Inventory,
+  imports: Imports,
+): NumericArchetypeExample[] {
+  const encoder = getPathExportEncoder();
+  const exportMap = buildExportMap(imports.edges);
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
+
+  const examples: NumericArchetypeExample[] = [];
+  for (const file of inventory.files) {
+    if (file.role !== "source") continue;
+    const fc = classificationByPath.get(file.path);
+    if (!fc?.archetype) continue;
+    if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
+    const vector = encoder.normalize(encoder.encode(pathExportText(file.path, exportMap)));
+    examples.push({ vector, archetype: fc.archetype });
+  }
+  return examples;
+}
+
+/**
+ * Encode one file's path/export text into the same vector space extractPathExportExamples
+ * trains on — the prediction-time counterpart, mirroring evidenceToVector's role for the
+ * numeric/evidence representation above.
+ */
+export function pathExportVector(path: string, imports: Imports): number[] {
+  const encoder = getPathExportEncoder();
+  const exportMap = buildExportMap(imports.edges);
+  return encoder.normalize(encoder.encode(pathExportText(path, exportMap)));
+}
+
 export interface TrainedArchetypeELMNumeric {
   elm: ELM;
   categories: string[];
@@ -136,6 +273,13 @@ export function trainArchetypeELMNumeric(
   examples: NumericArchetypeExample[],
   categories: string[],
   seed: number,
+  /**
+   * Random-projection width. Defaults to `HIDDEN_UNITS`. Exposed so capacity can be swept as an
+   * experimental variable -- Team Nolan's certified model uses 4096 against a 4000-dimension
+   * input, where this module's default of 128 was chosen for a 17-dimension evidence vector and
+   * was never revisited when the input grew to FEATURE_VECTOR_SIZE.
+   */
+  hiddenUnits: number = HIDDEN_UNITS,
 ): TrainedArchetypeELMNumeric {
   const inputSize = examples[0]?.vector.length;
   if (!inputSize) {
@@ -144,7 +288,7 @@ export function trainArchetypeELMNumeric(
 
   const elm = new ELM({
     categories,
-    hiddenUnits: HIDDEN_UNITS,
+    hiddenUnits,
     useTokenizer: false,
     inputSize,
     seed,
@@ -375,6 +519,24 @@ export interface ELMGateOptions {
   confidenceThreshold: number;
   /** Seed for fresh per-project training — irrelevant when the bundled baseline is used instead. */
   seed: number;
+  /**
+   * Absolute project root. **Supplying this switches the gate to the content representation**
+   * (`TJ-E1`) — the only one that can resolve anything at this call site, because the evidence
+   * vector is identically all-zero for the entire population that reaches here. Omit it and the
+   * gate uses the legacy evidence representation, which is retained for the existing tests and
+   * the bundled baseline model but resolves nothing in production.
+   *
+   * Required because the content representation reads file bytes, which `inventory.json` and
+   * `imports.json` do not carry. Additive to this interface, so `TJ-R3`'s stable gate signature
+   * is unchanged.
+   */
+  rootDir?: string;
+  /**
+   * Minimum share of the content ensemble that must agree (0-1). Defaults to
+   * `DEFAULT_ELM_MIN_VOTE_SHARE` (unanimity). Ignored by the legacy evidence path, which has no
+   * ensemble. This is deliberately NOT `confidenceThreshold` -- see the note at its use site.
+   */
+  minVoteShare?: number;
 }
 
 /**
@@ -390,7 +552,181 @@ export function runELMGate(
   imports: Imports,
   options: ELMGateOptions,
 ): ELMClassifyResult {
+  if (options.rootDir !== undefined) {
+    const models = getContentArchetypeELMEnsemble(
+      classifications,
+      inventory,
+      options.rootDir,
+      options.seed,
+    );
+    if (!models) return { updatedFiles: [] };
+    return classifyWithContentELM(
+      classifications,
+      models,
+      // NOT options.confidenceThreshold. That value is a softmax threshold, and softmax
+      // confidence was measured to be uninformative here -- the shipped default of 0.11 sits
+      // below the entire observed distribution, so it would accept EVERY prediction at ~52%
+      // precision. Ensemble agreement is a different quantity with its own default.
+      options.minVoteShare ?? DEFAULT_ELM_MIN_VOTE_SHARE,
+      options.rootDir,
+    );
+  }
   const trained = getArchetypeELM(classifications, inventory, imports, options.seed);
   if (!trained) return { updatedFiles: [] };
   return classifyWithELM(classifications, inventory, imports, trained, options.confidenceThreshold);
+}
+
+// ── Content representation (TJ-E1, ADR-2026-09-17-elon-content-based-elm-classifier.md) ────
+//
+// The representation that actually has signal at this call site. Everything above trains on
+// `classifyFile`'s evidence vector, which is identically all-zero for every file the gate is
+// invoked for (measured across 5 corpora, 2026-08-27, zero exceptions) — so the functions above
+// can only ever resolve files that did not need the ELM in the first place.
+//
+// THE BUNDLED BASELINE MODEL IS NOT USABLE HERE, deliberately. It was trained on 17-dimension
+// evidence vectors; a content vector is `FEATURE_VECTOR_SIZE`-dimensional. Loading one against
+// the other would not throw, it would silently predict from a garbage projection — exactly the
+// failure `FEATURE_VERSION` exists to make impossible. So the content path is fresh-training
+// only until a baseline is retrained under this layout (IMPL step 11).
+
+/**
+ * Training examples under the content representation. Same labeling rules as
+ * `extractNumericExamples` (source-role files, resolved archetype, algorithmic or llm source) —
+ * only the vector differs.
+ *
+ * Files whose content cannot be read still produce an example: `buildFeatureVector` degrades to
+ * metadata-only and sets `contentMissing`, so the model learns from the path half rather than the
+ * row being dropped.
+ */
+export function extractContentExamples(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+): NumericArchetypeExample[] {
+  const classificationByPath = new Map(classifications.files.map((f) => [f.path, f]));
+  const examples: NumericArchetypeExample[] = [];
+  for (const file of inventory.files) {
+    if (file.role !== "source") continue;
+    const fc = classificationByPath.get(file.path);
+    if (!fc?.archetype) continue;
+    if (fc.source !== "algorithmic" && fc.source !== "llm") continue;
+    examples.push({
+      vector: buildFeatureVector({
+        path: file.path,
+        content: readFileContentSafely(rootDir, file.path),
+      }),
+      archetype: fc.archetype,
+    });
+  }
+  return examples;
+}
+
+/**
+ * Model lifecycle for the content representation. Fresh-training only — see the block comment
+ * above for why the bundled baseline is deliberately excluded rather than reused.
+ */
+export function getContentArchetypeELM(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+  seed: number,
+): TrainedArchetypeELMNumeric | undefined {
+  return getContentArchetypeELMEnsemble(classifications, inventory, rootDir, seed, 1)?.[0];
+}
+
+/**
+ * Number of independently-seeded models in the content ensemble.
+ *
+ * An ELM's hidden layer is random and never trained, so a different seed is a genuinely
+ * different model, and training is one ridge solve. That makes an ensemble nearly free here --
+ * and measurement says it is necessary, not a refinement: a SINGLE model's confidence does not
+ * predict its own correctness (AUC 0.551-0.595, and incorrect predictions were marginally MORE
+ * confident than correct ones). Agreement across the ensemble is the only signal measured to
+ * produce a monotonic precision curve. See scripts/elm-ensemble-uncertainty.mjs.
+ */
+export const ELM_ENSEMBLE_SIZE = 15;
+
+/**
+ * Minimum share of the ensemble that must agree before a label is accepted.
+ *
+ * Defaults to 1.0 -- UNANIMITY -- because it is the only operating point measured to reach a
+ * precision anywhere near the LLM it would replace (81.3% teacher agreement at 6.3% coverage;
+ * every looser setting lands at 58-72%). It is deliberately the most conservative setting
+ * available rather than a tuned one: at batch 30 it saves roughly one LLM call in nine, and the
+ * settings that save more change a third of the labels. See scripts/elm-savings-curve.mjs.
+ */
+export const DEFAULT_ELM_MIN_VOTE_SHARE = 1.0;
+
+/** Train the content ensemble. Fresh-training only -- see the block comment above. */
+export function getContentArchetypeELMEnsemble(
+  classifications: Classifications,
+  inventory: Inventory,
+  rootDir: string,
+  seed: number,
+  size: number = ELM_ENSEMBLE_SIZE,
+): TrainedArchetypeELMNumeric[] | undefined {
+  if (!hasEnoughHistoryForFreshTraining(classifications)) return undefined;
+  const examples = extractContentExamples(classifications, inventory, rootDir);
+  if (examples.length === 0) return undefined;
+  const categories = [...new Set(examples.map((e) => e.archetype))].sort();
+  if (categories.length === 0) return undefined;
+  const models: TrainedArchetypeELMNumeric[] = [];
+  for (let i = 0; i < size; i++) {
+    // 7919 is an arbitrary large prime -- it just spreads the seeds so consecutive runs do not
+    // produce near-identical random projections.
+    models.push(trainArchetypeELMNumeric(examples, categories, seed + i * 7919));
+  }
+  return models;
+}
+
+/**
+ * Classify the unclassified population using the content representation.
+ *
+ * Note what is deliberately NOT here: the all-zero-vector guard from `classifyWithELM`. That
+ * guard exists because the evidence vector genuinely carries no information for this population.
+ * A content vector always has at least its extension and filename set, so an all-zero vector is
+ * not reachable — and a guard that can never fire would be misleading rather than safe. The
+ * honest equivalent is `contentMissing`, which is a feature the model can weigh rather than a
+ * hard skip: a file we could not read is still classifiable from its path, just less reliably.
+ */
+export function classifyWithContentELM(
+  classifications: Classifications,
+  models: TrainedArchetypeELMNumeric[],
+  minVoteShare: number,
+  rootDir: string,
+): ELMClassifyResult {
+  if (models.length === 0) return { updatedFiles: [] };
+  const trainedCategorySet = new Set(models[0].categories);
+  const updatedFiles: FileClassification[] = [];
+
+  for (const fc of classifications.files) {
+    if (fc.archetype !== null || fc.source !== "algorithmic") continue;
+    const vector = buildFeatureVector({
+      path: fc.path,
+      content: readFileContentSafely(rootDir, fc.path),
+    });
+
+    // Gate on ENSEMBLE AGREEMENT, not on one model's softmax. Measured: a single model's
+    // confidence is near-uninformative about its own correctness (AUC 0.551), while agreement
+    // produces a monotonic precision curve (57.6% at majority -> 81.3% at unanimity).
+    const votes = new Map<string, number>();
+    for (const m of models) {
+      const [top] = m.elm.predictTopKFromVector(vector, 1);
+      votes.set(top.label, (votes.get(top.label) ?? 0) + 1);
+    }
+    const [archetype, count] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0];
+    const voteShare = count / models.length;
+    if (voteShare < minVoteShare) continue;
+    if (!trainedCategorySet.has(archetype)) continue; // defensive
+
+    updatedFiles.push({
+      path: fc.path,
+      archetype,
+      // The recorded confidence is the ensemble's agreement, which is the quantity actually
+      // gated on -- storing a softmax value here would record a number nothing acted upon.
+      confidence: voteShare,
+      source: "elm",
+    });
+  }
+  return { updatedFiles };
 }
