@@ -3,6 +3,26 @@
 **Author:** Elon (Team Jarrett) · **Date:** 2026-09-23 · **Branch:** `elm/jarrett/classify-elm-content`
 **Implements:** `ADR-2026-09-17-elon-content-based-elm-classifier.md`
 
+> ## ⚠️ SUPERSEDED IN PART — 2026-10-01. Read this before the recommendation below.
+>
+> **The "not worth shipping" conclusion below was scoped too broadly.** Nearly every number in
+> this report comes from **cross-repo** evaluation — a pre-trained model shipped to unfamiliar
+> codebases. But `getArchetypeELM` already trains on **each project's own history**. Production is
+> per-project, and that path had never been benchmarked properly.
+>
+> Measured properly: **96.1% precision at 54.2% coverage** on a project with enough labelled
+> history, saving ~55% of tokens and ~55% of wall clock while changing 5 of 255 labels.
+>
+> **What still stands:** do not ship a bundled, pre-trained model (41% precision, 25.5 MB
+> artifact). **What does not:** the blanket recommendation against the gate.
+>
+> Several individual figures below are also corrected — the 80.4% was in-sample, the 41.2% was a
+> lucky seed (mean 35.8%), and the data-scaling projections were two-point extrapolations that did
+> not survive measurement.
+>
+> **Full head-to-head, economics and corrections:**
+> [`ELM-BENCHMARKS-AND-REVERSAL.md`](ELM-BENCHMARKS-AND-REVERSAL.md)
+
 > ## The short version
 >
 > **The classifier works mechanically and is not worth shipping on current evidence.**
