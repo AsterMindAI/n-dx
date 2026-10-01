@@ -53,6 +53,11 @@ const ALLOWED = new Set([
   "packages/web/dev.js",
   "scripts/cli-smoke-parity.mjs",
   "scripts/run-vitest-bind-aware.mjs",
+  // Benchmark that TIMES the raw CLI spawn (TJ-E1). Routing it through llm-client's exec()
+  // would measure llm-client's overhead on top of the thing under test, which is the spawn
+  // itself -- so the abstraction this rule enforces is exactly what it must bypass. Manual,
+  // costs real money to run, never imported by production code.
+  "packages/sourcevision/scripts/elm-benchmark-llm.mjs",
   // Process monitoring — needs raw execFile for system commands (vm_stat, sysctl)
   "packages/hench/src/process/memory-monitor.ts",
   // Git operations — need execFileSync/execFile for git CLI calls
